@@ -1,0 +1,337 @@
+---
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+const navItems: NavItem[] = [
+  { label: 'Fonctionnalités', href: '#features' },
+  { label: 'Services', href: '#services' },
+  { label: 'À propos', href: '#about' },
+  { label: 'Contact', href: '#contact' },
+];
+---
+
+<header class="header">
+  <div class="header-container">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="url(#logo-gradient)"/>
+          <path d="M10 16C10 12.6863 12.6863 10 16 10C19.3137 10 22 12.6863 22 16C22 19.3137 19.3137 22 16 22" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="16" cy="16" r="3" fill="white"/>
+          <defs>
+            <linearGradient id="logo-gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#3b82f6"/>
+              <stop offset="1" stop-color="#60a5fa"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="logo-text">BubbleStone<span class="logo-accent">.ai</span></span>
+    </a>
+
+    <nav class="nav" id="main-nav">
+      <ul class="nav-list">
+        {navItems.map((item) => (
+          <li class="nav-item">
+            <a href={item.href} class="nav-link">{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      <a href="#contact" class="btn btn-primary btn-nav">
+        Démarrer
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+      <button class="mobile-toggle" id="mobile-toggle" aria-label="Menu">
+        <span class="hamburger"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobile-menu">
+    <nav class="mobile-nav">
+      <ul class="mobile-nav-list">
+        {navItems.map((item) => (
+          <li class="mobile-nav-item">
+            <a href={item.href} class="mobile-nav-link">{item.label}</a>
+          </li>
+        ))}
+      </ul>
+      <a href="#contact" class="btn btn-primary btn-mobile">
+        Démarrer
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all var(--transition-base);
+  }
+
+  .header.scrolled {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .header-container {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 0.875rem var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Logo */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: var(--color-primary);
+  }
+
+  .logo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--transition-base);
+  }
+
+  .logo:hover .logo-icon {
+    transform: rotate(-5deg) scale(1.05);
+  }
+
+  .logo-text {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  .logo-accent {
+    color: var(--color-accent);
+  }
+
+  /* Navigation */
+  .nav {
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-list {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 0.5rem 1rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-gray-600);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+  }
+
+  .nav-link:hover {
+    color: var(--color-accent);
+    background: rgba(59, 130, 246, 0.05);
+  }
+
+  /* Header Actions */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .btn-nav {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  /* Mobile Toggle */
+  .mobile-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    z-index: 1001;
+  }
+
+  .hamburger,
+  .hamburger::before,
+  .hamburger::after {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--color-gray-700);
+    border-radius: 2px;
+    transition: all var(--transition-base);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .hamburger {
+    top: 50%;
+    margin-top: -1px;
+  }
+
+  .hamburger::before {
+    content: '';
+    top: -7px;
+    left: 0;
+    transform: none;
+  }
+
+  .hamburger::after {
+    content: '';
+    top: 7px;
+    left: 0;
+    transform: none;
+  }
+
+  .mobile-toggle.active .hamburger {
+    background: transparent;
+  }
+
+  .mobile-toggle.active .hamburger::before {
+    top: 0;
+    transform: rotate(45deg);
+  }
+
+  .mobile-toggle.active .hamburger::after {
+    top: 0;
+    transform: rotate(-45deg);
+  }
+
+  /* Mobile Menu */
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--color-white);
+    z-index: 999;
+    padding: 100px var(--spacing-lg) var(--spacing-lg);
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-slow);
+  }
+
+  .mobile-menu.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .mobile-nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--spacing-lg) 0;
+  }
+
+  .mobile-nav-item {
+    border-bottom: 1px solid var(--color-gray-100);
+  }
+
+  .mobile-nav-link {
+    display: block;
+    padding: 1rem 0;
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--color-gray-700);
+    text-decoration: none;
+    transition: color var(--transition-base);
+  }
+
+  .mobile-nav-link:hover {
+    color: var(--color-accent);
+  }
+
+  .btn-mobile {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .nav {
+      display: none;
+    }
+
+    .btn-nav {
+      display: none;
+    }
+
+    .mobile-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-menu {
+      display: block;
+    }
+  }
+</style>
+
+<script>
+  const header = document.querySelector('.header');
+  const mobileToggle = document.getElementById('mobile-toggle');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+
+  // Scroll effect
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      header?.classList.add('scrolled');
+    } else {
+      header?.classList.remove('scrolled');
+    }
+  });
+
+  // Mobile menu toggle
+  mobileToggle?.addEventListener('click', () => {
+    mobileToggle.classList.toggle('active');
+    mobileMenu?.classList.toggle('active');
+    document.body.style.overflow = mobileMenu?.classList.contains('active') ? 'hidden' : '';
+  });
+
+  // Close mobile menu on link click
+  mobileLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      mobileToggle?.classList.remove('active');
+      mobileMenu?.classList.remove('active');
+      document.body.style.overflow = '';
+    });
+  });
+</script>

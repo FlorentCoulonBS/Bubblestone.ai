@@ -1,0 +1,673 @@
+---
+---
+
+<section id="hero" class="hero">
+  <!-- Background effects -->
+  <div class="hero-bg">
+    <div class="hero-gradient"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-glow hero-glow-1"></div>
+    <div class="hero-glow hero-glow-2"></div>
+  </div>
+
+  <div class="container hero-container">
+    <div class="hero-content">
+      <!-- Badge -->
+      <div class="hero-badge fade-in">
+        <span class="badge-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </span>
+        <span>Pilotage IT & Automatisation IA</span>
+      </div>
+
+      <!-- Title -->
+      <h1 class="hero-title fade-in fade-in-delay-1">
+        Piloter. Sécuriser.
+        <span class="text-gradient">Automatiser.</span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="hero-subtitle fade-in fade-in-delay-2">
+        Nous accompagnons les entreprises dans la gouvernance, la sécurisation
+        et l'automatisation de leurs systèmes d'information grâce à des solutions
+        cloud, IA et sécurité sur mesure.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="hero-actions fade-in fade-in-delay-3">
+        <a href="#contact" class="btn btn-primary btn-lg">
+          Démarrer votre projet
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <a href="#features" class="btn btn-secondary btn-lg">
+          Découvrir nos solutions
+        </a>
+      </div>
+
+      <!-- Trust indicators -->
+      <div class="hero-trust fade-in fade-in-delay-4">
+        <div class="trust-avatars">
+          <div class="avatar" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">F</div>
+          <div class="avatar" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">M</div>
+          <div class="avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">C</div>
+          <div class="avatar" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">P</div>
+        </div>
+        <div class="trust-text">
+          <span class="trust-highlight">+50 entreprises</span> nous font confiance
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Visual - Sphere like Mizar -->
+    <div class="hero-visual fade-in fade-in-delay-2">
+      <div class="sphere-container">
+        <canvas id="blob-canvas"></canvas>
+        <video
+          id="sphere-video"
+          autoplay
+          loop
+          muted
+          playsinline
+        >
+          <source src="/sphere.webm" type="video/webm" />
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="scroll-indicator">
+    <div class="scroll-mouse">
+      <div class="scroll-wheel"></div>
+    </div>
+    <span>Défiler</span>
+  </div>
+</section>
+
+<style>
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 120px 0 80px;
+  }
+
+  /* Background Effects */
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .hero-gradient {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(96, 165, 250, 0.05) 0%, transparent 40%);
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: linear-gradient(180deg, white 0%, transparent 80%);
+    -webkit-mask-image: linear-gradient(180deg, white 0%, transparent 80%);
+  }
+
+  .hero-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .hero-glow-1 {
+    width: 400px;
+    height: 400px;
+    background: rgba(59, 130, 246, 0.3);
+    top: 10%;
+    right: 10%;
+  }
+
+  .hero-glow-2 {
+    width: 300px;
+    height: 300px;
+    background: rgba(96, 165, 250, 0.2);
+    bottom: 20%;
+    left: 5%;
+    animation-delay: -3s;
+  }
+
+  /* Container */
+  .hero-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Content */
+  .hero-content {
+    max-width: 600px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-accent);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .badge-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-title {
+    font-size: clamp(2.5rem, 5vw, 3.75rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-primary);
+  }
+
+  .hero-subtitle {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: var(--color-gray-600);
+    margin-bottom: var(--spacing-xl);
+  }
+
+  /* Actions */
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-xl);
+  }
+
+  /* Trust */
+  .hero-trust {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .trust-avatars {
+    display: flex;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    border: 2px solid white;
+    margin-left: -8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .avatar:first-child {
+    margin-left: 0;
+  }
+
+  .trust-text {
+    font-size: 0.9375rem;
+    color: var(--color-gray-600);
+  }
+
+  .trust-highlight {
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  /* Sphere Visual - Mizar Style */
+  .hero-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .sphere-container {
+    position: relative;
+    width: 100%;
+    max-width: 550px;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #sphere-video {
+    display: none;
+  }
+
+  #blob-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: pointer;
+    touch-action: none; /* Empêche le pull-to-refresh et autres gestes */
+  }
+
+  /* Scroll Indicator */
+  .scroll-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-gray-400);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .scroll-mouse {
+    width: 24px;
+    height: 38px;
+    border: 2px solid var(--color-gray-300);
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+  }
+
+  .scroll-wheel {
+    width: 4px;
+    height: 8px;
+    background: var(--color-accent);
+    border-radius: 2px;
+    animation: scroll-bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes scroll-bounce {
+    0%, 100% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(6px); opacity: 0.5; }
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .hero-container {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+
+    .hero-content {
+      max-width: 100%;
+    }
+
+    .hero-badge {
+      justify-content: center;
+    }
+
+    .hero-actions {
+      justify-content: center;
+    }
+
+    .hero-trust {
+      justify-content: center;
+    }
+
+    .hero-visual {
+      order: -1;
+    }
+
+    .sphere-container {
+      max-width: 450px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero {
+      padding: 100px 0 60px;
+    }
+
+    .hero-actions {
+      flex-direction: column;
+    }
+
+    .hero-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .hero-trust {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .scroll-indicator {
+      display: none;
+    }
+
+    .sphere-container {
+      max-width: 320px;
+    }
+  }
+</style>
+
+<script>
+  // Physics-based Blob Effect - Mizar Style
+  class Point {
+    x: number;
+    y: number;
+    originX: number;
+    originY: number;
+    velocity: number = 0;
+    acceleration: number = 0;
+    elasticity: number = 0.001;
+    friction: number = 0.0085;
+
+    constructor(x: number, y: number) {
+      this.x = x;
+      this.y = y;
+      this.originX = x;
+      this.originY = y;
+    }
+
+    update() {
+      // Spring physics
+      const dx = this.originX - this.x;
+      const dy = this.originY - this.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      this.acceleration += dist * this.elasticity;
+      this.velocity += this.acceleration;
+      this.velocity *= (1 - this.friction);
+
+      const angle = Math.atan2(dy, dx);
+      this.x += Math.cos(angle) * this.velocity;
+      this.y += Math.sin(angle) * this.velocity;
+
+      this.acceleration = 0;
+    }
+  }
+
+  class Blob {
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    video: HTMLVideoElement;
+    points: Point[] = [];
+    centerX: number = 0;
+    centerY: number = 0;
+    radius: number = 0;
+    numPoints: number = 32;
+
+    constructor(canvas: HTMLCanvasElement, video: HTMLVideoElement) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d')!;
+      this.video = video;
+      this.resize();
+      this.initPoints();
+
+      window.addEventListener('resize', () => this.resize());
+
+      // Mouse events
+      this.canvas.addEventListener('mousemove', (e) => this.onMouseMove(e));
+      this.canvas.addEventListener('mouseleave', () => this.onMouseLeave());
+
+      // Touch events for mobile - passive: false pour pouvoir bloquer le pull-to-refresh
+      this.canvas.addEventListener('touchstart', (e) => this.onTouchMove(e), { passive: false });
+      this.canvas.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+      this.canvas.addEventListener('touchend', () => this.onMouseLeave());
+    }
+
+    resize() {
+      const container = this.canvas.parentElement;
+      if (container) {
+        const size = Math.min(container.clientWidth, container.clientHeight);
+        this.canvas.width = size;
+        this.canvas.height = size;
+        this.centerX = size / 2;
+        this.centerY = size / 2;
+        this.radius = size * 0.38; // Smaller radius to leave room for deformation
+        this.initPoints();
+      }
+    }
+
+    initPoints() {
+      this.points = [];
+      for (let i = 0; i < this.numPoints; i++) {
+        const angle = (i / this.numPoints) * Math.PI * 2;
+        const x = this.centerX + Math.cos(angle) * this.radius;
+        const y = this.centerY + Math.sin(angle) * this.radius;
+        this.points.push(new Point(x, y));
+      }
+    }
+
+    onMouseMove(e: MouseEvent) {
+      const rect = this.canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Distance from center
+      const dx = mouseX - this.centerX;
+      const dy = mouseY - this.centerY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // Mouse angle
+      const mouseAngle = Math.atan2(dy, dx);
+
+      // Apply force to nearby points
+      this.points.forEach((point, i) => {
+        const pointAngle = (i / this.numPoints) * Math.PI * 2;
+        let angleDiff = mouseAngle - pointAngle;
+
+        // Normalize angle difference
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+        // Influence based on angle proximity
+        const influence = Math.max(0, 1 - Math.abs(angleDiff) / (Math.PI / 3));
+
+        if (influence > 0) {
+          // Push outward if inside, inward if outside
+          const isInside = dist < this.radius;
+          const force = influence * 0.8 * (isInside ? 1 : -1);
+
+          // Apply radial acceleration
+          const px = point.x - this.centerX;
+          const py = point.y - this.centerY;
+          const pDist = Math.sqrt(px * px + py * py);
+
+          if (pDist > 0) {
+            point.x += (px / pDist) * force * 3;
+            point.y += (py / pDist) * force * 3;
+          }
+        }
+      });
+    }
+
+    onTouchMove(e: TouchEvent) {
+      // Empêcher le pull-to-refresh et le scroll
+      e.preventDefault();
+
+      // Handle all touches for multi-finger sliding
+      for (let i = 0; i < e.touches.length; i++) {
+        const touch = e.touches[i];
+        const rect = this.canvas.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+
+        // Distance from center
+        const dx = touchX - this.centerX;
+        const dy = touchY - this.centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Touch angle
+        const touchAngle = Math.atan2(dy, dx);
+
+        // Apply force to nearby points
+        this.points.forEach((point, idx) => {
+          const pointAngle = (idx / this.numPoints) * Math.PI * 2;
+          let angleDiff = touchAngle - pointAngle;
+
+          // Normalize angle difference
+          while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+          while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+          // Influence based on angle proximity
+          const influence = Math.max(0, 1 - Math.abs(angleDiff) / (Math.PI / 3));
+
+          if (influence > 0) {
+            // Push outward if inside, inward if outside
+            const isInside = dist < this.radius;
+            const force = influence * 1.2 * (isInside ? 1 : -1); // Stronger force for touch
+
+            // Apply radial acceleration
+            const px = point.x - this.centerX;
+            const py = point.y - this.centerY;
+            const pDist = Math.sqrt(px * px + py * py);
+
+            if (pDist > 0) {
+              point.x += (px / pDist) * force * 4;
+              point.y += (py / pDist) * force * 4;
+            }
+          }
+        });
+      }
+    }
+
+    onMouseLeave() {
+      // Points will naturally return to origin via spring physics
+    }
+
+    draw() {
+      const ctx = this.ctx;
+      const size = this.canvas.width;
+
+      // Clear
+      ctx.clearRect(0, 0, size, size);
+
+      // Update points physics
+      this.points.forEach(p => p.update());
+
+      // Create clipping path from points
+      ctx.save();
+      ctx.beginPath();
+
+      // Draw smooth blob shape using quadratic curves
+      const pts = this.points;
+      const len = pts.length;
+
+      // Move to midpoint between first and last point
+      const firstMidX = (pts[0].x + pts[len - 1].x) / 2;
+      const firstMidY = (pts[0].y + pts[len - 1].y) / 2;
+      ctx.moveTo(firstMidX, firstMidY);
+
+      // Draw curves through all points
+      for (let i = 0; i < len; i++) {
+        const p1 = pts[i];
+        const p2 = pts[(i + 1) % len];
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
+      }
+
+      ctx.closePath();
+      ctx.clip();
+
+      // Draw video inside clipped area with extra padding for deformation
+      if (this.video.readyState >= this.video.HAVE_CURRENT_DATA) {
+        // Calculate video dimensions - scale larger to cover deformed blob
+        const vw = this.video.videoWidth;
+        const vh = this.video.videoHeight;
+        const padding = 1.5; // 50% extra to cover deformation
+        const scale = Math.max(size / vw, size / vh) * padding;
+        const w = vw * scale;
+        const h = vh * scale;
+        const x = (size - w) / 2;
+        const y = (size - h) / 2;
+
+        // Dessiner la vidéo en grayscale pour enlever les couleurs chaudes
+        ctx.filter = 'grayscale(100%) brightness(1.1) contrast(0.9)';
+        ctx.drawImage(this.video, x, y, w, h);
+        ctx.filter = 'none';
+
+        // Teinte bleue avec color pour appliquer la teinte tout en gardant la luminosité
+        ctx.globalCompositeOperation = 'color';
+        const gradient = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size * 0.5);
+        gradient.addColorStop(0, 'rgba(120, 180, 255, 1)');    // Bleu clair centre
+        gradient.addColorStop(0.6, 'rgba(59, 130, 246, 1)');   // Bleu site
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 1)');     // Violet léger bord
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, y, w, h);
+
+        // Renforcer les highlights blancs
+        ctx.globalCompositeOperation = 'soft-light';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillRect(x, y, w, h);
+
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      ctx.restore();
+
+      requestAnimationFrame(() => this.draw());
+    }
+
+    start() {
+      this.draw();
+    }
+  }
+
+  // Initialize
+  const canvas = document.getElementById('blob-canvas') as HTMLCanvasElement;
+  const video = document.getElementById('sphere-video') as HTMLVideoElement;
+
+  if (canvas && video) {
+    const blob = new Blob(canvas, video);
+
+    // Forcer la lecture de la vidéo (Chrome bloque parfois l'autoplay)
+    const playVideo = () => {
+      video.play().catch(() => {
+        // Si autoplay échoue, on réessaie au premier clic/touch
+        document.addEventListener('click', () => video.play(), { once: true });
+        document.addEventListener('touchstart', () => video.play(), { once: true });
+      });
+    };
+
+    video.addEventListener('loadeddata', () => {
+      playVideo();
+      blob.start();
+    });
+
+    if (video.readyState >= video.HAVE_CURRENT_DATA) {
+      playVideo();
+      blob.start();
+    }
+  }
+</script>

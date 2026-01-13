@@ -1,0 +1,196 @@
+---
+interface Value {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+const values: Value[] = [
+  {
+    icon: 'target',
+    title: 'Pragmatisme',
+    description: 'Solutions concrètes et mesurables, adaptées à votre contexte.'
+  },
+  {
+    icon: 'shield',
+    title: 'Sécurité',
+    description: 'Protection de vos données au coeur de chaque décision.'
+  },
+  {
+    icon: 'users',
+    title: 'Proximité',
+    description: 'Un interlocuteur dédié qui comprend vos enjeux métier.'
+  },
+  {
+    icon: 'zap',
+    title: 'Innovation',
+    description: 'Technologies de pointe au service de votre performance.'
+  }
+];
+
+const iconPaths: Record<string, string> = {
+  target: 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
+  shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+  users: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+  zap: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z'
+};
+---
+
+<section id="about" class="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-content">
+        <span class="section-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          À propos
+        </span>
+        <h2>Notre Vision</h2>
+        <p class="about-vision">
+          Offrir à chaque organisation un SI intelligent, aligné avec ses enjeux humains,
+          stratégiques et réglementaires.
+        </p>
+        <p class="about-description">
+          BubbleStone.ai accompagne les entreprises dans leur transformation digitale
+          en combinant expertise technique et compréhension métier. Notre approche
+          pragmatique permet de déployer des solutions concrètes, mesurables et durables.
+        </p>
+        <a href="#contact" class="btn btn-primary">
+          Discuter de votre projet
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <div class="about-values">
+        {values.map(value => (
+          <div class="value-card">
+            <div class="value-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d={iconPaths[value.icon]} />
+              </svg>
+            </div>
+            <div class="value-content">
+              <h3>{value.title}</h3>
+              <p>{value.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .about {
+    padding: var(--spacing-3xl) 0;
+    background: var(--color-white);
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-2xl);
+    align-items: center;
+  }
+
+  .about-content {
+    max-width: 500px;
+  }
+
+  .about-content h2 {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .about-vision {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    line-height: 1.5;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .about-description {
+    font-size: 1rem;
+    color: var(--color-gray-600);
+    line-height: 1.7;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .about-values {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .value-card {
+    background: var(--color-gray-50);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    transition: all var(--transition-slow);
+  }
+
+  .value-card:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow:
+      0 0 20px rgba(59, 130, 246, 0.3),
+      0 0 40px rgba(59, 130, 246, 0.15),
+      0 0 60px rgba(59, 130, 246, 0.05);
+  }
+
+  .value-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: var(--radius-md);
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+    transition: all var(--transition-base);
+  }
+
+  .value-card:hover .value-icon {
+    background: var(--gradient-primary);
+    color: white;
+  }
+
+  .value-content h3 {
+    font-size: 1rem;
+    margin-bottom: 0.375rem;
+    color: var(--color-primary);
+  }
+
+  .value-content p {
+    font-size: 0.875rem;
+    color: var(--color-gray-600);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 1024px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-xl);
+    }
+
+    .about-content {
+      max-width: 100%;
+      text-align: center;
+    }
+
+    .about-content .btn {
+      display: inline-flex;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .about-values {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

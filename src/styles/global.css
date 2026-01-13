@@ -1,0 +1,579 @@
+/* Variables de couleurs - Bubblestone.ai - Bleu transparent & Blanc */
+:root {
+  --color-primary: #020617;
+  --color-accent: #3b82f6;
+  --color-accent-light: #60a5fa;
+  --color-accent-dark: #2563eb;
+  --color-accent-glow: rgba(59, 130, 246, 0.5);
+  --color-white: #ffffff;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #64748b;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+
+  /* Crystal/Stone colors */
+  --color-crystal: #e0f2fe;
+  --color-crystal-light: #f0f9ff;
+  --color-stone: #64748b;
+  --color-stone-light: #94a3b8;
+
+  --gradient-primary: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-light) 100%);
+  --gradient-hero: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  --gradient-card: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+  --gradient-text: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-light) 50%, var(--color-accent) 100%);
+
+  /* Crystal gradients */
+  --gradient-crystal: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(224, 242, 254, 0.6) 50%, rgba(186, 230, 253, 0.4) 100%);
+  --gradient-crystal-shine: linear-gradient(125deg, rgba(255, 255, 255, 0.8) 0%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.3) 100%);
+  --gradient-crystal-edge: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 50%);
+
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+  /* Crystal glass effect */
+  --crystal-bg: rgba(255, 255, 255, 0.7);
+  --crystal-border: rgba(148, 163, 184, 0.2);
+  --crystal-border-light: rgba(255, 255, 255, 0.6);
+  --crystal-shadow: 0 8px 32px rgba(100, 116, 139, 0.15), 0 2px 8px rgba(0, 0, 0, 0.05);
+  --crystal-shadow-hover: 0 16px 48px rgba(59, 130, 246, 0.2), 0 4px 12px rgba(100, 116, 139, 0.1);
+
+  /* Stone effect - Robust & Grounded */
+  --stone-dark: #0c1222;
+  --stone-slate: #1e293b;
+  --stone-slate-light: #334155;
+  --stone-border: #475569;
+  --stone-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.2);
+  --stone-shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 -1px 2px rgba(255, 255, 255, 0.05);
+  --gradient-stone: linear-gradient(180deg, var(--stone-slate) 0%, var(--stone-dark) 100%);
+  --gradient-stone-surface: linear-gradient(145deg, rgba(51, 65, 85, 0.5) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(15, 23, 42, 0.9) 100%);
+
+  --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Poppins', system-ui, sans-serif;
+
+  --container-max: 1200px;
+  --container-wide: 1400px;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 4rem;
+  --spacing-2xl: 6rem;
+  --spacing-3xl: 8rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+  --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-gray-700);
+  background-color: var(--color-white);
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-primary);
+}
+
+h1 { font-size: clamp(2.5rem, 5vw, 4rem); }
+h2 { font-size: clamp(2rem, 4vw, 3rem); }
+h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); }
+
+p {
+  color: var(--color-gray-600);
+  line-height: 1.7;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+
+a:hover {
+  color: var(--color-accent-dark);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Container */
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.container-wide {
+  max-width: var(--container-wide);
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-family: var(--font-primary);
+  text-align: center;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: none;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: var(--color-white);
+  box-shadow: 0 4px 14px var(--color-accent-glow);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 20px var(--color-accent-glow);
+  color: var(--color-white);
+}
+
+.btn-secondary {
+  background-color: var(--color-white);
+  color: var(--color-gray-700);
+  border: 1px solid var(--color-gray-200);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-gray-50);
+  border-color: var(--color-gray-300);
+  color: var(--color-gray-900);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-gray-600);
+  padding: 0.5rem 1rem;
+}
+
+.btn-ghost:hover {
+  color: var(--color-accent);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+}
+
+/* Sections */
+section {
+  padding: var(--spacing-3xl) 0;
+  position: relative;
+}
+
+.section-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto var(--spacing-xl);
+}
+
+.section-header h2 {
+  margin-bottom: var(--spacing-md);
+}
+
+.section-header p {
+  font-size: 1.125rem;
+  color: var(--color-gray-500);
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-accent);
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Cards - Crystal Stone Effect */
+.card {
+  position: relative;
+  background: var(--crystal-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--crystal-border);
+  border-top: 1px solid var(--crystal-border-light);
+  border-left: 1px solid var(--crystal-border-light);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  transition: all var(--transition-slow);
+  box-shadow: var(--crystal-shadow);
+  overflow: hidden;
+}
+
+/* Crystal shine overlay */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: var(--gradient-crystal-edge);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Prismatic light reflection */
+.card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: var(--gradient-crystal-shine);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+}
+
+.card:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow:
+    0 0 20px rgba(59, 130, 246, 0.3),
+    0 0 40px rgba(59, 130, 246, 0.15),
+    0 0 60px rgba(59, 130, 246, 0.05);
+}
+
+.card:hover::after {
+  opacity: 0.5;
+}
+
+/* Deep crystal glass variant */
+.card-glass {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.85) 0%, rgba(241, 245, 249, 0.7) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.7);
+  border-left: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 10px 40px rgba(100, 116, 139, 0.12),
+    0 2px 4px rgba(0, 0, 0, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.card-glass:hover {
+  box-shadow:
+    0 20px 60px rgba(59, 130, 246, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Gradient text */
+.text-gradient {
+  background: var(--gradient-text);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+
+/* Glow effect */
+.glow {
+  position: relative;
+}
+
+.glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: var(--gradient-primary);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  z-index: -1;
+  filter: blur(20px);
+}
+
+.glow:hover::before {
+  opacity: 0.5;
+}
+
+/* Fade in animation */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fade-in-up 0.6s ease forwards;
+}
+
+@keyframes fade-in-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-delay-1 { animation-delay: 0.1s; }
+.fade-in-delay-2 { animation-delay: 0.2s; }
+.fade-in-delay-3 { animation-delay: 0.3s; }
+.fade-in-delay-4 { animation-delay: 0.4s; }
+
+/* Icon container - Crystal Style */
+.icon-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.15) 0%, rgba(96, 165, 250, 0.08) 100%);
+  border-radius: var(--radius-md);
+  color: var(--color-accent);
+  flex-shrink: 0;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.4);
+  border-left-color: rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 2px 8px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.icon-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  pointer-events: none;
+}
+
+.icon-box svg {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: var(--spacing-xl) 0;
+  }
+
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .container {
+    padding: 0 var(--spacing-md);
+  }
+}
+
+/* Scroll animations - appears on scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Pulse animation */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-accent);
+  animation: pulse-ring 2s ease-out infinite;
+  z-index: -1;
+}
+
+/* ========================================
+   STONE EFFECT - Robust & Grounded
+   ======================================== */
+
+/* Stone texture background with noise grain */
+.stone-texture {
+  position: relative;
+  background: var(--gradient-stone);
+}
+
+.stone-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Stone section - dark foundation */
+.section-stone {
+  position: relative;
+  background: var(--gradient-stone);
+  color: var(--color-white);
+  box-shadow: var(--stone-shadow);
+}
+
+.section-stone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+/* Stone surface highlight - subtle light from top */
+.section-stone::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(148, 163, 184, 0.3) 50%, transparent 100%);
+}
+
+/* Stone card variant - for dark backgrounds */
+.card-stone {
+  position: relative;
+  background: var(--gradient-stone-surface);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--stone-border);
+  border-top-color: rgba(148, 163, 184, 0.2);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  box-shadow: var(--stone-shadow-inset);
+  transition: all var(--transition-slow);
+  overflow: hidden;
+}
+
+.card-stone::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.08) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.card-stone:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow:
+    0 0 20px rgba(59, 130, 246, 0.4),
+    0 0 40px rgba(59, 130, 246, 0.2),
+    0 0 60px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(59, 130, 246, 0.2);
+}
+
+/* Stone divider - horizontal line */
+.stone-divider {
+  height: 4px;
+  background: var(--gradient-stone);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.stone-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(148, 163, 184, 0.4) 50%, transparent 100%);
+}

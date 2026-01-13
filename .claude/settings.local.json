@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.bubblestone.ai)",
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)",
+      "Bash(npm create:*)",
+      "Bash(npm show:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(claude mcp list)",
+      "Bash(claude mcp add:*)",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(npx astro dev:*)",
+      "mcp__playwright__browser_evaluate",
+      "Bash(curl -L \"https://mizar.majestico.co/_astro/promo.8ev6z6da.webm\" -o \"X:\\\\Claude\\\\SiteWeb\\\\public\\\\sphere.webm\")",
+      "mcp__playwright__browser_hover",
+      "mcp__playwright__browser_console_messages",
+      "Bash(curl:*)",
+      "Skill(frontend-design)",
+      "WebFetch(domain:mizar.majestico.co)",
+      "Bash(timeout /t 3)",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_run_code",
+      "mcp__playwright__browser_click",
+      "Bash(git add:*)"
+    ]
+  }
+}

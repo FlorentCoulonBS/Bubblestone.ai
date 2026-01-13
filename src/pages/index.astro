@@ -12,21 +12,35 @@ import FAQ from '../components/FAQ.astro';
 import CTA from '../components/CTA.astro';
 import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
+import ScrollLine from '../components/ScrollLine.astro';
 ---
 
 <Layout title="Accueil">
   <Header />
-  <main>
-    <Hero />
-    <TechStack />
-    <Features />
-    <Stats />
-    <Services />
-    <Testimonials />
-    <About />
-    <FAQ />
-    <CTA />
-    <Contact />
-  </main>
-  <Footer />
+  <div class="page-wrapper">
+    <ScrollLine />
+    <main>
+      <Hero />
+      <TechStack />
+      <Features />
+      <Stats />
+      <Services />
+      <Testimonials />
+      <About />
+      <FAQ />
+      <CTA />
+      <Contact />
+    </main>
+    <Footer />
+  </div>
 </Layout>
+
+<style>
+  .page-wrapper {
+    position: relative;
+  }
+
+  main {
+    position: relative;
+  }
+</style>

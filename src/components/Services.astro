@@ -103,13 +103,23 @@ const iconPaths: Record<string, string> = {
 <style>
   .services {
     padding: var(--spacing-3xl) 0;
+    position: relative;
+  }
+
+  .services::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background: var(--color-gray-50);
+    z-index: -1;
   }
 
   .services-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-lg);
+    position: relative;
+    z-index: 100;
   }
 
   .service-card {
@@ -120,6 +130,8 @@ const iconPaths: Record<string, string> = {
     transition: all var(--transition-slow);
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 10;
   }
 
   .service-card:hover {

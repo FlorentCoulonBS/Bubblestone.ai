@@ -52,7 +52,7 @@ const testimonials: Testimonial[] = [
 ];
 ---
 
-<section class="testimonials">
+<section id="testimonials" class="testimonials">
   <div class="container">
     <div class="section-header">
       <span class="section-badge">
@@ -96,8 +96,15 @@ const testimonials: Testimonial[] = [
 <style>
   .testimonials {
     padding: var(--spacing-3xl) 0;
+    position: relative;
+  }
+
+  .testimonials::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background: var(--color-white);
-    overflow: hidden;
+    z-index: -1;
   }
 
   .testimonials-carousel {
@@ -107,6 +114,7 @@ const testimonials: Testimonial[] = [
     overflow: hidden;
     mask-image: linear-gradient(90deg, transparent 0%, white 5%, white 95%, transparent 100%);
     -webkit-mask-image: linear-gradient(90deg, transparent 0%, white 5%, white 95%, transparent 100%);
+    z-index: 100;
   }
 
   .testimonials-track {
@@ -134,6 +142,8 @@ const testimonials: Testimonial[] = [
     border-radius: var(--radius-xl);
     padding: var(--spacing-lg);
     transition: all var(--transition-slow);
+    position: relative;
+    z-index: 100;
   }
 
   .testimonial-card:hover {
@@ -206,6 +216,8 @@ const testimonials: Testimonial[] = [
     font-size: 0.8125rem;
     color: var(--color-gray-400);
     font-style: italic;
+    position: relative;
+    z-index: 2;
   }
 
   @media (max-width: 768px) {

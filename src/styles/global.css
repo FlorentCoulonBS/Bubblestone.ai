@@ -162,6 +162,8 @@ img {
   transition: all var(--transition-base);
   border: none;
   text-decoration: none;
+  position: relative;
+  z-index: 100;
 }
 
 .btn-primary {
@@ -213,6 +215,12 @@ section {
   text-align: center;
   max-width: 700px;
   margin: 0 auto var(--spacing-xl);
+  position: relative;
+  z-index: 10;
+  background: white;
+  padding: 1.5rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .section-header h2 {
@@ -229,7 +237,7 @@ section {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: rgba(59, 130, 246, 0.1);
+  background: linear-gradient(135deg, #e8f1fe 0%, #dbeafe 100%);
   color: var(--color-accent);
   border-radius: var(--radius-full);
   font-size: 0.875rem;
@@ -240,6 +248,7 @@ section {
 /* Cards - Crystal Stone Effect */
 .card {
   position: relative;
+  z-index: 2;
   background: var(--crystal-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);

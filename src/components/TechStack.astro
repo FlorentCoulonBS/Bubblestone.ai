@@ -16,7 +16,9 @@ const technologies: Tech[] = [
 
 <section class="tech-stack">
   <div class="container">
-    <h2 class="tech-title">Technologies de confiance</h2>
+    <div class="title-wrapper">
+      <h2 class="tech-title">Technologies de confiance</h2>
+    </div>
     <div class="tech-carousel">
       <div class="tech-track">
         {[...technologies, ...technologies].map((tech) => (
@@ -38,20 +40,42 @@ const technologies: Tech[] = [
 <style>
   .tech-stack {
     padding: var(--spacing-xl) 0;
-    background: var(--color-gray-50);
-    border-top: 1px solid var(--color-gray-100);
-    border-bottom: 1px solid var(--color-gray-100);
-    overflow: hidden;
+    position: relative;
+  }
+
+  .title-wrapper {
+    position: relative;
+    z-index: 1;
+    background: white;
+    text-align: center;
+    padding: 1rem 0;
+    margin-bottom: var(--spacing-md);
   }
 
   .tech-title {
-    text-align: center;
     font-size: 1rem;
     font-weight: 500;
     color: var(--color-gray-500);
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    margin-bottom: var(--spacing-lg);
+    margin: 0;
+    position: relative;
+    display: inline-block;
+    padding: 0.5rem 2rem;
+    background: white;
+  }
+
+  .tech-title::after {
+    content: '';
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    min-width: 280px;
+    height: calc(100% + 60px);
+    background: white;
+    z-index: -1;
   }
 
   .tech-carousel {
@@ -60,6 +84,7 @@ const technologies: Tech[] = [
     overflow: hidden;
     mask-image: linear-gradient(90deg, transparent 0%, white 10%, white 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(90deg, transparent 0%, white 10%, white 90%, transparent 100%);
+    z-index: 2;
   }
 
   .tech-track {
@@ -89,6 +114,8 @@ const technologies: Tech[] = [
     border-radius: var(--radius-lg);
     white-space: nowrap;
     transition: all var(--transition-base);
+    position: relative;
+    z-index: 2;
   }
 
   .tech-item:hover {

@@ -87,7 +87,15 @@ const iconPaths: Record<string, string> = {
 <style>
   .about {
     padding: var(--spacing-3xl) 0;
+    position: relative;
+  }
+
+  .about::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background: var(--color-white);
+    z-index: -1;
   }
 
   .about-grid {
@@ -99,6 +107,8 @@ const iconPaths: Record<string, string> = {
 
   .about-content {
     max-width: 500px;
+    position: relative;
+    z-index: 100;
   }
 
   .about-content h2 {
@@ -124,6 +134,8 @@ const iconPaths: Record<string, string> = {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+    position: relative;
+    z-index: 100;
   }
 
   .value-card {
@@ -132,6 +144,8 @@ const iconPaths: Record<string, string> = {
     border-radius: var(--radius-xl);
     padding: 1.5rem;
     transition: all var(--transition-slow);
+    position: relative;
+    z-index: 100;
   }
 
   .value-card:hover {

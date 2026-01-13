@@ -114,14 +114,24 @@
 <style>
   .contact {
     padding: var(--spacing-3xl) 0;
+    position: relative;
+  }
+
+  .contact::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background: var(--color-gray-50);
+    z-index: -1;
   }
 
   .contact-grid {
     display: grid;
     grid-template-columns: 1fr 1.2fr;
-    gap: var(--spacing-2xl);
+    gap: var(--spacing-lg);
     align-items: start;
+    position: relative;
+    z-index: 100;
   }
 
   .contact-info h2 {
@@ -214,6 +224,15 @@
     border: 1px solid var(--color-gray-200);
     border-radius: var(--radius-xl);
     padding: var(--spacing-xl);
+    transition: border-color 0.5s ease, box-shadow 0.5s ease;
+  }
+
+  .contact-form-wrapper.line-reached {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow:
+      0 0 20px rgba(59, 130, 246, 0.3),
+      0 0 40px rgba(59, 130, 246, 0.15),
+      0 0 60px rgba(59, 130, 246, 0.05);
   }
 
   .contact-form {

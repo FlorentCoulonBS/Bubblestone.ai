@@ -1,0 +1,176 @@
+---
+---
+
+<div class="scroll-line" id="scroll-line"></div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const scrollLine = document.getElementById('scroll-line');
+    const scrollIndicator = document.querySelector('.scroll-indicator');
+    const ctaContent = document.querySelector('.cta-content');
+    const contactForm = document.querySelector('.contact-form-wrapper');
+
+    if (!scrollLine || !scrollIndicator || !contactForm) return;
+
+    // Éléments à éviter (titres centrés)
+    const elementsToAvoid = document.querySelectorAll('.tech-title, .section-header h2, .section-header p');
+
+    function updateLine() {
+      const indicatorRect = scrollIndicator.getBoundingClientRect();
+      const ctaRect = ctaContent ? ctaContent.getBoundingClientRect() : null;
+      const formRect = contactForm.getBoundingClientRect();
+
+      const startY = indicatorRect.top + window.scrollY + indicatorRect.height / 2;
+      const endY = formRect.top + window.scrollY;
+      const currentBottom = window.scrollY + window.innerHeight;
+      const lineStart = startY;
+
+      let lineHeight = currentBottom - lineStart - window.innerHeight * 0.3;
+      const maxHeight = endY - startY;
+      lineHeight = Math.max(0, Math.min(lineHeight, maxHeight));
+
+      scrollLine.style.top = `${startY}px`;
+      scrollLine.style.height = `${lineHeight}px`;
+
+      const opacity = lineHeight > 10 ? 1 : lineHeight / 10;
+      scrollLine.style.opacity = opacity.toString();
+
+      // Activer l'effet néon sur le CTA quand la ligne l'atteint
+      if (ctaContent && ctaRect) {
+        const ctaY = ctaRect.top + window.scrollY;
+        const lineReachesCTA = (startY + lineHeight) >= ctaY - 10;
+        if (lineReachesCTA) {
+          ctaContent.classList.add('line-reached');
+        } else {
+          ctaContent.classList.remove('line-reached');
+        }
+      }
+
+      // Activer l'effet néon sur le formulaire quand la ligne l'atteint
+      const lineReachesForm = lineHeight >= maxHeight - 10;
+      if (lineReachesForm) {
+        contactForm.classList.add('line-reached');
+      } else {
+        contactForm.classList.remove('line-reached');
+      }
+
+      // Construire le mask-image pour masquer aux positions des titres
+      if (lineHeight > 0) {
+        const clips: Array<{top: number, bottom: number}> = [];
+
+        elementsToAvoid.forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          const elTop = rect.top + window.scrollY;
+          const elBottom = elTop + rect.height;
+
+          // Calculer les positions relatives à la ligne (en pixels)
+          const relTopPx = elTop - startY - 20;
+          const relBottomPx = elBottom - startY + 20;
+
+          // Convertir en pourcentage
+          const relTop = (relTopPx / lineHeight) * 100;
+          const relBottom = (relBottomPx / lineHeight) * 100;
+
+          if (relTop < 100 && relBottom > 0) {
+            clips.push({
+              top: Math.max(0, relTop),
+              bottom: Math.min(100, relBottom)
+            });
+          }
+        });
+
+        // Trier par position
+        clips.sort((a, b) => a.top - b.top);
+
+        // Fusionner les clips qui se chevauchent
+        const mergedClips: Array<{top: number, bottom: number}> = [];
+        clips.forEach((clip) => {
+          if (mergedClips.length === 0) {
+            mergedClips.push({ ...clip });
+          } else {
+            const last = mergedClips[mergedClips.length - 1];
+            if (clip.top <= last.bottom) {
+              // Chevauchement - fusionner
+              last.bottom = Math.max(last.bottom, clip.bottom);
+            } else {
+              mergedClips.push({ ...clip });
+            }
+          }
+        });
+
+        // Créer un background gradient avec des zones transparentes
+        if (mergedClips.length > 0) {
+          const gradientStops: string[] = [];
+
+          // Ajouter les zones visibles et invisibles
+          let lastEnd = 0;
+          mergedClips.forEach((clip) => {
+            if (clip.top > lastEnd) {
+              // Zone visible avant le trou
+              gradientStops.push(`rgba(59, 130, 246, 0.7) ${lastEnd}%`);
+              gradientStops.push(`rgba(59, 130, 246, 0.7) ${clip.top}%`);
+            }
+            // Zone transparente (le trou) - utiliser rgba explicite
+            gradientStops.push(`rgba(0,0,0,0) ${clip.top}%`);
+            gradientStops.push(`rgba(0,0,0,0) ${clip.bottom}%`);
+            lastEnd = clip.bottom;
+          });
+
+          // Zone visible après le dernier trou
+          if (lastEnd < 100) {
+            gradientStops.push(`rgba(59, 130, 246, 0.7) ${lastEnd}%`);
+            gradientStops.push(`rgba(59, 130, 246, 0.7) 100%`);
+          }
+
+          scrollLine.style.background = `linear-gradient(to bottom, ${gradientStops.join(', ')})`;
+          scrollLine.style.boxShadow = 'none'; // Désactiver le box-shadow car il ne suit pas le gradient
+        } else {
+          // Restaurer le background original
+          scrollLine.style.background = `linear-gradient(
+            to bottom,
+            rgba(59, 130, 246, 0.4) 0%,
+            rgba(59, 130, 246, 0.7) 10%,
+            rgba(96, 165, 250, 0.9) 50%,
+            rgba(59, 130, 246, 0.7) 90%,
+            rgba(59, 130, 246, 0.4) 100%
+          )`;
+        }
+      }
+    }
+
+    window.addEventListener('scroll', updateLine, { passive: true });
+    window.addEventListener('resize', updateLine, { passive: true });
+    setTimeout(updateLine, 100);
+  });
+</script>
+
+<style>
+  .scroll-line {
+    position: absolute;
+    left: calc(50% - 1px);
+    width: 2px;
+    height: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(59, 130, 246, 0.4) 0%,
+      rgba(59, 130, 246, 0.7) 10%,
+      rgba(96, 165, 250, 0.9) 50%,
+      rgba(59, 130, 246, 0.7) 90%,
+      rgba(59, 130, 246, 0.4) 100%
+    );
+    box-shadow:
+      0 0 8px rgba(59, 130, 246, 0.5),
+      0 0 16px rgba(59, 130, 246, 0.3),
+      0 0 24px rgba(59, 130, 246, 0.15);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 1px;
+  }
+
+  @media (max-width: 768px) {
+    .scroll-line {
+      display: none;
+    }
+  }
+</style>

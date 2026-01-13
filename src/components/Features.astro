@@ -149,7 +149,29 @@
 <style>
   .features {
     padding: var(--spacing-3xl) 0;
-    background: var(--color-white);
+    position: relative;
+  }
+
+  .features .section-header {
+    position: relative;
+    z-index: 1;
+    background: white;
+    padding: 1rem 2rem;
+    margin: -1rem -2rem 0;
+    width: calc(100% + 4rem);
+  }
+
+  .features .section-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 500px;
+    height: 100%;
+    background: white;
+    z-index: -1;
   }
 
   .bento-grid {
@@ -157,6 +179,7 @@
     grid-template-columns: repeat(12, 1fr);
     grid-template-rows: auto;
     gap: 1.5rem;
+    position: relative;
   }
 
   .bento-item {
@@ -167,6 +190,7 @@
     transition: all var(--transition-slow);
     position: relative;
     overflow: hidden;
+    z-index: 1;
   }
 
   .bento-item:hover {

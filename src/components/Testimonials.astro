@@ -54,15 +54,18 @@ const testimonials: Testimonial[] = [
 
 <section id="testimonials" class="testimonials">
   <div class="container">
-    <div class="section-header">
-      <span class="section-badge">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-        Témoignages
-      </span>
-      <h2>Ce que disent nos clients</h2>
-      <p>Découvrez comment nous accompagnons les entreprises dans leur transformation.</p>
+    <div class="testimonials-header-wrapper">
+      <div class="testimonials-glow"></div>
+      <div class="section-header">
+        <span class="section-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          Témoignages
+        </span>
+        <h2>Ce que disent nos clients</h2>
+        <p>Découvrez comment nous accompagnons les entreprises dans leur transformation.</p>
+      </div>
     </div>
 
     <div class="testimonials-carousel">
@@ -115,6 +118,15 @@ const testimonials: Testimonial[] = [
     mask-image: linear-gradient(90deg, transparent 0%, white 5%, white 95%, transparent 100%);
     -webkit-mask-image: linear-gradient(90deg, transparent 0%, white 5%, white 95%, transparent 100%);
     z-index: 100;
+    border-radius: var(--radius-xl);
+    transition: box-shadow 0.5s ease;
+  }
+
+  .testimonials-carousel.line-reached {
+    box-shadow:
+      0 0 30px rgba(59, 130, 246, 0.3),
+      0 0 60px rgba(59, 130, 246, 0.15),
+      0 0 90px rgba(59, 130, 246, 0.05);
   }
 
   .testimonials-track {
@@ -217,12 +229,61 @@ const testimonials: Testimonial[] = [
     color: var(--color-gray-400);
     font-style: italic;
     position: relative;
-    z-index: 2;
+    z-index: 100;
+    background: var(--color-white);
+    padding: 0.5rem 1rem;
+    display: inline-block;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: var(--radius-md);
   }
 
   @media (max-width: 768px) {
     .testimonial-card {
       width: 320px;
+    }
+  }
+
+  /* Wrapper avec effet halo pour le header */
+  .testimonials-header-wrapper {
+    position: relative;
+    max-width: 700px;
+    margin: 0 auto var(--spacing-xl) auto;
+    padding: var(--spacing-xl);
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    z-index: 100;
+    transition: border-color 0.5s ease, box-shadow 0.5s ease;
+  }
+
+  .testimonials-header-wrapper .section-header {
+    margin-bottom: 0;
+  }
+
+  .testimonials-header-wrapper.line-reached {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow:
+      0 0 20px rgba(59, 130, 246, 0.3),
+      0 0 40px rgba(59, 130, 246, 0.15),
+      0 0 60px rgba(59, 130, 246, 0.05);
+  }
+
+  .testimonials-glow {
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  @media (max-width: 768px) {
+    .testimonials-header-wrapper {
+      padding: var(--spacing-lg) var(--spacing-md);
     }
   }
 </style>

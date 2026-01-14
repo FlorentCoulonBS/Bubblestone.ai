@@ -29,19 +29,22 @@ const faqs: FAQItem[] = [
 ---
 
 <section id="faq" class="faq section-stone">
-  <div class="faq-stone-texture"></div>
+  <div class="faq-texture"></div>
   <div class="container">
-    <div class="section-header">
-      <span class="section-badge">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        FAQ
-      </span>
-      <h2>Questions fréquentes</h2>
-      <p>Tout ce que vous devez savoir sur nos services et notre accompagnement.</p>
+    <div class="faq-header-wrapper">
+      <div class="faq-glow"></div>
+      <div class="section-header">
+        <span class="section-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          FAQ
+        </span>
+        <h2>Questions fréquentes</h2>
+        <p>Tout ce que vous devez savoir sur nos services et notre accompagnement.</p>
+      </div>
     </div>
 
     <div class="faq-list">
@@ -79,11 +82,11 @@ const faqs: FAQItem[] = [
   .faq {
     padding: var(--spacing-3xl) 0;
     position: relative;
-    z-index: 60;
+    z-index: 1;
   }
 
   /* Stone texture overlay */
-  .faq-stone-texture {
+  .faq-texture {
     position: absolute;
     inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
@@ -103,23 +106,80 @@ const faqs: FAQItem[] = [
     z-index: 1;
   }
 
+  /* Bottom edge shadow */
+  .faq::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+  }
+
   .faq .container {
     position: relative;
     z-index: 100;
   }
 
-  /* Override section-header for dark background */
-  .faq .section-header h2 {
+  /* Wrapper avec effet halo pour le header - style stone */
+  .faq-header-wrapper {
+    position: relative;
+    max-width: 700px;
+    margin: 0 auto var(--spacing-xl) auto;
+    padding: var(--spacing-xl);
+    background: var(--gradient-stone-surface);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--stone-border);
+    border-top-color: rgba(148, 163, 184, 0.2);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    z-index: 100;
+    box-shadow: var(--stone-shadow-inset);
+    transition: border-color 0.5s ease, box-shadow 0.5s ease;
+  }
+
+  .faq-header-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(148, 163, 184, 0.08) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .faq-header-wrapper .section-header {
+    margin-bottom: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  .faq-header-wrapper .section-header h2 {
     color: var(--color-white);
   }
 
-  .faq .section-header p {
-    color: var(--color-gray-400);
+  .faq-header-wrapper .section-header p {
+    color: var(--color-gray-300);
   }
 
-  .faq .section-badge {
+  .faq-header-wrapper .section-badge {
     background: rgba(59, 130, 246, 0.2);
     border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+
+  .faq-header-wrapper.line-reached {
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow:
+      0 0 20px rgba(59, 130, 246, 0.4),
+      0 0 40px rgba(59, 130, 246, 0.2),
+      0 0 60px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(59, 130, 246, 0.2);
+  }
+
+  .faq-glow {
+    display: none;
   }
 
   .faq-list {
@@ -131,32 +191,45 @@ const faqs: FAQItem[] = [
   }
 
   .faq-item {
-    background: linear-gradient(145deg, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.8) 100%);
+    position: relative;
+    background: var(--gradient-stone-surface);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(71, 85, 105, 0.5);
+    border: 1px solid var(--stone-border);
     border-top-color: rgba(148, 163, 184, 0.2);
     border-radius: var(--radius-xl);
     overflow: hidden;
     transition: all var(--transition-slow);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    position: relative;
     z-index: 100;
+    box-shadow: var(--stone-shadow-inset);
+  }
+
+  .faq-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(148, 163, 184, 0.08) 0%, transparent 100%);
+    pointer-events: none;
   }
 
   .faq-item:hover {
-    border-color: rgba(59, 130, 246, 0.5);
+    border-color: rgba(59, 130, 246, 0.6);
     box-shadow:
-      0 0 15px rgba(59, 130, 246, 0.3),
-      0 0 30px rgba(59, 130, 246, 0.15),
-      0 0 45px rgba(59, 130, 246, 0.05);
+      0 0 20px rgba(59, 130, 246, 0.4),
+      0 0 40px rgba(59, 130, 246, 0.2),
+      0 0 60px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(59, 130, 246, 0.2);
   }
 
   .faq-item[open] {
     border-color: rgba(59, 130, 246, 0.6);
     box-shadow:
-      0 0 20px rgba(59, 130, 246, 0.4),
-      0 0 40px rgba(59, 130, 246, 0.2),
-      0 0 60px rgba(59, 130, 246, 0.1);
+      0 0 25px rgba(59, 130, 246, 0.5),
+      0 0 50px rgba(59, 130, 246, 0.25),
+      0 0 75px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(59, 130, 246, 0.3);
   }
 
   .faq-question {
@@ -186,12 +259,17 @@ const faqs: FAQItem[] = [
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(59, 130, 246, 0.2);
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
     border-radius: var(--radius-md);
-    color: var(--color-accent-light);
+    color: var(--color-accent);
     flex-shrink: 0;
     transition: all var(--transition-base);
+  }
+
+  .faq-item:hover .faq-icon {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
   }
 
   .faq-item[open] .faq-icon {
@@ -221,9 +299,9 @@ const faqs: FAQItem[] = [
   .faq-answer p {
     font-size: 0.9375rem;
     line-height: 1.7;
-    color: var(--color-gray-400);
+    color: var(--color-gray-300);
     padding-top: 1rem;
-    border-top: 1px solid rgba(71, 85, 105, 0.5);
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
   }
 
   .faq-cta {
@@ -232,31 +310,23 @@ const faqs: FAQItem[] = [
     align-items: center;
     gap: 1rem;
     margin-top: var(--spacing-xl);
-    padding-top: var(--spacing-xl);
-    border-top: 1px solid rgba(71, 85, 105, 0.5);
+    padding: var(--spacing-xl) var(--spacing-lg);
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
     position: relative;
     z-index: 100;
+    background: transparent;
   }
 
   .faq-cta p {
     font-size: 1rem;
-    color: var(--color-gray-400);
-  }
-
-  /* Style the button for dark background */
-  .faq-cta .btn-secondary {
-    background: rgba(51, 65, 85, 0.6);
-    border-color: rgba(71, 85, 105, 0.6);
-    color: var(--color-white);
-  }
-
-  .faq-cta .btn-secondary:hover {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    color: var(--color-gray-300);
   }
 
   @media (max-width: 768px) {
+    .faq-header-wrapper {
+      padding: var(--spacing-lg) var(--spacing-md);
+    }
+
     .faq-question {
       padding: 1rem 1.25rem;
     }

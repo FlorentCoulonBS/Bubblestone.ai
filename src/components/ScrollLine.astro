@@ -9,11 +9,17 @@
     const scrollIndicator = document.querySelector('.scroll-indicator');
     const ctaContent = document.querySelector('.cta-content');
     const contactForm = document.querySelector('.contact-form-wrapper');
+    const testimonialsCarousel = document.querySelector('.testimonials-carousel');
+    const techHeader = document.querySelector('.tech-header-wrapper');
+    const featuresHeader = document.querySelector('.features-header-wrapper');
+    const servicesHeader = document.querySelector('.services-header-wrapper');
+    const testimonialsHeader = document.querySelector('.testimonials-header-wrapper');
+    const faqHeader = document.querySelector('.faq-header-wrapper');
 
     if (!scrollLine || !scrollIndicator || !contactForm) return;
 
-    // Éléments à éviter (titres centrés)
-    const elementsToAvoid = document.querySelectorAll('.tech-title, .section-header h2, .section-header p');
+    // Éléments à éviter (titres centrés et textes FAQ)
+    const elementsToAvoid = document.querySelectorAll('.tech-title, .section-header h2, .section-header p, .faq-cta p, .faq-cta .btn');
 
     function updateLine() {
       const indicatorRect = scrollIndicator.getBoundingClientRect();
@@ -43,6 +49,78 @@
           ctaContent.classList.add('line-reached');
         } else {
           ctaContent.classList.remove('line-reached');
+        }
+      }
+
+      // Activer l'effet néon sur le header Technologies quand la ligne l'atteint
+      if (techHeader) {
+        const techRect = techHeader.getBoundingClientRect();
+        const techY = techRect.top + window.scrollY;
+        const lineReachesTech = (startY + lineHeight) >= techY;
+        if (lineReachesTech) {
+          techHeader.classList.add('line-reached');
+        } else {
+          techHeader.classList.remove('line-reached');
+        }
+      }
+
+      // Activer l'effet néon sur le header Fonctionnalités quand la ligne l'atteint
+      if (featuresHeader) {
+        const featuresRect = featuresHeader.getBoundingClientRect();
+        const featuresY = featuresRect.top + window.scrollY;
+        const lineReachesFeatures = (startY + lineHeight) >= featuresY;
+        if (lineReachesFeatures) {
+          featuresHeader.classList.add('line-reached');
+        } else {
+          featuresHeader.classList.remove('line-reached');
+        }
+      }
+
+      // Activer l'effet néon sur le header Services quand la ligne l'atteint
+      if (servicesHeader) {
+        const servicesRect = servicesHeader.getBoundingClientRect();
+        const servicesY = servicesRect.top + window.scrollY;
+        const lineReachesServices = (startY + lineHeight) >= servicesY - 10;
+        if (lineReachesServices) {
+          servicesHeader.classList.add('line-reached');
+        } else {
+          servicesHeader.classList.remove('line-reached');
+        }
+      }
+
+      // Activer l'effet néon sur le header Témoignages quand la ligne l'atteint
+      if (testimonialsHeader) {
+        const testimonialsHeaderRect = testimonialsHeader.getBoundingClientRect();
+        const testimonialsHeaderY = testimonialsHeaderRect.top + window.scrollY;
+        const lineReachesTestimonialsHeader = (startY + lineHeight) >= testimonialsHeaderY - 10;
+        if (lineReachesTestimonialsHeader) {
+          testimonialsHeader.classList.add('line-reached');
+        } else {
+          testimonialsHeader.classList.remove('line-reached');
+        }
+      }
+
+      // Activer l'effet néon sur le header FAQ quand la ligne l'atteint
+      if (faqHeader) {
+        const faqHeaderRect = faqHeader.getBoundingClientRect();
+        const faqHeaderY = faqHeaderRect.top + window.scrollY;
+        const lineReachesFaqHeader = (startY + lineHeight) >= faqHeaderY;
+        if (lineReachesFaqHeader) {
+          faqHeader.classList.add('line-reached');
+        } else {
+          faqHeader.classList.remove('line-reached');
+        }
+      }
+
+      // Activer l'effet néon sur les témoignages quand la ligne les atteint
+      if (testimonialsCarousel) {
+        const testimonialsRect = testimonialsCarousel.getBoundingClientRect();
+        const testimonialsY = testimonialsRect.top + window.scrollY;
+        const lineReachesTestimonials = (startY + lineHeight) >= testimonialsY - 10;
+        if (lineReachesTestimonials) {
+          testimonialsCarousel.classList.add('line-reached');
+        } else {
+          testimonialsCarousel.classList.remove('line-reached');
         }
       }
 

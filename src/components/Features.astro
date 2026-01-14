@@ -97,23 +97,28 @@
         <p>Monitoring continu et optimisation des performances.</p>
       </div>
 
-      <!-- Code Preview Card -->
-      <div class="bento-item bento-code">
+      <!-- Code Preview Card - Claude Code Animation -->
+      <div class="bento-item bento-code" id="claude-terminal">
         <div class="code-header">
           <div class="code-dots">
             <span></span><span></span><span></span>
           </div>
-          <span>automation.n8n.json</span>
+          <span class="terminal-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+            Claude Code
+          </span>
         </div>
-        <div class="code-content">
-          <pre><code><span class="code-comment">// Workflow automatisé</span>
-<span class="code-key">"trigger"</span>: <span class="code-string">"schedule"</span>,
-<span class="code-key">"interval"</span>: <span class="code-string">"daily"</span>,
-<span class="code-key">"actions"</span>: [
-  <span class="code-string">"backup_data"</span>,
-  <span class="code-string">"send_report"</span>,
-  <span class="code-string">"notify_team"</span>
-]</code></pre>
+        <div class="code-content terminal-content">
+          <div class="terminal-line prompt-line">
+            <span class="prompt">❯</span>
+            <span class="typed-command" id="typed-command"></span>
+            <span class="cursor" id="cursor">▋</span>
+          </div>
+          <div class="terminal-output" id="terminal-output"></div>
         </div>
         <div class="bento-icon-float">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -417,6 +422,90 @@
   .code-key { color: #60a5fa; }
   .code-string { color: #34d399; }
 
+  /* Claude Code Terminal Styles */
+  .terminal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-gray-300);
+    font-weight: 500;
+  }
+
+  .terminal-title svg {
+    color: #60a5fa;
+  }
+
+  .terminal-content {
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Fira Code', 'SF Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+  }
+
+  .terminal-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .prompt {
+    color: #22c55e;
+    font-weight: 600;
+  }
+
+  .typed-command {
+    color: #f59e0b;
+  }
+
+  .cursor {
+    color: #60a5fa;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .terminal-output {
+    margin-top: 0.75rem;
+    color: var(--color-gray-300);
+  }
+
+  .output-line {
+    opacity: 0;
+    animation: fadeInLine 0.3s ease forwards;
+  }
+
+  .output-line.comment {
+    color: #6b7280;
+  }
+
+  .output-line.success {
+    color: #22c55e;
+  }
+
+  .output-line.key {
+    color: #60a5fa;
+  }
+
+  .output-line.string {
+    color: #34d399;
+  }
+
+  .output-line.info {
+    color: #94a3b8;
+    font-style: italic;
+  }
+
+  @keyframes fadeInLine {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   .bento-icon-float {
     position: absolute;
     top: 1rem;
@@ -509,3 +598,96 @@
     }
   }
 </style>
+
+<script>
+  // Claude Code Terminal Animation
+  document.addEventListener('DOMContentLoaded', () => {
+    const terminal = document.getElementById('claude-terminal');
+    const typedCommand = document.getElementById('typed-command');
+    const cursor = document.getElementById('cursor');
+    const output = document.getElementById('terminal-output');
+
+    if (!terminal || !typedCommand || !output) return;
+
+    const command = '/workflow create backup-automation';
+    const outputLines = [
+      { text: '✓ Creating workflow...', class: 'success', delay: 400 },
+      { text: '', class: '', delay: 200 },
+      { text: '// backup-automation.n8n.json', class: 'comment', delay: 300 },
+      { text: '"trigger": "schedule",', class: 'key', delay: 200 },
+      { text: '"interval": "daily",', class: 'key', delay: 200 },
+      { text: '"actions": [', class: 'key', delay: 150 },
+      { text: '  "backup_data",', class: 'string', delay: 150 },
+      { text: '  "send_report",', class: 'string', delay: 150 },
+      { text: '  "notify_team"', class: 'string', delay: 150 },
+      { text: ']', class: 'key', delay: 200 },
+      { text: '', class: '', delay: 300 },
+      { text: '✓ Workflow deployed successfully!', class: 'success', delay: 400 },
+    ];
+
+    let isAnimating = false;
+    let hasAnimated = false;
+
+    async function typeCommand(text: string, element: HTMLElement) {
+      for (let i = 0; i <= text.length; i++) {
+        element.textContent = text.slice(0, i);
+        await new Promise(r => setTimeout(r, 50 + Math.random() * 30));
+      }
+    }
+
+    async function showOutput() {
+      let totalDelay = 0;
+      for (const line of outputLines) {
+        totalDelay += line.delay;
+        setTimeout(() => {
+          const div = document.createElement('div');
+          div.className = `output-line ${line.class}`;
+          div.textContent = line.text || '\u00A0';
+          output.appendChild(div);
+        }, totalDelay);
+      }
+    }
+
+    async function runAnimation() {
+      if (isAnimating) return;
+      isAnimating = true;
+
+      // Reset
+      typedCommand.textContent = '';
+      output.innerHTML = '';
+      if (cursor) cursor.style.display = 'inline';
+
+      // Type command
+      await typeCommand(command, typedCommand);
+
+      // Hide cursor after typing
+      await new Promise(r => setTimeout(r, 300));
+      if (cursor) cursor.style.display = 'none';
+
+      // Show output
+      await showOutput();
+
+      isAnimating = false;
+      hasAnimated = true;
+    }
+
+    // Run animation when element comes into view
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !hasAnimated) {
+          setTimeout(runAnimation, 500);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    observer.observe(terminal);
+
+    // Replay on hover (after initial animation)
+    terminal.addEventListener('mouseenter', () => {
+      if (hasAnimated && !isAnimating) {
+        hasAnimated = false;
+        runAnimation();
+      }
+    });
+  });
+</script>

@@ -1,4 +1,5 @@
 ---
+const base = import.meta.env.BASE_URL;
 ---
 
 <section id="hero" class="hero">
@@ -59,7 +60,7 @@
           muted
           playsinline
         >
-          <source src="/sphere.webm" type="video/webm" />
+          <source src={`${base}sphere.webm`} type="video/webm" />
         </video>
       </div>
     </div>

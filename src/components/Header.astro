@@ -115,8 +115,8 @@ const base = import.meta.env.BASE_URL;
   }
 
   #logo-blob-canvas {
-    width: 100%;
-    height: 100%;
+    width: 36px;
+    height: 36px;
     display: block;
     cursor: pointer;
   }
@@ -392,8 +392,9 @@ const base = import.meta.env.BASE_URL;
     centerX: number = 0;
     centerY: number = 0;
     radius: number = 0;
-    numPoints: number = 16;
+    numPoints: number = 24;
     time: number = 0;
+    scale: number = 3; // Render at 3x resolution for smooth edges
 
     constructor(canvas: HTMLCanvasElement, video: HTMLVideoElement) {
       this.canvas = canvas;
@@ -410,16 +411,14 @@ const base = import.meta.env.BASE_URL;
     }
 
     resize() {
-      const container = this.canvas.parentElement;
-      if (container) {
-        const size = Math.min(container.clientWidth, container.clientHeight);
-        this.canvas.width = size;
-        this.canvas.height = size;
-        this.centerX = size / 2;
-        this.centerY = size / 2;
-        this.radius = size * 0.42;
-        this.initPoints();
-      }
+      const displaySize = 36;
+      const size = displaySize * this.scale; // Internal render size (108px)
+      this.canvas.width = size;
+      this.canvas.height = size;
+      this.centerX = size / 2;
+      this.centerY = size / 2;
+      this.radius = size * 0.42;
+      this.initPoints();
     }
 
     initPoints() {

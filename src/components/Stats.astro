@@ -6,10 +6,10 @@ interface Stat {
 }
 
 const stats: Stat[] = [
-  { value: '50', suffix: '+', label: 'Entreprises accompagnées' },
+  { value: '100', suffix: '+', label: 'Agents déployés' },
   { value: '99.9', suffix: '%', label: 'Disponibilité garantie' },
-  { value: '500', suffix: '+', label: 'Workflows automatisés' },
-  { value: '24', suffix: '/7', label: 'Support technique' },
+  { value: '130', suffix: '+', label: 'Workflows automatisés' },
+  { value: '24', suffix: '/7', label: 'Disponibilité technique' },
 ];
 ---
 
@@ -27,7 +27,6 @@ const stats: Stat[] = [
         </div>
       ))}
     </div>
-    <p class="stats-disclaimer">* Chiffres basés sur nos clients actifs</p>
   </div>
 </section>
 
@@ -128,16 +127,6 @@ const stats: Stat[] = [
     font-size: 0.9375rem;
     color: var(--color-gray-400);
     font-weight: 500;
-  }
-
-  .stats-disclaimer {
-    text-align: center;
-    margin-top: var(--spacing-lg);
-    font-size: 0.8125rem;
-    color: var(--color-gray-500);
-    font-style: italic;
-    position: relative;
-    z-index: 1;
   }
 
   @media (max-width: 1024px) {

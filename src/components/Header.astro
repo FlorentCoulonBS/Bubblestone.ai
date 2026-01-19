@@ -16,7 +16,18 @@ const base = import.meta.env.BASE_URL;
 <header class="header">
   <div class="header-container">
     <a href={base} class="logo">
-      <img src={`${base}logo.png`} alt="BubbleStone.ai" class="logo-img" />
+      <div class="logo-bubble-container">
+        <canvas id="logo-blob-canvas"></canvas>
+        <video
+          id="logo-sphere-video"
+          autoplay
+          loop
+          muted
+          playsinline
+        >
+          <source src={`${base}sphere.webm`} type="video/webm" />
+        </video>
+      </div>
       <span class="logo-text">BubbleStone<span class="logo-accent">.ai</span></span>
     </a>
 
@@ -96,15 +107,30 @@ const base = import.meta.env.BASE_URL;
     text-decoration: none;
   }
 
-  .logo-img {
-    height: 32px;
-    width: auto;
-    object-fit: contain;
-    transition: transform var(--transition-base);
+  .logo-bubble-container {
+    width: 36px;
+    height: 36px;
+    position: relative;
+    flex-shrink: 0;
   }
 
-  .logo:hover .logo-img {
-    transform: scale(1.03);
+  #logo-blob-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: pointer;
+  }
+
+  #logo-sphere-video {
+    display: none;
+  }
+
+  .logo:hover .logo-bubble-container {
+    transform: scale(1.05);
+  }
+
+  .logo-bubble-container {
+    transition: transform var(--transition-base);
   }
 
   .logo-text {
@@ -322,4 +348,200 @@ const base = import.meta.env.BASE_URL;
       document.body.style.overflow = '';
     });
   });
+
+  // Mini Blob Animation for Logo
+  class MiniPoint {
+    x: number;
+    y: number;
+    originX: number;
+    originY: number;
+    velocity: number = 0;
+    acceleration: number = 0;
+    elasticity: number = 0.001;
+    friction: number = 0.0085;
+
+    constructor(x: number, y: number) {
+      this.x = x;
+      this.y = y;
+      this.originX = x;
+      this.originY = y;
+    }
+
+    update() {
+      const dx = this.originX - this.x;
+      const dy = this.originY - this.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      this.acceleration += dist * this.elasticity;
+      this.velocity += this.acceleration;
+      this.velocity *= (1 - this.friction);
+
+      const angle = Math.atan2(dy, dx);
+      this.x += Math.cos(angle) * this.velocity;
+      this.y += Math.sin(angle) * this.velocity;
+
+      this.acceleration = 0;
+    }
+  }
+
+  class MiniBlob {
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    video: HTMLVideoElement;
+    points: MiniPoint[] = [];
+    centerX: number = 0;
+    centerY: number = 0;
+    radius: number = 0;
+    numPoints: number = 16;
+    time: number = 0;
+
+    constructor(canvas: HTMLCanvasElement, video: HTMLVideoElement) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d')!;
+      this.video = video;
+      this.resize();
+      this.initPoints();
+
+      window.addEventListener('resize', () => this.resize());
+
+      // Subtle hover effect
+      this.canvas.addEventListener('mouseenter', () => this.onHover());
+      this.canvas.addEventListener('mouseleave', () => this.onLeave());
+    }
+
+    resize() {
+      const container = this.canvas.parentElement;
+      if (container) {
+        const size = Math.min(container.clientWidth, container.clientHeight);
+        this.canvas.width = size;
+        this.canvas.height = size;
+        this.centerX = size / 2;
+        this.centerY = size / 2;
+        this.radius = size * 0.42;
+        this.initPoints();
+      }
+    }
+
+    initPoints() {
+      this.points = [];
+      for (let i = 0; i < this.numPoints; i++) {
+        const angle = (i / this.numPoints) * Math.PI * 2;
+        const x = this.centerX + Math.cos(angle) * this.radius;
+        const y = this.centerY + Math.sin(angle) * this.radius;
+        this.points.push(new MiniPoint(x, y));
+      }
+    }
+
+    onHover() {
+      // Gentle push outward on hover
+      this.points.forEach((point, i) => {
+        const angle = (i / this.numPoints) * Math.PI * 2;
+        point.x += Math.cos(angle) * 1.5;
+        point.y += Math.sin(angle) * 1.5;
+      });
+    }
+
+    onLeave() {
+      // Points return naturally via spring physics
+    }
+
+    draw() {
+      const ctx = this.ctx;
+      const size = this.canvas.width;
+
+      ctx.clearRect(0, 0, size, size);
+
+      // Subtle ambient animation
+      this.time += 0.02;
+      this.points.forEach((point, i) => {
+        const angle = (i / this.numPoints) * Math.PI * 2;
+        const wave = Math.sin(this.time + i * 0.5) * 0.3;
+        point.originX = this.centerX + Math.cos(angle) * (this.radius + wave);
+        point.originY = this.centerY + Math.sin(angle) * (this.radius + wave);
+        point.update();
+      });
+
+      ctx.save();
+      ctx.beginPath();
+
+      const pts = this.points;
+      const len = pts.length;
+
+      const firstMidX = (pts[0].x + pts[len - 1].x) / 2;
+      const firstMidY = (pts[0].y + pts[len - 1].y) / 2;
+      ctx.moveTo(firstMidX, firstMidY);
+
+      for (let i = 0; i < len; i++) {
+        const p1 = pts[i];
+        const p2 = pts[(i + 1) % len];
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
+      }
+
+      ctx.closePath();
+      ctx.clip();
+
+      if (this.video.readyState >= this.video.HAVE_CURRENT_DATA) {
+        const vw = this.video.videoWidth;
+        const vh = this.video.videoHeight;
+        const padding = 1.6;
+        const scale = Math.max(size / vw, size / vh) * padding;
+        const w = vw * scale;
+        const h = vh * scale;
+        const x = (size - w) / 2;
+        const y = (size - h) / 2;
+
+        ctx.filter = 'grayscale(100%) brightness(1.1) contrast(0.9)';
+        ctx.drawImage(this.video, x, y, w, h);
+        ctx.filter = 'none';
+
+        ctx.globalCompositeOperation = 'color';
+        const gradient = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size * 0.5);
+        gradient.addColorStop(0, 'rgba(120, 180, 255, 1)');
+        gradient.addColorStop(0.6, 'rgba(59, 130, 246, 1)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 1)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, y, w, h);
+
+        ctx.globalCompositeOperation = 'soft-light';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillRect(x, y, w, h);
+
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      ctx.restore();
+
+      requestAnimationFrame(() => this.draw());
+    }
+
+    start() {
+      this.draw();
+    }
+  }
+
+  // Initialize mini blob
+  const logoCanvas = document.getElementById('logo-blob-canvas') as HTMLCanvasElement;
+  const logoVideo = document.getElementById('logo-sphere-video') as HTMLVideoElement;
+
+  if (logoCanvas && logoVideo) {
+    const miniBlob = new MiniBlob(logoCanvas, logoVideo);
+
+    const playLogoVideo = () => {
+      logoVideo.play().catch(() => {
+        document.addEventListener('click', () => logoVideo.play(), { once: true });
+      });
+    };
+
+    logoVideo.addEventListener('loadeddata', () => {
+      playLogoVideo();
+      miniBlob.start();
+    });
+
+    if (logoVideo.readyState >= logoVideo.HAVE_CURRENT_DATA) {
+      playLogoVideo();
+      miniBlob.start();
+    }
+  }
 </script>

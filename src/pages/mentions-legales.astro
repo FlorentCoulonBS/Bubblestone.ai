@@ -1,0 +1,336 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<Layout title="Mentions légales" description="Mentions légales de BubbleStone.ai">
+  <Header />
+  <div class="page-wrapper">
+    <main class="legal-page">
+      <div class="legal-hero">
+        <div class="container">
+          <a href={base} class="back-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Retour à l'accueil
+          </a>
+          <h1>Mentions légales</h1>
+          <p class="legal-subtitle">Informations légales relatives au site BubbleStone.ai</p>
+        </div>
+      </div>
+
+      <div class="legal-content">
+        <div class="container">
+          <div class="legal-card">
+            <section class="legal-section">
+              <h2>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Éditeur du site
+              </h2>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Raison sociale</span>
+                  <span class="info-value">BubbleStone.ai</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Forme juridique</span>
+                  <span class="info-value">Micro-entreprise</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Responsable</span>
+                  <span class="info-value">Florent Coulon</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Adresse</span>
+                  <span class="info-value">Saint-Sulpice-et-Cameyrac, France</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Email</span>
+                  <span class="info-value"><a href="mailto:florent.coulon@bubblestone.ai">florent.coulon@bubblestone.ai</a></span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Téléphone</span>
+                  <span class="info-value"><a href="tel:+33674470593">+33 6 74 47 05 93</a></span>
+                </div>
+              </div>
+            </section>
+
+            <section class="legal-section">
+              <h2>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                Hébergement
+              </h2>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Hébergeur</span>
+                  <span class="info-value">GitHub Pages</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Société</span>
+                  <span class="info-value">GitHub, Inc.</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Adresse</span>
+                  <span class="info-value">88 Colin P Kelly Jr St, San Francisco, CA 94107, USA</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="legal-section">
+              <h2>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Propriété intellectuelle
+              </h2>
+              <p>L'ensemble du contenu de ce site (textes, images, vidéos, logos, icônes, sons, logiciels, etc.) est la propriété exclusive de BubbleStone.ai ou de ses partenaires et est protégé par les lois françaises et internationales relatives à la propriété intellectuelle.</p>
+              <p>Toute reproduction, représentation, modification, publication, adaptation de tout ou partie des éléments du site, quel que soit le moyen ou le procédé utilisé, est interdite, sauf autorisation écrite préalable de BubbleStone.ai.</p>
+              <p>Toute exploitation non autorisée du site ou de l'un des éléments qu'il contient sera considérée comme constitutive d'une contrefaçon et poursuivie conformément aux dispositions des articles L.335-2 et suivants du Code de Propriété Intellectuelle.</p>
+            </section>
+
+            <section class="legal-section">
+              <h2>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Limitation de responsabilité
+              </h2>
+              <p>BubbleStone.ai s'efforce d'assurer au mieux de ses possibilités l'exactitude et la mise à jour des informations diffusées sur ce site, dont elle se réserve le droit de corriger, à tout moment et sans préavis, le contenu.</p>
+              <p>BubbleStone.ai décline toute responsabilité :</p>
+              <ul>
+                <li>Pour toute imprécision, inexactitude ou omission portant sur des informations disponibles sur le site</li>
+                <li>Pour tous dommages résultant d'une intrusion frauduleuse d'un tiers ayant entraîné une modification des informations mises à la disposition sur le site</li>
+                <li>Et plus généralement, pour tous dommages, directs ou indirects, qu'elles qu'en soient les causes, origines, natures ou conséquences</li>
+              </ul>
+            </section>
+
+            <section class="legal-section">
+              <h2>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                Liens hypertextes
+              </h2>
+              <p>Le site BubbleStone.ai peut contenir des liens hypertextes vers d'autres sites. BubbleStone.ai n'exerce aucun contrôle sur ces sites et décline toute responsabilité quant à leur contenu ou aux éventuels collectes et traitements de données personnelles effectués par ces sites.</p>
+            </section>
+
+            <section class="legal-section">
+              <h2>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                Droit applicable
+              </h2>
+              <p>Les présentes mentions légales sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents.</p>
+              <p class="update-date">Dernière mise à jour : Janvier 2026</p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+    <Footer />
+  </div>
+</Layout>
+
+<style>
+  .page-wrapper {
+    position: relative;
+  }
+
+  .legal-page {
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Hero Section */
+  .legal-hero {
+    padding: calc(var(--spacing-3xl) + 80px) 0 var(--spacing-2xl);
+    background: linear-gradient(180deg, var(--stone-slate) 0%, var(--stone-dark) 100%);
+    position: relative;
+  }
+
+  .legal-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+  }
+
+  .legal-hero .container {
+    position: relative;
+    z-index: 1;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-gray-400);
+    font-size: 0.9375rem;
+    margin-bottom: var(--spacing-lg);
+    transition: color var(--transition-base);
+  }
+
+  .back-link:hover {
+    color: var(--color-accent);
+  }
+
+  .legal-hero h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    color: var(--color-white);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .legal-subtitle {
+    font-size: 1.125rem;
+    color: var(--color-gray-400);
+    max-width: 600px;
+  }
+
+  /* Content Section */
+  .legal-content {
+    padding: var(--spacing-2xl) 0 var(--spacing-3xl);
+    background: var(--color-gray-50);
+  }
+
+  .legal-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .legal-section {
+    padding-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+    border-bottom: 1px solid var(--color-gray-200);
+  }
+
+  .legal-section:last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+
+  .legal-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .legal-section h2 svg {
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  .legal-section p {
+    color: var(--color-gray-600);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+  }
+
+  .legal-section p:last-child {
+    margin-bottom: 0;
+  }
+
+  .legal-section ul {
+    color: var(--color-gray-600);
+    line-height: 1.8;
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .legal-section li {
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-section a {
+    color: var(--color-accent);
+    transition: color var(--transition-base);
+  }
+
+  .legal-section a:hover {
+    color: var(--color-primary);
+  }
+
+  /* Info Grid */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+
+  .info-item {
+    padding: 1rem 1.25rem;
+    background: var(--color-gray-50);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-gray-100);
+  }
+
+  .info-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-gray-500);
+    margin-bottom: 0.25rem;
+  }
+
+  .info-value {
+    font-weight: 500;
+    color: var(--color-primary);
+  }
+
+  .info-value a {
+    color: var(--color-accent);
+  }
+
+  .update-date {
+    font-size: 0.875rem;
+    color: var(--color-gray-400);
+    font-style: italic;
+    margin-top: var(--spacing-md);
+  }
+
+  @media (max-width: 768px) {
+    .legal-hero {
+      padding: calc(var(--spacing-2xl) + 80px) 0 var(--spacing-xl);
+    }
+
+    .legal-card {
+      padding: var(--spacing-lg);
+    }
+
+    .legal-section h2 {
+      font-size: 1.25rem;
+    }
+
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

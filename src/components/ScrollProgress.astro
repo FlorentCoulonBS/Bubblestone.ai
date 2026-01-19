@@ -1,0 +1,110 @@
+---
+// Scroll Line - A thin vertical line that descends through the page
+// Goes BEHIND all content
+---
+
+<div class="scroll-line-container" id="scroll-line-container">
+  <div class="scroll-line-track"></div>
+  <div class="scroll-line-fill" id="scroll-line-fill"></div>
+</div>
+
+<style>
+  .scroll-line-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+    width: 2px;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5; /* Above section backgrounds, below content */
+  }
+
+  .scroll-line-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(59, 130, 246, 0.08);
+  }
+
+  .scroll-line-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0;
+    background: linear-gradient(180deg,
+      rgba(59, 130, 246, 0.6) 0%,
+      rgba(96, 165, 250, 0.9) 50%,
+      rgba(59, 130, 246, 0.6) 100%
+    );
+    box-shadow:
+      0 0 8px rgba(59, 130, 246, 0.8),
+      0 0 16px rgba(59, 130, 246, 0.5),
+      0 0 24px rgba(59, 130, 246, 0.3);
+    transition: height 0.05s linear;
+  }
+
+  /* Hide on mobile */
+  @media (max-width: 768px) {
+    .scroll-line-container {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const scrollLineFill = document.getElementById('scroll-line-fill');
+    const container = document.getElementById('scroll-line-container');
+
+    // Get the "Défiler" element as starting point
+    const heroScrollIndicator = document.querySelector('.scroll-indicator');
+    // Get the CTA section as ending point
+    const ctaSection = document.querySelector('.cta');
+
+    if (!heroScrollIndicator || !ctaSection || !scrollLineFill || !container) {
+      console.log('Missing elements for scroll line');
+      return;
+    }
+
+    function updateScrollLine() {
+      const scrollTop = window.scrollY;
+      const viewportHeight = window.innerHeight;
+
+      // Calculate start position (from "Défiler" element)
+      const startRect = heroScrollIndicator.getBoundingClientRect();
+      const startY = startRect.bottom + scrollTop;
+
+      // Calculate end position (CTA section bottom)
+      const endRect = ctaSection.getBoundingClientRect();
+      const endY = endRect.bottom + scrollTop;
+
+      // Total distance the line needs to travel
+      const totalDistance = endY - startY;
+
+      // Current scroll position relative to start
+      const currentScrollFromStart = scrollTop + viewportHeight * 0.5 - startY;
+
+      // Calculate percentage of line to show
+      let linePercent = (currentScrollFromStart / totalDistance) * 100;
+      linePercent = Math.max(0, Math.min(100, linePercent));
+
+      // Position the container
+      container.style.top = `${startY}px`;
+      container.style.height = `${totalDistance}px`;
+
+      // Update the fill height
+      scrollLineFill.style.height = `${linePercent}%`;
+    }
+
+    // Listen to scroll
+    window.addEventListener('scroll', updateScrollLine, { passive: true });
+    window.addEventListener('resize', updateScrollLine, { passive: true });
+
+    // Initial update
+    setTimeout(updateScrollLine, 100);
+  });
+</script>

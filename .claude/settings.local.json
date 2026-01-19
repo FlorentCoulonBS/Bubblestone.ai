@@ -29,7 +29,23 @@
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_run_code",
       "mcp__playwright__browser_click",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: BubbleStone.ai website with Stone/Crystal design system\n\n- Hero section with animated blue bubble \\(Canvas 2D physics\\)\n- Stone effect on dark sections \\(Stats, FAQ, Footer\\)\n- Crystal glassmorphism on light section cards\n- Neon glow hover effect on all interactive elements\n- Responsive design with Astro framework\n- Color scheme: Blue \\(#3b82f6\\) & White with slate accents\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(gh auth login:*)",
+      "Bash(git config:*)",
+      "Bash(cmdkey /delete:git:https://github.com)",
+      "Bash(cmdkey /delete:LegacyGeneric:target=git:https://github.com)",
+      "mcp__playwright__browser_press_key",
+      "Bash(git commit:*)",
+      "mcp__playwright__browser_close",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(gh api:*)",
+      "Bash(gh repo view:*)",
+      "WebFetch(domain:florentcoulonbs.github.io)",
+      "Bash(claude --version:*)"
     ]
   }
 }

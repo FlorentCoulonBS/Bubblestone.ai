@@ -1,12 +1,21 @@
-name: Deploy to VPS
+name: Build & Deploy
 
 on:
   push:
     branches: [main, master]
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deploy target'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,16 +33,67 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify build (check 6 team members)
+        run: |
+          COUNT=$(grep -o 'team-name' dist/teams/index.html | wc -l)
+          echo "Found $COUNT team members"
+          if [ "$COUNT" -lt 6 ]; then
+            echo "ERROR: Expected 6 team members, found $COUNT. Build is incomplete!"
+            exit 1
+          fi
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'staging')
+    environment: staging
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
       - name: Install SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          eval $(ssh-agent -s)
-          ssh-add ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Deploy files
-        run: rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/bubblestone/dist/
+      - name: Deploy to staging
+        run: rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key" dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/bubblestone-staging/dist/
 
-      - name: Restart container
-        run: ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "docker restart bubblestone-site"
+      - name: Restart staging container
+        run: ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "docker restart bubblestone-staging"
+
+  deploy-production:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production'
+    environment: production
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy to production
+        run: rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key" dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/bubblestone/dist/
+
+      - name: Restart production container
+        run: ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "docker restart bubblestone-site"

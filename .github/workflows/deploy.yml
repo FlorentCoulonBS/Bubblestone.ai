@@ -33,12 +33,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Verify build (check 6 team members)
+      - name: Verify build (team members count)
         run: |
-          COUNT=$(grep -o 'team-name' dist/teams/index.html | wc -l)
-          echo "Found $COUNT team members"
-          if [ "$COUNT" -lt 6 ]; then
-            echo "ERROR: Expected 6 team members, found $COUNT. Build is incomplete!"
+          EXPECTED=$(grep -c "    name:" src/pages/teams.astro)
+          ACTUAL=$(grep -o "team-name" dist/teams/index.html | wc -l)
+          echo "Source: $EXPECTED members | Build: $ACTUAL members"
+          if [ "$ACTUAL" -ne "$EXPECTED" ]; then
+            echo "ERROR: Build has $ACTUAL members but source has $EXPECTED!"
             exit 1
           fi
 

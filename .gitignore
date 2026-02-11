@@ -30,3 +30,7 @@ npm-debug.log*
 .vercel/
 .netlify/
 nul
+
+# Deploy scripts (server-side only)
+deploy.sh
+prod.sh

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - AI Trend Monitor{% endblock %}
+{% block content %}
+<hgroup>
+  <h2>AI Trend Monitor</h2>
+  <p>{{ topics|length }} topics in last {{ hours }}h
+    {% if hours != 24 %} | <a href="/?hours=24">24h</a>{% endif %}
+    {% if hours != 48 %} | <a href="/?hours=48">48h</a>{% endif %}
+    {% if hours != 6 %} | <a href="/?hours=6">6h</a>{% endif %}
+  </p>
+</hgroup>
+
+<table role="grid">
+  <thead>
+    <tr>
+      <th>Score</th>
+      <th>Topic</th>
+      <th>Sources</th>
+      <th>Posts</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for topic in topics %}
+    <tr class="topic-row" data-id="{{ topic.id }}" onclick="toggleDetail(this)">
+      <td>
+        <span class="score-badge {% if topic.score >= 7 %}score-high{% elif topic.score >= 4 %}score-mid{% else %}score-low{% endif %}">
+          {{ "%.1f"|format(topic.score) }}
+        </span>
+      </td>
+      <td>{{ topic.title }}</td>
+      <td>
+        {% for s in topic.sources.split(',') %}
+          {% set src = s.strip() %}
+          {% if src == 'reddit' %}<span class="source-pill src-R">R</span>
+          {% elif src == 'rss' %}<span class="source-pill src-F">F</span>
+          {% elif src == 'gmail' %}<span class="source-pill src-G">G</span>
+          {% elif src == 'twitter' %}<span class="source-pill src-X">X</span>
+          {% elif src == 'youtube' %}<span class="source-pill src-Y">Y</span>
+          {% elif src %}<span class="source-pill">{{ src[:1]|upper }}</span>
+          {% endif %}
+        {% endfor %}
+      </td>
+      <td>{{ topic.post_count }}</td>
+      <td>
+        <button class="dismiss-btn outline secondary" onclick="event.stopPropagation(); dismiss({{ topic.id }}, 'read', this)">Read</button>
+        <button class="dismiss-btn outline secondary" onclick="event.stopPropagation(); dismiss({{ topic.id }}, 'not_interested', this)">Skip</button>
+      </td>
+    </tr>
+    <tr class="topic-detail" id="detail-{{ topic.id }}">
+      <td colspan="5">
+        <div class="stats">
+          <strong>Velocity:</strong> 1h={{ "%.1f"|format(topic.velocity_1h) }} | 6h={{ "%.1f"|format(topic.velocity_6h) }} | 24h={{ "%.1f"|format(topic.velocity_24h) }}<br>
+          <strong>Engagement:</strong> {{ topic.upvotes_total }} upvotes, {{ topic.comments_total }} comments<br>
+          <strong>Subreddits:</strong> {{ topic.subreddits }}<br>
+          <strong>First seen:</strong> {{ topic.first_seen.strftime('%Y-%m-%d %H:%M') if topic.first_seen else 'N/A' }} |
+          <strong>Last seen:</strong> {{ topic.last_seen.strftime('%Y-%m-%d %H:%M') if topic.last_seen else 'N/A' }}<br>
+          {% if topic.url %}<a href="{{ topic.url }}" target="_blank">Original link</a>{% endif %}
+          | <a href="/topic/{{ topic.id }}">Full detail</a>
+        </div>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No topics found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleDetail(row) {
+  const id = row.dataset.id;
+  const detail = document.getElementById('detail-' + id);
+  detail.classList.toggle('open');
+}
+
+function dismiss(id, action, btn) {
+  const row = btn.closest('tr');
+  const detailRow = document.getElementById('detail-' + id);
+  fetch('/api/dismiss/' + id, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: action})
+  }).then(r => r.json()).then(data => {
+    if (data.ok) {
+      row.classList.add('fade-out');
+      if (detailRow) detailRow.classList.add('fade-out');
+      setTimeout(() => {
+        row.remove();
+        if (detailRow) detailRow.remove();
+      }, 400);
+    }
+  });
+}
+</script>
+{% endblock %}

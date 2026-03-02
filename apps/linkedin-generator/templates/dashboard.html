@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="dashboard-header">
+    <h1>Posts LinkedIn</h1>
+    <div class="stats">
+        <span class="stat" title="Total">📊 {{ counts.get('total', 0) }}</span>
+        <span class="stat proposed" title="Proposés">💡 {{ counts.get('proposed', 0) }}</span>
+        <span class="stat validated" title="Validés">✅ {{ counts.get('validated', 0) }}</span>
+        <span class="stat published" title="Publiés">🚀 {{ counts.get('published', 0) }}</span>
+        <span class="stat rejected" title="Rejetés">❌ {{ counts.get('rejected', 0) }}</span>
+    </div>
+</div>
+
+<div class="filters">
+    <a href="{{ url_for('dashboard') }}" class="filter-btn {% if not current_status %}active{% endif %}">Tous</a>
+    <a href="{{ url_for('dashboard', status='proposed') }}" class="filter-btn {% if current_status == 'proposed' %}active{% endif %}">💡 Proposés</a>
+    <a href="{{ url_for('dashboard', status='validated') }}" class="filter-btn {% if current_status == 'validated' %}active{% endif %}">✅ Validés</a>
+    <a href="{{ url_for('dashboard', status='published') }}" class="filter-btn {% if current_status == 'published' %}active{% endif %}">🚀 Publiés</a>
+    <a href="{{ url_for('dashboard', status='rejected') }}" class="filter-btn {% if current_status == 'rejected' %}active{% endif %}">❌ Rejetés</a>
+</div>
+
+{% if posts %}
+<div class="posts-grid">
+    {% for post in posts %}
+    <div class="post-card status-{{ post.status }}" data-id="{{ post.id }}">
+        <div class="post-meta">
+            <span class="post-date">{{ post.created_at[:16] }}</span>
+            <span class="post-status badge-{{ post.status }}">{{ post.status }}</span>
+            {% if post.topic_score %}
+            <span class="post-score">🔥 {{ "%.0f"|format(post.topic_score) }}</span>
+            {% endif %}
+        </div>
+        <h3 class="post-title">
+            <a href="{{ url_for('post_detail', post_id=post.id) }}">{{ post.topic_title }}</a>
+        </h3>
+        <div class="post-preview">{{ post.post_text[:200] }}{% if post.post_text|length > 200 %}...{% endif %}</div>
+        
+        {% if post.image_path %}
+        <div class="post-thumbnail">
+            <img src="{{ url_for('serve_image', filename=post.image_path) }}" alt="Post image" loading="lazy">
+        </div>
+        {% endif %}
+
+        <div class="post-actions">
+            {% if post.status == 'proposed' %}
+            <button class="btn btn-sm btn-validate" onclick="validatePost({{ post.id }})">✅ Valider</button>
+            <button class="btn btn-sm btn-reject" onclick="rejectPost({{ post.id }})">❌ Rejeter</button>
+            {% elif post.status == 'validated' %}
+            <button class="btn btn-sm btn-publish" onclick="publishPost({{ post.id }})">🚀 Publier</button>
+            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-sm btn-ghost">Voir</a>
+            {% endif %}
+            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-sm btn-ghost">Détail →</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>Aucun post{% if current_status %} avec le statut "{{ current_status }}"{% endif %}.</p>
+    <p class="text-muted">Les propositions sont générées automatiquement chaque soir à 20h.</p>
+</div>
+{% endif %}
+
+{% endblock %}

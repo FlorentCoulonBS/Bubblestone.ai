@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Créer une offre — {{ audit.domain }} — BubbleStone.ai</title>
+<link rel="icon" type="image/svg+xml" href="https://bubblestone.ai/favicon.svg">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#F3F4F6;color:#1F2937;font-size:14px}
+.header{background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:24px 32px}
+.header h1{font-size:22px;font-weight:800}
+.header p{opacity:0.85;margin-top:4px}
+.container{max-width:700px;margin:30px auto;padding:0 24px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);padding:28px;margin-bottom:20px}
+.card h2{font-size:18px;font-weight:700;color:#2563EB;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #E5E7EB}
+label{display:block;font-weight:600;margin-bottom:4px;color:#374151;font-size:13px}
+input,textarea,select{width:100%;padding:10px 12px;border:2px solid #E5E7EB;border-radius:8px;font-size:14px;margin-bottom:16px;font-family:inherit}
+input:focus,textarea:focus{border-color:#2563EB;outline:none}
+textarea{min-height:100px;resize:vertical}
+.row{display:flex;gap:16px}
+.row>div{flex:1}
+.preview{background:#F0FDF4;border:2px solid #10B981;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px}
+.preview .amount{font-size:42px;font-weight:800;color:#059669}
+.preview .sub{color:#6B7280;font-size:13px;margin-top:4px}
+.btn{padding:12px 28px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer;text-decoration:none;display:inline-block}
+.btn-submit{background:linear-gradient(135deg,#10B981,#059669);color:#fff}
+.btn-cancel{background:#F3F4F6;color:#374151;margin-right:12px}
+.info{background:#DBEAFE;border-radius:8px;padding:14px 16px;font-size:13px;color:#1E40AF;margin-bottom:20px}
+</style>
+<script>
+function updatePreview() {
+  const tjm = parseFloat(document.getElementById('tjm').value) || 0;
+  const days = parseFloat(document.getElementById('days').value) || 0;
+  const total = tjm * days;
+  document.getElementById('preview-amount').textContent = total.toLocaleString('fr-FR') + ' €';
+  document.getElementById('preview-detail').textContent = days + 'j × ' + tjm + '€/j';
+}
+</script>
+</head>
+<body>
+<div class="header">
+  <div style="display:flex;align-items:center;gap:12px"><svg viewBox="0 0 32 32" style="width:40px;height:40px;filter:drop-shadow(0 0 8px rgba(74,158,173,0.5));pointer-events:none"><defs><radialGradient id="sp" cx="35%" cy="35%" r="60%"><stop offset="0%" stop-color="#6ec6d6"/><stop offset="50%" stop-color="#2a8a9a"/><stop offset="100%" stop-color="#0d3a45"/></radialGradient></defs><circle cx="16" cy="16" r="15" fill="url(#sp)"><animate attributeName="r" values="14.5;15.5;14.5" dur="3s" repeatCount="indefinite"/></circle><circle cx="11" cy="11" r="4" fill="rgba(255,255,255,0.15)"><animate attributeName="r" values="3.5;4.5;3.5" dur="3s" repeatCount="indefinite"/></circle></svg><h1>Créer une offre commerciale</h1></div>
+  <p>Audit #{{ audit.id }} — {{ audit.domain }}</p>
+</div>
+
+<div class="container">
+  {% if migration %}
+  <div class="info">
+    📊 <strong>Données de migration détectées :</strong> {{ migration.get('score_label', 'N/A') }}, ~{{ migration.get('total_days', '?') }} jours estimés, {{ migration.get('page_stats', {}).get('total', '?') }} pages, {{ migration.get('features', [])|length }} fonctionnalités détectées.
+  </div>
+  {% endif %}
+
+  <form method="POST">
+    <div class="card">
+      <h2>📋 Tarification</h2>
+      <div class="row">
+        <div>
+          <label for="tjm">TJM (€/jour)</label>
+          <input type="number" id="tjm" name="tjm" value="600" step="50" onchange="updatePreview()" oninput="updatePreview()">
+        </div>
+        <div>
+          <label for="days">Nombre de jours</label>
+          <input type="number" id="days" name="days" value="{{ migration.get('total_days', 10) }}" step="0.5" onchange="updatePreview()" oninput="updatePreview()">
+        </div>
+      </div>
+
+      <div class="preview">
+        <div id="preview-amount" class="amount">{{ (600 * (migration.get('total_days', 10)))|int|string }} €</div>
+        <div id="preview-detail" class="sub">{{ migration.get('total_days', 10) }}j × 600€/j</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📝 Description de l'offre</h2>
+      <label for="description">Contexte et objectifs</label>
+      <textarea id="description" name="description" placeholder="Migration du site {{ audit.domain }} vers une solution moderne (Astro)...">Migration du site {{ audit.domain }} vers une architecture moderne et performante (Astro/SSG), incluant l'optimisation SEO, la sécurité, et la visibilité IA (GEO).</textarea>
+
+      <label for="includes">Ce qui est inclus</label>
+      <textarea id="includes" name="includes" placeholder="Listez les prestations...">- Audit technique complet (SEO, Performance, Sécurité, GEO)
+- Migration de l'ensemble des pages et contenus
+- Mise en place des redirections 301
+- Optimisation SEO et données structurées (Schema.org)
+- Optimisation GEO (visibilité moteurs IA)
+- Configuration sécurité (headers HTTP, SSL)
+- Formation et documentation
+- Support 30 jours post-migration</textarea>
+    </div>
+
+    <div style="text-align:right;padding:20px 0">
+      <a href="/admin" class="btn btn-cancel">Annuler</a>
+      <button type="submit" class="btn btn-submit">✓ Valider l'offre</button>
+    </div>
+  </form>
+</div>
+</body>
+</html>

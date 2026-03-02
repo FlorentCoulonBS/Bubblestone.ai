@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Post #{{ post.id }}{% endblock %}
+{% block content %}
+
+<div class="detail-header">
+    <a href="{{ url_for('dashboard') }}" class="back-link">← Retour</a>
+    <span class="badge-{{ post.status }}">{{ post.status }}</span>
+</div>
+
+<div class="detail-layout">
+    <div class="detail-main">
+        <h1>{{ post.topic_title }}</h1>
+        
+        <div class="detail-meta">
+            <span>📅 {{ post.created_at[:16] }}</span>
+            {% if post.topic_score %}<span>🔥 Score: {{ "%.0f"|format(post.topic_score) }}</span>{% endif %}
+            {% if post.topic_url %}<a href="{{ post.topic_url }}" target="_blank" rel="noopener">🔗 Source</a>{% endif %}
+        </div>
+
+        <!-- Post text éditable -->
+        <div class="post-editor">
+            <div class="editor-header">
+                <h2>Post LinkedIn</h2>
+                <span class="char-count" id="charCount">{{ post.post_text|length }} chars</span>
+            </div>
+            <textarea id="postText" 
+                      class="post-textarea" 
+                      data-id="{{ post.id }}"
+                      {% if post.status != 'proposed' %}readonly{% endif %}
+                      >{{ post.post_text }}</textarea>
+            
+            <div class="editor-actions">
+                {% if post.status == 'proposed' %}
+                <button class="btn btn-sm btn-ghost" onclick="saveText({{ post.id }})">💾 Sauvegarder</button>
+                {% endif %}
+                <button class="btn btn-sm btn-ghost" onclick="copyText()">📋 Copier le texte</button>
+            </div>
+        </div>
+
+        <!-- Image -->
+        <div class="image-section">
+            <div class="editor-header">
+                <h2>Illustration</h2>
+            </div>
+            
+            {% if post.image_path %}
+            <div class="image-preview">
+                <img src="{{ url_for('serve_image', filename=post.image_path) }}" alt="Post illustration" id="postImage">
+                <div class="image-actions">
+                    <a href="{{ url_for('serve_image', filename=post.image_path) }}" download class="btn btn-sm btn-ghost">⬇️ Télécharger</a>
+                    <button class="btn btn-sm btn-ghost" onclick="regenerateImage({{ post.id }})">🔄 Régénérer</button>
+                </div>
+            </div>
+            {% else %}
+            <div class="no-image">
+                <p>Aucune image générée.</p>
+                {% if post.status == 'proposed' %}
+                <p class="text-muted">L'image sera générée à la validation du post.</p>
+                {% else %}
+                <button class="btn btn-sm btn-primary" onclick="regenerateImage({{ post.id }})">🎨 Générer l'image</button>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="image-prompt-section">
+                <label>Prompt image :</label>
+                <textarea id="imagePrompt" class="prompt-textarea" rows="3">{{ post.image_prompt or '' }}</textarea>
+            </div>
+        </div>
+
+        <!-- Article markdown -->
+        {% if post.article_md %}
+        <div class="article-section">
+            <div class="editor-header">
+                <h2>Version article</h2>
+                <button class="btn btn-sm btn-ghost" onclick="copyArticle()">📋 Copier</button>
+            </div>
+            <pre class="article-content" id="articleMd">{{ post.article_md }}</pre>
+        </div>
+        {% endif %}
+
+        <!-- Sources -->
+        {% if post.sources %}
+        <div class="sources-section">
+            <h2>Sources</h2>
+            <div class="sources-list">
+                {% for src in post.sources.split(',') %}
+                <a href="{{ src.strip() }}" target="_blank" rel="noopener" class="source-link">{{ src.strip() }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="detail-sidebar">
+        <div class="action-panel">
+            <h3>Actions</h3>
+            {% if post.status == 'proposed' %}
+            <button class="btn btn-primary btn-full" onclick="validatePost({{ post.id }}, true)" id="validateBtn">✅ Valider + Générer image</button>
+            <button class="btn btn-reject btn-full" onclick="rejectPost({{ post.id }}, true)">❌ Rejeter</button>
+            {% elif post.status == 'validated' %}
+            <button class="btn btn-publish btn-full" onclick="publishPost({{ post.id }}, true)">🚀 Marquer publié</button>
+            <button class="btn btn-ghost btn-full" onclick="copyText()">📋 Copier le texte</button>
+            {% elif post.status == 'published' %}
+            <span class="published-info">✅ Publié le {{ post.published_at[:16] if post.published_at else '?' }}</span>
+            {% endif %}
+        </div>
+
+        <div class="info-panel">
+            <h3>Infos</h3>
+            <dl>
+                <dt>Créé</dt><dd>{{ post.created_at[:16] }}</dd>
+                {% if post.validated_at %}<dt>Validé</dt><dd>{{ post.validated_at[:16] }}</dd>{% endif %}
+                {% if post.published_at %}<dt>Publié</dt><dd>{{ post.published_at[:16] }}</dd>{% endif %}
+                <dt>Caractères</dt><dd>{{ post.post_text|length }}</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

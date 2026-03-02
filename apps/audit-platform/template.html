@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Audit Web — {{ domain }} — BubbleStone.ai</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1F2937; line-height: 1.6; background: #fff; font-size: 13px; }
+  .page { padding: 0; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%); color: white; padding: 40px 35px; margin-bottom: 30px; }
+  .header-inner { display: flex; justify-content: space-between; align-items: center; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo svg { width: 48px; height: 48px; }
+  .logo-text { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo-sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  .header-right { text-align: right; font-size: 13px; opacity: 0.9; }
+  .header-url { font-size: 16px; font-weight: 600; margin-top: 4px; word-break: break-all; }
+
+  /* Scores */
+  .scores-section { display: flex; justify-content: center; gap: 30px; margin: 0 35px 35px; flex-wrap: wrap; }
+  .score-card { text-align: center; flex: 1; min-width: 140px; max-width: 180px; }
+  .score-circle { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; background: white; border: 5px solid #ccc; }
+  .score-circle::before { display: none; }
+  .score-value { position: relative; z-index: 1; font-size: 28px; font-weight: 800; }
+  .score-label { font-size: 14px; font-weight: 600; color: #374151; }
+  .score-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; color: white; margin-top: 4px; }
+
+  /* Sections */
+  .section { margin: 0 35px 30px; page-break-inside: avoid; }
+  .section-title { font-size: 18px; font-weight: 700; color: #2563EB; border-bottom: 3px solid #2563EB; padding-bottom: 8px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title .icon { font-size: 20px; }
+
+  /* Summary */
+  .summary { background: #F0F4FF; border-left: 4px solid #2563EB; padding: 16px 20px; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.7; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+  th { background: #F3F4F6; text-align: left; padding: 10px 12px; font-weight: 600; color: #374151; border-bottom: 2px solid #E5E7EB; }
+  td { padding: 9px 12px; border-bottom: 1px solid #F3F4F6; vertical-align: top; }
+  tr:hover { background: #FAFBFC; }
+
+  /* Tags */
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .tag-green { background: #D1FAE5; color: #065F46; }
+  .tag-red { background: #FEE2E2; color: #991B1B; }
+  .tag-orange { background: #FEF3C7; color: #92400E; }
+  .tag-blue { background: #DBEAFE; color: #1E40AF; }
+  .tag-purple { background: #EDE9FE; color: #5B21B6; }
+  .tag-gray { background: #F3F4F6; color: #374151; }
+
+  /* Risk badges */
+  .risk-high { background: #DC2626; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .risk-medium { background: #F59E0B; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .risk-low { background: #3B82F6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .risk-info { background: #9CA3AF; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+
+  /* CWV Grid */
+  .cwv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
+  .cwv-card { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px; text-align: center; }
+  .cwv-metric { font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .cwv-value { font-size: 22px; font-weight: 800; color: #1F2937; margin-top: 4px; }
+
+  /* Stack */
+  .stack-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stack-item { background: #F9FAFB; border-radius: 6px; padding: 10px 14px; }
+  .stack-label { font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase; }
+  .stack-value { font-size: 14px; font-weight: 600; color: #1F2937; margin-top: 2px; }
+
+  /* Recommendations */
+  .rec-list { list-style: none; counter-reset: rec; }
+  .rec-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #F3F4F6; }
+  .rec-num { background: linear-gradient(135deg, #2563EB, #7C3AED); color: white; min-width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .rec-content { flex: 1; }
+  .rec-text { font-size: 13px; }
+  .rec-meta { display: flex; gap: 6px; margin-top: 4px; }
+
+  /* Footer */
+  .footer { background: #F9FAFB; border-top: 2px solid #E5E7EB; padding: 20px 35px; text-align: center; color: #6B7280; font-size: 12px; margin-top: 40px; }
+  .footer a { color: #2563EB; text-decoration: none; font-weight: 600; }
+
+  /* Print */
+  @media print {
+    .section { page-break-inside: avoid; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="48" height="48" rx="12" fill="rgba(255,255,255,0.2)"/>
+          <path d="M14 34V18c0-5.5 4.5-10 10-10s10 4.5 10 10v2c0 3.3-2.7 6-6 6h-4v8" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="24" cy="36" r="3" fill="white"/>
+        </svg>
+        <div>
+          <div class="logo-text">BubbleStone.ai</div>
+          <div class="logo-sub">Audit Web Automatisé</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div>{{ date }}</div>
+        <div class="header-url">{{ url }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORES -->
+  <div class="scores-section">
+    {% for key, label in [('performance', 'Performance'), ('seo', 'SEO'), ('security', 'Sécurité'), ('accessibility', 'Accessibilité')] %}
+    <div class="score-card">
+      <div class="score-circle" style="border-color: {{ score_color(scores[key]) }};">
+        <span class="score-value" style="color: {{ score_color(scores[key]) }};">{{ scores[key] }}</span>
+      </div>
+      <div class="score-label">{{ label }}</div>
+      <span class="score-badge" style="background: {{ score_color(scores[key]) }};">{{ score_label(scores[key]) }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- RÉSUMÉ -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📋</span> Résumé exécutif</div>
+    <div class="summary">{{ summary }}</div>
+  </div>
+
+  <!-- STACK -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📦</span> Stack technique détectée</div>
+    <div class="stack-grid">
+      <div class="stack-item">
+        <div class="stack-label">CMS</div>
+        <div class="stack-value">{{ stack.cms or 'Non détecté' }}{% if stack.cms_version %} {{ stack.cms_version }}{% endif %}</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-label">Serveur</div>
+        <div class="stack-value">{{ stack.server or 'Non détecté' }}</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-label">CDN</div>
+        <div class="stack-value">{{ stack.cdn or 'Aucun détecté' }}</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-label">SSL</div>
+        <div class="stack-value">{{ stack.ssl.issuer if stack.ssl and stack.ssl.issuer else 'N/A' }}{% if stack.ssl and stack.ssl.version %} ({{ stack.ssl.version }}){% endif %}</div>
+      </div>
+      {% if stack.php_version %}
+      <div class="stack-item">
+        <div class="stack-label">PHP</div>
+        <div class="stack-value">{{ stack.php_version }}</div>
+      </div>
+      {% endif %}
+      {% if stack.technologies %}
+      <div class="stack-item">
+        <div class="stack-label">Technologies</div>
+        <div class="stack-value">{{ stack.technologies | join(', ') }}</div>
+      </div>
+      {% endif %}
+      {% if stack.analytics %}
+      <div class="stack-item">
+        <div class="stack-label">Analytics</div>
+        <div class="stack-value">{% for a in stack.analytics %}{{ a.type }}{% if not loop.last %}, {% endif %}{% endfor %}</div>
+      </div>
+      {% endif %}
+      {% if stack.plugins %}
+      <div class="stack-item" style="grid-column: span 2;">
+        <div class="stack-label">Plugins WordPress</div>
+        <div class="stack-value" style="font-size: 12px;">{{ stack.plugins | join(', ') }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- PERFORMANCE -->
+  <div class="section">
+    <div class="section-title"><span class="icon">⚡</span> Performance — Core Web Vitals</div>
+    <div class="cwv-grid">
+      {% for metric, value in cwv.items() %}
+      <div class="cwv-card">
+        <div class="cwv-metric">{{ metric }}</div>
+        <div class="cwv-value">{{ value }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if opportunities %}
+    <h3 style="margin-top: 20px; font-size: 14px; color: #374151;">🚀 Opportunités d'amélioration</h3>
+    <table>
+      <thead><tr><th>Optimisation</th><th style="width:120px;">Gain estimé</th></tr></thead>
+      <tbody>
+        {% for opp in opportunities %}
+        <tr>
+          <td>{{ opp.title }}</td>
+          <td><span class="tag tag-green">{{ opp.savings_ms }} ms</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+
+  <!-- SEO -->
+  <div class="section">
+    <div class="section-title"><span class="icon">🔍</span> SEO</div>
+    {% if seo_checks %}
+    <table>
+      <thead><tr><th>Vérification</th><th style="width:100px;">Statut</th><th>Détail</th></tr></thead>
+      <tbody>
+        {% for name, check in seo_checks.items() %}
+        <tr>
+          <td>{{ name }}</td>
+          <td>
+            {% if check.score == 1 %}<span class="tag tag-green">✓ OK</span>
+            {% elif check.score == 0 %}<span class="tag tag-red">✗ Échec</span>
+            {% else %}<span class="tag tag-orange">⚠ Partiel</span>{% endif %}
+          </td>
+          <td>{{ check.value or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color: #6B7280;">Données SEO non disponibles.</p>
+    {% endif %}
+  </div>
+
+  <!-- SÉCURITÉ -->
+  <div class="section">
+    <div class="section-title"><span class="icon">🔒</span> Sécurité</div>
+
+    <h3 style="font-size: 14px; color: #374151; margin-bottom: 8px;">Headers HTTP de sécurité — Score : {{ headers.score | default(0) }}/100</h3>
+    {% if headers.headers %}
+    <table>
+      <thead><tr><th>Header</th><th style="width:80px;">Statut</th><th>Valeur</th><th>Recommandation</th></tr></thead>
+      <tbody>
+        {% for name, h in headers.headers.items() %}
+        <tr>
+          <td style="font-weight:600;">{{ name }}</td>
+          <td>{% if h.present %}<span class="tag tag-green">✓</span>{% else %}<span class="tag tag-red">✗</span>{% endif %}</td>
+          <td style="font-size:11px; word-break:break-all;">{{ h.value or '—' }}</td>
+          <td style="font-size:11px; color:#6B7280;">{{ h.recommended }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {% if zap_alerts %}
+    <h3 style="font-size: 14px; color: #374151; margin: 20px 0 8px;">Alertes OWASP ZAP ({{ zap_alerts | length }})</h3>
+    <table>
+      <thead><tr><th>Alerte</th><th style="width:90px;">Risque</th><th>Description</th><th style="width:50px;">Nb</th></tr></thead>
+      <tbody>
+        {% for alert in zap_alerts %}
+        <tr>
+          <td style="font-weight:600;">{{ alert.name }}</td>
+          <td>
+            {% if 'High' in alert.risk %}<span class="risk-high">Élevé</span>
+            {% elif 'Medium' in alert.risk %}<span class="risk-medium">Moyen</span>
+            {% elif 'Low' in alert.risk %}<span class="risk-low">Faible</span>
+            {% else %}<span class="risk-info">Info</span>{% endif %}
+          </td>
+          <td style="font-size:11px;">{{ alert.description | striptags | truncate(150) }}</td>
+          <td style="text-align:center;">{{ alert.count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+
+  <!-- ACCESSIBILITÉ -->
+  <div class="section">
+    <div class="section-title"><span class="icon">♿</span> Accessibilité</div>
+    {% if a11y_issues %}
+    <table>
+      <thead><tr><th>Problème</th><th>Description</th></tr></thead>
+      <tbody>
+        {% for issue in a11y_issues %}
+        <tr>
+          <td style="font-weight:600;">{{ issue.title }}</td>
+          <td style="font-size:11px;">{{ issue.description | striptags | truncate(200) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color: #16A34A; font-weight: 600;">✓ Aucun problème majeur d'accessibilité détecté.</p>
+    {% endif %}
+  </div>
+
+  <!-- RECOMMANDATIONS -->
+  <div class="section">
+    <div class="section-title"><span class="icon">🎯</span> Recommandations prioritaires</div>
+    <div class="rec-list">
+      {% for rec in recommendations %}
+      <div class="rec-item">
+        <div class="rec-num">{{ loop.index }}</div>
+        <div class="rec-content">
+          <div class="rec-text">{{ rec.text }}</div>
+          <div class="rec-meta">
+            <span class="tag {% if rec.priority == 'Haute' %}tag-red{% elif rec.priority == 'Moyenne' %}tag-orange{% else %}tag-blue{% endif %}">{{ rec.priority }}</span>
+            <span class="tag tag-purple">{{ rec.category }}</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p>Audit réalisé par <strong>BubbleStone.ai</strong> — <a href="https://www.bubblestone.ai">www.bubblestone.ai</a></p>
+    <p style="margin-top: 4px; font-size: 11px;">Ce rapport a été généré automatiquement le {{ date }}. Les résultats reflètent l'état du site au moment de l'audit.</p>
+  </div>
+
+</div>
+</body>
+</html>

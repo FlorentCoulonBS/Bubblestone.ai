@@ -3,6 +3,9 @@ name: Build & Deploy
 on:
   push:
     branches: [main, master]
+    paths:
+      - 'site/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
     inputs:
       target:
@@ -17,6 +20,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,6 +32,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: site/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -47,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
+          path: site/dist/
 
   deploy-staging:
     needs: build
@@ -72,7 +79,7 @@ jobs:
         run: rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key" dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/bubblestone-staging/dist/
 
       - name: Restart staging container
-        run: ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "docker restart bubblestone-staging"
+        run: ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "docker restart projects-bubblestone-staging-1"
 
   deploy-production:
     needs: build
@@ -97,4 +104,4 @@ jobs:
         run: rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key" dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/bubblestone/dist/
 
       - name: Restart production container
-        run: ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "docker restart bubblestone-site"
+        run: ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "docker restart projects-bubblestone-site-1"

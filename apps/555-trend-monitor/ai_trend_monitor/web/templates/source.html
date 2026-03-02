@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}AI Trend Digest — {{ source_name }}{% endblock %}
+{% block content %}
+
+<div class="mb-6">
+    <h1 class="text-2xl font-bold">{{ source_emoji }} {{ source_name }}</h1>
+    <p class="text-gray-500 text-sm">Top {{ items|length }} items</p>
+</div>
+
+{% if not items %}
+<div class="text-center py-20 text-gray-500">
+    <p class="text-5xl mb-4">📭</p>
+    <p class="text-lg">No items found for this source.</p>
+    <a href="/" class="text-indigo-400 hover:underline mt-2 inline-block">← Back to dashboard</a>
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+    {% for t in items %}
+    <div class="card-hover bg-dark-800 rounded-xl border border-indigo-900/20 overflow-hidden flex flex-col" style="background:#1a1a2e;">
+        <!-- Image -->
+        {% if t.thumbnail %}
+        <div>
+            <img src="{{ t.thumbnail }}" class="og-img rounded-t-xl" onerror="this.parentElement.innerHTML='<div class=placeholder-img><span class=text-4xl>🤖</span></div>'" />
+        </div>
+        {% elif t.og_image %}
+        <div>
+            <img src="{{ t.og_image }}" class="og-img rounded-t-xl" onerror="this.parentElement.innerHTML='<div class=placeholder-img><span class=text-4xl>🤖</span></div>'" />
+        </div>
+        {% else %}
+        <div data-og-url="{{ t.url or '' }}">
+            <div class="placeholder-img rounded-t-xl">
+                <span class="text-4xl">🤖</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="p-4 flex flex-col flex-1">
+            <!-- Score / meta -->
+            <div class="flex items-center gap-2 mb-2">
+                {% if t.score is defined and t.score is not none %}
+                <span class="score-{{ t.score_color|default('blue') }} text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    ⚡ {{ "%.0f"|format(t.score) }}
+                </span>
+                {% endif %}
+                {% if t.channel %}
+                <span class="bg-red-900/60 text-red-300 text-[10px] font-medium px-2 py-0.5 rounded-full">
+                    {{ t.channel }}
+                </span>
+                {% endif %}
+                {% if t.published %}
+                <span class="text-gray-500 text-xs ml-auto">{{ t.published[:10] }}</span>
+                {% elif t.last_seen %}
+                <span class="text-gray-500 text-xs ml-auto">{{ t.last_seen[:10] }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Title -->
+            <h2 class="font-semibold text-base leading-tight mb-2">
+                {% if t.url %}
+                <a href="{{ t.url }}" target="_blank" class="hover:text-indigo-300 transition">
+                    {{ t.title }}
+                </a>
+                {% else %}
+                {{ t.title }}
+                {% endif %}
+            </h2>
+
+            <!-- Source badge -->
+            <div class="flex flex-wrap gap-1 mt-auto">
+                <span class="source-{{ source_key }} text-white text-[10px] font-medium px-2 py-0.5 rounded-full uppercase">
+                    {{ source_key }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

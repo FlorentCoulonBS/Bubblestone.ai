@@ -1,0 +1,116 @@
+# docker-compose.yml - BubbleStoneAI (Exploit)
+# Serveur: 72.62.190.147
+# Secrets dans .env (JAMAIS commité)
+
+services:
+  # ============================================
+  # Nginx Proxy Manager - Reverse Proxy + SSL
+  # ============================================
+  npm:
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "127.0.0.1:8081:81"
+    volumes:
+      - /opt/npm/data:/data
+      - /opt/npm/letsencrypt:/etc/letsencrypt
+    networks:
+      npmnet:
+        ipv4_address: 172.18.0.10
+
+  # ============================================
+  # BubbleStone.ai - Site vitrine (prod)
+  # ============================================
+  bubblestone-site:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - /opt/bubblestone/dist:/usr/share/nginx/html:ro
+      - /opt/bubblestone/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      npmnet:
+        ipv4_address: 172.18.0.20
+
+  # ============================================
+  # BubbleStone.ai - Staging
+  # ============================================
+  bubblestone-staging:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - /opt/bubblestone-staging/dist:/usr/share/nginx/html:ro
+      - /opt/bubblestone-staging/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      npmnet:
+        ipv4_address: 172.18.0.25
+
+  # ============================================
+  # 555 - AI Trend Dashboard (Veille IA)
+  # ============================================
+  "555":
+    image: 555:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      - DATABASE_PATH=/data/trends.db
+      - OPML_PATH=/data/feeds.opml
+      - GMAIL_USER=${GMAIL_USER}
+      - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
+      - DUMP_TOPICS_PATH=/home/pinceouverte/clawd/scripts/dump_topics.py
+    volumes:
+      - /root/data:/root/data
+      - /root/data:/data
+      - /root/src:/root/src
+      - /home/pinceouverte/clawd:/home/pinceouverte/clawd
+    networks:
+      npmnet:
+        ipv4_address: 172.18.0.2
+
+  # ============================================
+  # BubbleStone Audit
+  # ============================================
+  bubblestone-audit:
+    image: bubblestone-audit:latest
+    restart: unless-stopped
+    mem_limit: 6g
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - DB_PATH=/data/audits.db
+    volumes:
+      - /root/data/audits:/data
+    networks:
+      npmnet:
+        ipv4_address: 172.18.0.30
+
+  # ============================================
+  # LinkedIn Generator
+  # ============================================
+  linkedin-generator:
+    build: ./linkedin-generator
+    image: linkedin-generator:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:5001"
+    environment:
+      - LINKEDIN_DB_PATH=/data/linkedin.db
+      - TRENDS_DB_PATH=/data/trends.db
+      - IMAGES_DIR=/data/images
+      - LOGIN_USER=${LOGIN_USER}
+      - LOGIN_PASSWORD=${LOGIN_PASSWORD}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - /root/data/linkedin:/data
+      - /root/data/trends.db:/data/trends.db:ro
+    networks:
+      npmnet:
+        ipv4_address: 172.18.0.40
+
+networks:
+  npmnet:
+    external: true

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LinkedIn Generator{% endblock %} — BubbleStone AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    {% if session.logged_in %}
+    <nav class="topbar">
+        <div class="topbar-left">
+            <a href="{{ url_for('dashboard') }}" class="logo">⚡ LinkedIn Generator</a>
+        </div>
+        <div class="topbar-right">
+            <span class="user">{{ session.get('user', 'Florent') }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-sm btn-ghost">Déconnexion</a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

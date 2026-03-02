@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Trend Digest{% endblock %}</title>
+    <script src="/static/tailwind.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 800: '#1a1a2e', 900: '#0f0f23', 700: '#252547' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: #0f0f23; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99,102,241,0.15); }
+        .card-hover { transition: all 0.2s ease; }
+        .score-red { background: #ef4444; }
+        .score-orange { background: #f97316; }
+        .score-yellow { background: #eab308; color: #000; }
+        .score-blue { background: #3b82f6; }
+        .source-reddit { background: #ff4500; }
+        .source-rss { background: #f97316; }
+        .source-gmail { background: #ea4335; }
+        .source-twitter { background: #1da1f2; }
+        .source-unknown { background: #6b7280; }
+        .og-img { object-fit: cover; width: 100%; height: 180px; }
+        .placeholder-img {
+            width: 100%; height: 180px;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            display: flex; align-items: center; justify-content: center;
+        }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 z-50 bg-dark-900/95 backdrop-blur border-b border-indigo-900/30">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2 text-xl font-bold">
+                <span class="text-2xl">🔮</span>
+                <span class="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">AI Trend Digest</span>
+                <span class="text-xs text-gray-500 ml-1">v2</span>
+            </a>
+            <div class="flex items-center gap-3 flex-wrap">
+                {% set active_tab = request.path %}
+                <a href="/" class="px-3 py-1.5 rounded-lg text-sm transition {% if active_tab == '/' %}bg-indigo-600 text-white{% else %}text-gray-400 hover:text-white hover:bg-dark-700{% endif %}">🌐 Global</a>
+                <a href="/source/youtube" class="px-3 py-1.5 rounded-lg text-sm transition {% if active_tab == '/source/youtube' %}bg-red-600 text-white{% else %}text-gray-400 hover:text-white hover:bg-dark-700{% endif %}">▶️ YouTube</a>
+                <a href="/source/reddit" class="px-3 py-1.5 rounded-lg text-sm transition {% if active_tab == '/source/reddit' %}bg-orange-600 text-white{% else %}text-gray-400 hover:text-white hover:bg-dark-700{% endif %}">🟠 Reddit</a>
+                <a href="/source/rss" class="px-3 py-1.5 rounded-lg text-sm transition {% if active_tab == '/source/rss' %}bg-yellow-600 text-white{% else %}text-gray-400 hover:text-white hover:bg-dark-700{% endif %}">📡 RSS</a>
+                <a href="/source/gmail" class="px-3 py-1.5 rounded-lg text-sm transition {% if active_tab == '/source/gmail' %}bg-red-500 text-white{% else %}text-gray-400 hover:text-white hover:bg-dark-700{% endif %}">🔔 Google Alerts</a>
+                <!-- Twitter disabled: all Nitter instances are dead -->
+                <a href="/source/hackernews" class="px-3 py-1.5 rounded-lg text-sm transition {% if active_tab == '/source/hackernews' %}bg-orange-500 text-white{% else %}text-gray-400 hover:text-white hover:bg-dark-700{% endif %}">🟧 Hacker News</a>
+                <span class="text-gray-700">|</span>
+                <a href="/search" class="text-gray-400 hover:text-white text-sm">🔍 Search</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="text-center text-gray-600 text-xs py-6">
+        BubbleStone.ai — AI Trend Digest V2
+    </footer>
+
+    <script>
+        // Lazy load OG images
+        document.querySelectorAll('[data-og-url]').forEach(el => {
+            const url = el.dataset.ogUrl;
+            if (!url) return;
+            fetch('/api/og-image?url=' + encodeURIComponent(url))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.image) {
+                        el.innerHTML = '<img src="' + data.image + '" class="og-img rounded-t-xl" onerror="this.parentElement.innerHTML=\'<div class=placeholder-img><span class=text-4xl>🤖</span></div>\'" />';
+                    }
+                })
+                .catch(() => {});
+        });
+    </script>
+</body>
+</html>

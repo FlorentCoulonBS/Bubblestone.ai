@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}AI Trend Digest — {{ date }}{% endblock %}
+{% block content %}
+
+<!-- Date Navigation -->
+<div class="flex items-center justify-between mb-6">
+    <a href="/?date={{ prev_date }}" class="px-4 py-2 bg-indigo-900/40 hover:bg-indigo-800/60 rounded-lg text-sm transition">
+        ← {{ prev_date }}
+    </a>
+    <div class="text-center">
+        <h1 class="text-2xl font-bold">{{ date }}</h1>
+        <p class="text-gray-500 text-sm">{{ topics|length }} trending topics</p>
+    </div>
+    {% if not is_today %}
+    <a href="/?date={{ next_date }}" class="px-4 py-2 bg-indigo-900/40 hover:bg-indigo-800/60 rounded-lg text-sm transition">
+        {{ next_date }} →
+    </a>
+    {% else %}
+    <span class="px-4 py-2 bg-green-900/30 rounded-lg text-sm text-green-400">Today</span>
+    {% endif %}
+</div>
+
+{% if not topics %}
+<div class="text-center py-20 text-gray-500">
+    <p class="text-5xl mb-4">📭</p>
+    <p class="text-lg">No topics found for this date.</p>
+    <a href="/" class="text-indigo-400 hover:underline mt-2 inline-block">← Back to today</a>
+</div>
+{% endif %}
+
+<!-- Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+    {% for t in topics[:12] %}
+    <div class="card-hover bg-dark-800 rounded-xl border border-indigo-900/20 overflow-hidden flex flex-col" style="background:#1a1a2e;">
+        <!-- Image -->
+        <div data-og-url="{{ t.url or '' }}">
+            <div class="placeholder-img rounded-t-xl">
+                <span class="text-4xl">🤖</span>
+            </div>
+        </div>
+
+        <div class="p-4 flex flex-col flex-1">
+            <!-- Score badge + trend -->
+            <div class="flex items-center gap-2 mb-2">
+                <span class="score-{{ t.score_color }} text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {{ "%.0f"|format(t.combined_signal) if t.combined_signal else t.old_score }}
+                </span>
+                <span class="text-sm">{{ t.trend_emoji }} {{ t.trend_label }}</span>
+                <span class="text-gray-500 text-xs ml-auto">vol: {{ t.volume }} | src: {{ t.source_count }}</span>
+            </div>
+
+            <!-- Title -->
+            <h2 class="font-semibold text-base leading-tight mb-2">
+                {% if t.url %}
+                <a href="{{ t.url }}" target="_blank" class="hover:text-indigo-300 transition">
+                    {{ t.title }}
+                </a>
+                {% else %}
+                {{ t.title }}
+                {% endif %}
+            </h2>
+
+            <!-- Alt titles as summary -->
+            {% if t.all_titles|length > 1 %}
+            <p class="text-gray-400 text-xs mb-3 line-clamp-2">
+                Also: {{ t.all_titles[1:3]|join(' • ') }}
+            </p>
+            {% endif %}
+
+            <!-- Mentions -->
+            <div class="flex items-center gap-3 text-xs text-gray-400 mb-3">
+                <span title="24h mentions">24h: <b class="text-gray-200">{{ t.mentions_24h }}</b></span>
+                <span title="3 day mentions">3d: <b class="text-gray-200">{{ t.mentions_3d }}</b></span>
+                <span title="7 day mentions">7d: <b class="text-gray-200">{{ t.mentions_7d }}</b></span>
+            </div>
+
+            <!-- Sources -->
+            <div class="flex flex-wrap gap-1 mt-auto">
+                {% for src in t.source_list %}
+                <span class="source-{{ src }} text-white text-[10px] font-medium px-2 py-0.5 rounded-full uppercase">
+                    {{ src }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

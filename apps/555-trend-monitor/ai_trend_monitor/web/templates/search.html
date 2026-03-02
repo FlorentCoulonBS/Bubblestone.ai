@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Search — AI Trend Digest{% endblock %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">🔍 Search Topics</h1>
+    
+    <form method="get" action="/search" class="mb-8">
+        <div class="flex gap-2">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search topics..."
+                   class="flex-1 bg-dark-800 border border-indigo-900/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition"
+                   style="background:#1a1a2e;" autofocus>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-lg font-medium transition">
+                Search
+            </button>
+        </div>
+    </form>
+
+    {% if query %}
+    <p class="text-gray-400 text-sm mb-4">{{ results|length }} results for "<span class="text-white">{{ query }}</span>"</p>
+    {% endif %}
+
+    <div class="space-y-3">
+        {% for r in results %}
+        <div class="bg-dark-800 rounded-lg border border-indigo-900/20 p-4 card-hover" style="background:#1a1a2e;">
+            <div class="flex items-start gap-3">
+                <span class="score-{{ r.score_color }} text-white text-xs font-bold px-2 py-0.5 rounded-full shrink-0 mt-1">
+                    {{ r.old_score }}
+                </span>
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-medium text-sm">
+                        {% if r.url %}
+                        <a href="{{ r.url }}" target="_blank" class="hover:text-indigo-300 transition">{{ r.title }}</a>
+                        {% else %}
+                        {{ r.title }}
+                        {% endif %}
+                    </h3>
+                    <div class="flex items-center gap-2 mt-2">
+                        {% for src in r.source_list %}
+                        <span class="source-{{ src }} text-white text-[10px] px-1.5 py-0.5 rounded-full uppercase">{{ src }}</span>
+                        {% endfor %}
+                        <span class="text-gray-500 text-xs ml-auto">{{ r.last_seen[:10] }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

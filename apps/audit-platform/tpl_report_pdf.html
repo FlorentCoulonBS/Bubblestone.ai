@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Audit — {{ audit.domain }} — BubbleStone.ai</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1F2937;line-height:1.6;font-size:12px}
+.header{background:linear-gradient(135deg,#2563EB,#7C3AED);color:white;padding:30px;margin-bottom:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.header h1{font-size:24px;font-weight:800}
+.header p{opacity:0.9;font-size:13px;margin-top:4px}
+.scores{display:flex;justify-content:center;gap:24px;margin-bottom:24px}
+.sc{text-align:center;padding:12px 20px}
+.sc .val{font-size:32px;font-weight:800}.sc .lbl{font-size:12px;color:#6B7280}
+.section{margin:0 20px 20px;page-break-inside:avoid}
+.section h2{font-size:16px;color:#2563EB;border-bottom:2px solid #2563EB;padding-bottom:6px;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#F3F4F6;padding:8px;text-align:left;font-weight:600;border-bottom:2px solid #E5E7EB}
+td{padding:7px 8px;border-bottom:1px solid #F3F4F6}
+.tag-ok{color:#065F46;font-weight:600}.tag-fail{color:#991B1B;font-weight:600}
+.footer{text-align:center;color:#9CA3AF;font-size:11px;margin-top:30px;padding:16px;border-top:1px solid #E5E7EB}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>BubbleStone.ai — Audit Web</h1>
+  <p>{{ audit.url }} — {{ audit.created_at[:16] }}</p>
+</div>
+
+{% set scores = r.get('scores', {}) %}
+<div class="scores">
+  <div class="sc"><div class="val">{{ scores.get('performance',0) }}</div><div class="lbl">Performance</div></div>
+  <div class="sc"><div class="val">{{ scores.get('seo',0) }}</div><div class="lbl">SEO</div></div>
+  <div class="sc"><div class="val">{{ scores.get('security',0) }}</div><div class="lbl">Sécurité</div></div>
+  <div class="sc"><div class="val">{{ scores.get('accessibility',0) }}</div><div class="lbl">Accessibilité</div></div>
+</div>
+
+{% if r.get('summary') %}
+<div class="section"><h2>Résumé</h2><p>{{ r.summary }}</p></div>
+{% endif %}
+
+{% set headers = r.get('headers', {}) %}
+{% if headers.get('headers') %}
+<div class="section">
+  <h2>Headers de sécurité ({{ headers.score|default(0) }}/100)</h2>
+  <table><thead><tr><th>Header</th><th>Statut</th><th>Recommandation</th></tr></thead><tbody>
+  {% for name, h in headers.headers.items() %}
+  <tr><td>{{ name }}</td><td>{% if h.present %}<span class="tag-ok">✓</span>{% else %}<span class="tag-fail">✗</span>{% endif %}</td><td>{{ h.recommended }}</td></tr>
+  {% endfor %}
+  </tbody></table>
+</div>
+{% endif %}
+
+{% if r.get('zap_alerts') %}
+<div class="section">
+  <h2>Alertes OWASP ZAP</h2>
+  <table><thead><tr><th>Alerte</th><th>Risque</th><th>Nb</th></tr></thead><tbody>
+  {% for a in r.zap_alerts %}<tr><td>{{ a.name }}</td><td>{{ a.risk }}</td><td>{{ a.count }}</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+{% endif %}
+
+{% if r.get('recommendations') %}
+<div class="section">
+  <h2>Recommandations</h2>
+  {% for rec in r.recommendations %}
+  <p style="margin-bottom:6px"><strong>{{ loop.index }}.</strong> {{ rec.text }} <em>({{ rec.priority }} — {{ rec.category }})</em></p>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="footer">Rapport généré par BubbleStone.ai — www.bubblestone.ai</div>
+</body>
+</html>

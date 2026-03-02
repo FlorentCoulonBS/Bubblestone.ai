@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ topic.title }} - AI Trend Monitor{% endblock %}
+{% block content %}
+<p><a href="/">&larr; Back to dashboard</a></p>
+
+<hgroup>
+  <h3>
+    <span class="score-badge {% if topic.score >= 7 %}score-high{% elif topic.score >= 4 %}score-mid{% else %}score-low{% endif %}">
+      {{ "%.1f"|format(topic.score) }}
+    </span>
+    {{ topic.title }}
+  </h3>
+  <p>
+    {% for s in topic.sources.split(',') %}
+      {% set code = s.strip()[:1]|upper %}
+      {% if code == 'R' %}<span class="source-pill src-R">R</span>
+      {% elif code == 'F' or code == 'A' %}<span class="source-pill src-F">F</span>
+      {% elif code == 'G' %}<span class="source-pill src-G">G</span>
+      {% elif code in ('X', 'T') %}<span class="source-pill src-X">X</span>
+      {% else %}<span class="source-pill">{{ code }}</span>
+      {% endif %}
+    {% endfor %}
+  </p>
+</hgroup>
+
+<div class="grid">
+  <article>
+    <header>Velocity</header>
+    <p>
+      1h: <strong>{{ "%.1f"|format(topic.velocity_1h) }}</strong> |
+      6h: <strong>{{ "%.1f"|format(topic.velocity_6h) }}</strong> |
+      24h: <strong>{{ "%.1f"|format(topic.velocity_24h) }}</strong>
+    </p>
+  </article>
+  <article>
+    <header>Engagement</header>
+    <p>
+      {{ topic.upvotes_total }} upvotes |
+      {{ topic.comments_total }} comments |
+      {{ topic.post_count }} posts
+    </p>
+  </article>
+  <article>
+    <header>Timeline</header>
+    <p>
+      First: {{ topic.first_seen.strftime('%Y-%m-%d %H:%M') if topic.first_seen else 'N/A' }}<br>
+      Last: {{ topic.last_seen.strftime('%Y-%m-%d %H:%M') if topic.last_seen else 'N/A' }}
+    </p>
+  </article>
+</div>
+
+{% if topic.url %}
+<p><a href="{{ topic.url }}" target="_blank">Original link</a></p>
+{% endif %}
+
+<h4>Related Posts ({{ posts|length }})</h4>
+<table>
+  <thead>
+    <tr><th>Subreddit</th><th>Title</th><th>Upvotes</th><th>Comments</th><th>Date</th></tr>
+  </thead>
+  <tbody>
+    {% for post in posts %}
+    <tr>
+      <td>r/{{ post.subreddit }}</td>
+      <td>{% if post.url %}<a href="{{ post.url }}" target="_blank">{{ post.title }}</a>{% else %}{{ post.title }}{% endif %}</td>
+      <td>{{ post.upvotes }}</td>
+      <td>{{ post.num_comments }}</td>
+      <td>{{ post.collected_at.strftime('%m-%d %H:%M') if post.collected_at else '' }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No posts linked to this topic.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div>
+  <button class="dismiss-btn outline secondary" onclick="dismiss({{ topic.id }}, 'read')">Mark as Read</button>
+  <button class="dismiss-btn outline secondary" onclick="dismiss({{ topic.id }}, 'not_interested')">Not Interested</button>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function dismiss(id, action) {
+  fetch('/api/dismiss/' + id, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: action})
+  }).then(r => r.json()).then(data => {
+    if (data.ok) window.location.href = '/';
+  });
+}
+</script>
+{% endblock %}

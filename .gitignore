@@ -3,14 +3,22 @@ node_modules/
 
 # Build output
 dist/
-
-# Astro
 .astro/
 
-# Environment
+# Environment — NEVER commit secrets
 .env
 .env.*
 !.env.example
+
+# Python
+__pycache__/
+*.egg-info/
+*.pyc
+.venv/
+
+# Databases
+*.db
+*.sqlite
 
 # IDE
 .vscode/
@@ -34,3 +42,12 @@ nul
 # Deploy scripts (server-side only)
 deploy.sh
 prod.sh
+
+# Claude Code temp files
+tmpclaude-*
+.claude/
+.playwright-mcp/
+
+# Server backups
+*.tar.gz
+*.bak

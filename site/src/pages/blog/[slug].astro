@@ -20,6 +20,7 @@ const articleSchema = JSON.stringify({
   "@type": "Article",
   "headline": post.data.title,
   "description": post.data.description,
+  "image": post.data.image ? `https://bubblestone.ai${post.data.image}` : undefined,
   "datePublished": post.data.date.toISOString(),
   "dateModified": (post.data.updated || post.data.date).toISOString(),
   "author": {
@@ -35,10 +36,7 @@ const articleSchema = JSON.stringify({
     "url": "https://bubblestone.ai",
     "logo": { "@type": "ImageObject", "url": "https://bubblestone.ai/logo.png" }
   },
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": `https://bubblestone.ai/blog/${post.slug}/`
-  },
+  "mainEntityOfPage": `https://bubblestone.ai/blog/${post.slug}/`,
   "keywords": post.data.tags.join(", "),
   "inLanguage": "fr-FR"
 });
@@ -48,21 +46,25 @@ const articleSchema = JSON.stringify({
   title={post.data.title}
   description={post.data.description}
   type="article"
+  image={post.data.image ? `https://bubblestone.ai${post.data.image}` : undefined}
   dateModified={(post.data.updated || post.data.date).toISOString().split('T')[0]}
 >
   <Header />
   
   <main class="article-page">
-    <article class="article">
+    <article>
       <div class="container">
-        <div class="article-header">
-          <a href="/blog/" class="back-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7"></path>
-            </svg>
-            Retour au blog
-          </a>
-          
+        
+        <!-- Back -->
+        <a href="/blog/" class="back-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"></path>
+          </svg>
+          Blog
+        </a>
+
+        <!-- Header -->
+        <header class="article-header">
           <div class="article-meta">
             <time datetime={post.data.date.toISOString()}>
               {post.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -72,7 +74,6 @@ const articleSchema = JSON.stringify({
           </div>
           
           <h1>{post.data.title}</h1>
-          <p class="article-desc">{post.data.description}</p>
           
           {post.data.tags.length > 0 && (
             <div class="article-tags">
@@ -81,24 +82,32 @@ const articleSchema = JSON.stringify({
               ))}
             </div>
           )}
-        </div>
+        </header>
 
-        <div class="article-content">
+        <!-- Hero Image -->
+        {post.data.image && (
+          <div class="article-hero-img">
+            <img src={post.data.image} alt={post.data.title} />
+          </div>
+        )}
+
+        <!-- Content -->
+        <div class="article-content prose">
           <Content />
         </div>
 
-        <div class="article-footer">
+        <!-- Author -->
+        <footer class="article-footer">
           <div class="author-card">
             <img src="/images/team/florent.jpg" alt="Florent Coulon" class="author-avatar" />
             <div class="author-info">
               <strong>Florent Coulon</strong>
-              <p>Fondateur de BubbleStone AI. 20+ ans d'expérience IT. Passionné par l'IA appliquée et l'automatisation des processus métier.</p>
-              <a href="https://www.linkedin.com/in/florentcoulon" target="_blank" rel="noopener">
-                Voir le profil LinkedIn →
-              </a>
+              <p>Fondateur de BubbleStone AI · 20+ ans d'IT · IA appliquée & automatisation</p>
+              <a href="https://www.linkedin.com/in/florentcoulon" target="_blank" rel="noopener">LinkedIn →</a>
             </div>
           </div>
-        </div>
+        </footer>
+
       </div>
     </article>
   </main>
@@ -110,31 +119,32 @@ const articleSchema = JSON.stringify({
 <style>
   .article-page {
     padding-top: 80px;
+    background: white;
+    min-height: 100vh;
   }
 
   .container {
-    max-width: 800px;
+    max-width: 740px;
     margin: 0 auto;
     padding: 0 1.5rem;
   }
 
-  .article-header {
-    padding: 3rem 0 2rem;
-  }
-
+  /* Back link */
   .back-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     color: var(--color-accent);
     text-decoration: none;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 500;
-    margin-bottom: 2rem;
+    padding: 1.5rem 0 0;
   }
+  .back-link:hover { opacity: 0.7; }
 
-  .back-link:hover {
-    opacity: 0.8;
+  /* Header */
+  .article-header {
+    padding: 1.5rem 0 1.25rem;
   }
 
   .article-meta {
@@ -142,158 +152,182 @@ const articleSchema = JSON.stringify({
     align-items: center;
     gap: 0.5rem;
     color: var(--color-gray-400);
-    font-size: 0.875rem;
-    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
   }
-
-  .meta-sep {
-    color: var(--color-gray-300);
-  }
+  .meta-sep { color: var(--color-gray-300); }
 
   .article-header h1 {
     font-family: var(--font-heading);
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-size: clamp(1.6rem, 3.5vw, 2.25rem);
     font-weight: 700;
     color: var(--color-primary);
-    line-height: 1.2;
+    line-height: 1.25;
     margin: 0 0 1rem;
-  }
-
-  .article-desc {
-    font-size: 1.125rem;
-    color: var(--color-gray-500);
-    line-height: 1.6;
-    margin: 0 0 1.5rem;
   }
 
   .article-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
-
   .tag {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.75rem;
-    background: rgba(59, 130, 246, 0.08);
+    font-size: 0.7rem;
+    padding: 0.2rem 0.65rem;
+    background: rgba(59, 130, 246, 0.07);
     color: var(--color-accent);
     border-radius: var(--radius-full);
     font-weight: 500;
   }
 
-  .article-content {
-    padding: 2rem 0;
-    border-top: 1px solid var(--color-gray-100);
+  /* Hero image */
+  .article-hero-img {
+    margin-bottom: 2rem;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--color-gray-100);
+  }
+  .article-hero-img img {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 2/1;
+    object-fit: cover;
   }
 
-  .article-content :global(h2) {
+  /* Content prose */
+  .prose :global(h2) {
     font-family: var(--font-heading);
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.35rem;
+    font-weight: 700;
     color: var(--color-primary);
-    margin: 2.5rem 0 1rem;
+    margin: 2.5rem 0 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-gray-100);
   }
 
-  .article-content :global(h3) {
+  .prose :global(h3) {
     font-family: var(--font-heading);
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--color-primary);
-    margin: 2rem 0 0.75rem;
+    margin: 1.75rem 0 0.5rem;
   }
 
-  .article-content :global(p) {
+  .prose :global(p) {
     color: var(--color-gray-600);
-    line-height: 1.8;
-    margin: 0 0 1.25rem;
-    font-size: 1.05rem;
+    line-height: 1.75;
+    margin: 0 0 1.15rem;
+    font-size: 1rem;
   }
 
-  .article-content :global(strong) {
+  .prose :global(strong) {
     color: var(--color-primary);
     font-weight: 600;
   }
 
-  .article-content :global(ul),
-  .article-content :global(ol) {
+  .prose :global(ul),
+  .prose :global(ol) {
     color: var(--color-gray-600);
-    line-height: 1.8;
-    margin: 0 0 1.25rem;
-    padding-left: 1.5rem;
+    line-height: 1.75;
+    margin: 0 0 1.15rem;
+    padding-left: 1.25rem;
   }
 
-  .article-content :global(li) {
-    margin-bottom: 0.5rem;
+  .prose :global(li) {
+    margin-bottom: 0.35rem;
   }
 
-  .article-content :global(a) {
+  .prose :global(a) {
     color: var(--color-accent);
     text-decoration: underline;
-    text-underline-offset: 2px;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(59, 130, 246, 0.3);
+  }
+  .prose :global(a:hover) {
+    text-decoration-color: var(--color-accent);
   }
 
-  .article-content :global(blockquote) {
+  .prose :global(blockquote) {
     border-left: 3px solid var(--color-accent);
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.25rem;
     margin: 1.5rem 0;
-    background: rgba(59, 130, 246, 0.04);
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: rgba(59, 130, 246, 0.03);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   }
-
-  .article-content :global(blockquote p) {
-    color: var(--color-gray-600);
+  .prose :global(blockquote p) {
     font-style: italic;
     margin: 0;
+    color: var(--color-gray-500);
   }
 
-  .article-content :global(hr) {
+  .prose :global(hr) {
     border: none;
     border-top: 1px solid var(--color-gray-100);
-    margin: 2rem 0;
+    margin: 2.5rem 0;
   }
 
+  /* FAQ — special styling for the FAQ section at the end of articles */
+  .prose :global(h2:last-of-type) {
+    /* Target the FAQ heading if it's the last H2 — but we'll use a general approach */
+  }
+
+  /* Style FAQ-like content: bold question + answer pattern */
+  .prose :global(p strong:first-child) {
+    display: block;
+    color: var(--color-primary);
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Author footer */
   .article-footer {
     padding: 2rem 0 4rem;
+    margin-top: 1rem;
     border-top: 1px solid var(--color-gray-100);
   }
 
   .author-card {
     display: flex;
-    gap: 1.25rem;
-    padding: 1.5rem;
+    gap: 1rem;
+    padding: 1.25rem;
     background: var(--color-gray-50);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     border: 1px solid var(--color-gray-100);
   }
 
   .author-avatar {
-    width: 64px;
-    height: 64px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
   }
 
+  .author-info {
+    min-width: 0;
+  }
   .author-info strong {
     display: block;
     font-family: var(--font-heading);
     color: var(--color-primary);
-    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
   }
-
   .author-info p {
-    font-size: 0.875rem;
+    font-size: 0.825rem;
     color: var(--color-gray-500);
-    line-height: 1.5;
-    margin: 0 0 0.5rem;
+    line-height: 1.4;
+    margin: 0 0 0.35rem;
   }
-
   .author-info a {
-    font-size: 0.875rem;
+    font-size: 0.825rem;
     color: var(--color-accent);
     text-decoration: none;
     font-weight: 500;
   }
+  .author-info a:hover { opacity: 0.8; }
 
   @media (max-width: 768px) {
     .author-card {

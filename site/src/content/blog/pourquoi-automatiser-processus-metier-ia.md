@@ -61,18 +61,24 @@ Pas besoin de réinventer la roue. Des plateformes comme **n8n** (open source, a
 
 Chaque automatisation doit produire des métriques claires : temps gagné, erreurs évitées, leads qualifiés, coût par opération. Sans mesure, pas d'amélioration.
 
-## FAQ
+---
 
-**Combien coûte l'automatisation IA pour une PME ?**
+## Questions fréquentes
+
+### Combien coûte l'automatisation IA pour une PME ?
+
 Un projet d'automatisation type coûte entre 3 000€ et 15 000€ selon la complexité, avec un ROI mesurable dès les 3 premiers mois. Les coûts récurrents (hébergement, API) se situent généralement entre 50€ et 200€/mois.
 
-**Faut-il des compétences techniques en interne ?**
+### Faut-il des compétences techniques en interne ?
+
 Non. BubbleStone AI conçoit, déploie et maintient les solutions. L'objectif est de vous rendre autonomes progressivement, mais le démarrage ne nécessite aucune compétence technique de votre côté.
 
-**Quels outils utilisez-vous ?**
+### Quels outils utilisez-vous ?
+
 Nous travaillons principalement avec n8n pour l'orchestration, des LLM (Claude, Mistral) pour l'intelligence, et des intégrations API natives avec vos outils existants (CRM, ERP, email).
 
-**En combien de temps un workflow est-il opérationnel ?**
+### En combien de temps un workflow est-il opérationnel ?
+
 Un workflow simple (ex: qualification de leads) est opérationnel en 2-3 jours. Un système complet (ex: pipeline de prospection bout en bout) prend 2-3 semaines.
 
 ---

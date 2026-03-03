@@ -1,0 +1,41 @@
+# BubbleStone AI
+
+> Agence française spécialisée dans l'intégration de l'intelligence artificielle en entreprise. Nous accompagnons les PME dans leur transformation IA : automatisation de processus métier, déploiement d'agents IA autonomes, pilotage d'infrastructure cloud, prospection commerciale augmentée et gestion de données. Plus de 20 ans d'expérience IT, 100+ agents déployés, 130+ workflows automatisés.
+
+BubbleStone AI traduit les besoins business en solutions techniques concrètes. Notre approche : audit, étude de faisabilité, implémentation, maintenance. Tarification transparente entre 600€ et 800€/jour. Basés en France, nous intervenons dans tous les secteurs.
+
+Fondée par Florent Coulon, expert IT avec plus de 20 ans d'expérience en infrastructure, cloud, développement, data et automatisation.
+
+## Services
+
+- [Pilotage IT 360°](https://bubblestone.ai/#services): Déploiement, monitoring proactif, support réactif, optimisation des coûts, Infrastructure as Code. L'IA au cœur de votre infrastructure.
+- [Automatisation de processus](https://bubblestone.ai/#services): Workflows n8n, intégrations API, MCP (Model Context Protocol), automatisation 24/7. Produire plus, plus vite, sans effort supplémentaire.
+- [Data Management](https://bubblestone.ai/#services): Centralisation des données, bases de connaissances, ETL & pipelines, qualité des données. Valoriser le savoir de votre entreprise.
+- [Processus Métier](https://bubblestone.ai/#services): Digitalisation des processus, réduction des erreurs, traçabilité complète, gains de productivité mesurables.
+- [Prospection Commerciale IA](https://bubblestone.ai/#services): Enrichissement de leads, scoring prédictif, intégration CRM, veille automatisée. Des équipes Sales augmentées par l'IA.
+- [IA & Machine Learning](https://bubblestone.ai/#services): LLM personnalisés, agents autonomes, fine-tuning, RAG & embeddings. Chaque modèle adapté à chaque besoin métier.
+
+## Formations
+
+- [Formations IA pour entreprises](https://bubblestone.ai/formations): Formations pratiques pour intégrer l'IA dans vos équipes et processus métier. (À venir)
+
+## À propos
+
+- [Équipe BubbleStone](https://bubblestone.ai/teams): Notre équipe technique et nos agents IA.
+- [Fondateur — Florent Coulon](https://www.linkedin.com/in/florentcoulon): 20+ ans d'expérience IT, fondateur de BubbleStone AI.
+
+## Blog
+
+- [Articles et veille IA](https://bubblestone.ai/blog): Analyses, tutoriels et études de cas sur l'IA appliquée en entreprise. (À venir)
+
+## Contact
+
+- Email: florent.coulon@bubblestone.ai
+- Site: https://bubblestone.ai
+- LinkedIn: https://www.linkedin.com/company/bubblestoneai
+- Localisation: France
+
+## Optional
+
+- [Mentions légales](https://bubblestone.ai/mentions-legales)
+- [Politique de confidentialité](https://bubblestone.ai/confidentialite)

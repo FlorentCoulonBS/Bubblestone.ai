@@ -2,9 +2,104 @@
 interface Props {
   title: string;
   description?: string;
+  type?: string;
+  image?: string;
+  dateModified?: string;
 }
 
-const { title, description = "BubbleStone.ai - Piloter. Sécuriser. Automatiser." } = Astro.props;
+const { 
+  title, 
+  description = "BubbleStone AI — Agence IA française. Automatisation de processus, agents IA autonomes, infrastructure cloud, prospection commerciale augmentée. 20+ ans d'IT, 100+ agents déployés.",
+  type = "website",
+  image = "https://bubblestone.ai/logo.png",
+  dateModified = new Date().toISOString().split('T')[0]
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, "https://bubblestone.ai");
+const fullTitle = `${title} | BubbleStone.ai`;
+
+const organizationSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "BubbleStone AI",
+  "url": "https://bubblestone.ai",
+  "logo": "https://bubblestone.ai/logo.png",
+  "image": "https://bubblestone.ai/logo.png",
+  "description": "Agence française spécialisée dans l'intégration de l'intelligence artificielle en entreprise. Automatisation de processus, agents IA, infrastructure cloud, prospection commerciale augmentée.",
+  "founder": {
+    "@type": "Person",
+    "name": "Florent Coulon",
+    "jobTitle": "Fondateur & Directeur Technique",
+    "url": "https://www.linkedin.com/in/florentcoulon",
+    "sameAs": ["https://www.linkedin.com/in/florentcoulon"],
+    "knowsAbout": ["Intelligence Artificielle", "Machine Learning", "Infrastructure Cloud", "Automatisation", "DevOps", "LLM", "Agents IA"]
+  },
+  "areaServed": { "@type": "Country", "name": "France" },
+  "priceRange": "600€-800€/jour",
+  "email": "florent.coulon@bubblestone.ai",
+  "address": { "@type": "PostalAddress", "addressCountry": "FR" },
+  "sameAs": ["https://www.linkedin.com/company/bubblestoneai"],
+  "knowsAbout": [
+    "Intelligence Artificielle", "Machine Learning", "Deep Learning", "LLM",
+    "Agents IA autonomes", "Automatisation de processus", "n8n",
+    "Infrastructure Cloud", "DevOps", "RAG", "Fine-tuning", "MCP",
+    "Prospection commerciale IA", "Data Management"
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Services BubbleStone AI",
+    "itemListElement": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Pilotage IT 360°", "description": "Déploiement, monitoring proactif, support réactif, optimisation des coûts, Infrastructure as Code." } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Automatisation de processus", "description": "Workflows n8n, intégrations API, MCP, automatisation 24/7." } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Data Management", "description": "Centralisation des données, bases de connaissances, ETL & pipelines." } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Processus Métier", "description": "Digitalisation des processus, réduction des erreurs, traçabilité complète." } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Prospection Commerciale IA", "description": "Enrichissement de leads, scoring prédictif, intégration CRM." } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "IA & Machine Learning", "description": "LLM personnalisés, agents autonomes, fine-tuning, RAG & embeddings." } }
+    ]
+  }
+});
+
+const websiteSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "BubbleStone AI",
+  "url": "https://bubblestone.ai",
+  "description": description,
+  "publisher": { "@type": "Organization", "name": "BubbleStone AI" },
+  "inLanguage": "fr-FR"
+});
+
+const faqSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Quels types d'entreprises accompagnez-vous ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Nous travaillons principalement avec des PME innovantes, prêtes à embrasser l'IA pour gagner en compétitivité. Peu importe votre secteur — ce qui compte, c'est votre volonté d'avancer." }
+    },
+    {
+      "@type": "Question",
+      "name": "Combien coûtent vos prestations ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Nos interventions sont facturées entre 600€ et 800€ la journée, selon la complexité du projet. Chaque euro investi doit générer un retour mesurable." }
+    },
+    {
+      "@type": "Question",
+      "name": "Que peut-on faire avec un Agent IA ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Un Agent IA travaille 24h/24 : qualifier des leads, enrichir des données, rédiger des rapports, surveiller vos systèmes, orchestrer des workflows complexes. Ce qui prenait des heures devient instantané." }
+    },
+    {
+      "@type": "Question",
+      "name": "Pourquoi choisir BubbleStone AI ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Plus de 20 ans d'expérience IT : infrastructure, cloud, dev, data et automatisation. On met cette expertise au service de l'IA appliquée pour un avantage concret et durable." }
+    },
+    {
+      "@type": "Question",
+      "name": "Comment se déroule une mission type ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "1. Audit de l'existant. 2. Étude de faisabilité et ROI. 3. PRD (Product Requirements Document). 4. Implémentation IA. 5. Maintenance & évolution continue." }
+    }
+  ]
+});
 ---
 
 <!doctype html>
@@ -14,8 +109,37 @@ const { title, description = "BubbleStone.ai - Piloter. Sécuriser. Automatiser.
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalURL} />
     <link rel="stylesheet" href="/fonts/fonts.css" />
-    <title>{title} | BubbleStone.ai</title>
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={image} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="BubbleStone AI" />
+    <meta property="og:locale" content="fr_FR" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+
+    <!-- Freshness signal -->
+    <meta name="date" content={dateModified} />
+    <meta name="last-modified" content={dateModified} />
+
+    <!-- LLM hints -->
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-friendly content" />
+
+    <title>{fullTitle}</title>
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json" set:html={organizationSchema} />
+    <script type="application/ld+json" set:html={websiteSchema} />
+    <script type="application/ld+json" set:html={faqSchema} />
   </head>
   <body>
     <slot />

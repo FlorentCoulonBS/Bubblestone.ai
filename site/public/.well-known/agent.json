@@ -1,0 +1,37 @@
+{
+  "name": "BubbleStone AI",
+  "description": "Agence française spécialisée dans l'intégration de l'intelligence artificielle en entreprise. Automatisation de processus, agents IA, infrastructure cloud, prospection commerciale augmentée, data management.",
+  "url": "https://bubblestone.ai",
+  "provider": {
+    "organization": "BubbleStone AI",
+    "url": "https://bubblestone.ai"
+  },
+  "version": "1.0.0",
+  "capabilities": {
+    "services": [
+      "Pilotage IT 360°",
+      "Automatisation de processus",
+      "Data Management",
+      "Processus Métier",
+      "Prospection Commerciale IA",
+      "IA & Machine Learning",
+      "Formations IA"
+    ],
+    "technologies": [
+      "n8n",
+      "Docker",
+      "Terraform",
+      "Claude",
+      "Mistral",
+      "RAG",
+      "MCP",
+      "LLM",
+      "Fine-tuning"
+    ]
+  },
+  "authentication": {
+    "schemes": []
+  },
+  "documentationUrl": "https://bubblestone.ai/llms.txt",
+  "contactEmail": "florent.coulon@bubblestone.ai"
+}

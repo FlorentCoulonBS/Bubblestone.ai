@@ -1,0 +1,83 @@
+# robots.txt — BubbleStone AI
+# Maximum AI visibility + standard search engines
+# Updated: 2026-03-03
+
+# Traditional search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# OpenAI crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic (Claude)
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+# Google AI
+User-agent: Google-Extended
+Allow: /
+
+# Apple AI
+User-agent: Applebot-Extended
+Allow: /
+
+# Amazon
+User-agent: Amazonbot
+Allow: /
+
+# Common Crawl
+User-agent: CCBot
+Allow: /
+
+# Other AI search engines
+User-agent: YouBot
+Allow: /
+
+User-agent: PhindBot
+Allow: /
+
+User-agent: ExaBot
+Allow: /
+
+User-agent: FirecrawlAgent
+Allow: /
+
+User-agent: Cohere-ai
+Allow: /
+
+# Default: allow all
+User-agent: *
+Allow: /
+
+# Block SEO crawlers (reduce load)
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+# Sitemaps
+Sitemap: https://bubblestone.ai/sitemap-index.xml
+
+# LLM-friendly content
+# See also: /llms.txt and /llms-full.txt

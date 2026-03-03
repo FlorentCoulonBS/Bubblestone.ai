@@ -1,0 +1,130 @@
+# BubbleStone AI — Documentation complète
+
+> Agence française spécialisée dans l'intégration de l'intelligence artificielle en entreprise. Nous accompagnons les PME dans leur transformation IA : automatisation de processus métier, déploiement d'agents IA autonomes, pilotage d'infrastructure cloud, prospection commerciale augmentée et gestion de données. Plus de 20 ans d'expérience IT, 100+ agents déployés, 130+ workflows automatisés.
+
+BubbleStone AI traduit les besoins business en solutions techniques concrètes. Notre approche : audit, étude de faisabilité, implémentation, maintenance. Tarification transparente entre 600€ et 800€/jour. Basés en France, nous intervenons dans tous les secteurs.
+
+Fondée par Florent Coulon, expert IT avec plus de 20 ans d'expérience en infrastructure, cloud, développement, data et automatisation.
+
+## Services détaillés
+
+### Pilotage IT 360°
+
+Déploiement, monitoring proactif, support réactif, réduction des coûts, optimisation des ressources et sécurisation. L'IA est intégrée au cœur de votre infrastructure pour anticiper les incidents, optimiser les performances et réduire les coûts opérationnels.
+
+Fonctionnalités :
+- Monitoring proactif avec alertes intelligentes
+- Optimisation des coûts cloud et infrastructure
+- Support réactif avec SLA personnalisé
+- Infrastructure as Code (Terraform, Docker Compose, CI/CD)
+- Sécurisation et hardening des serveurs
+- Disponibilité garantie 99.9%
+
+### Automatisation de processus
+
+Produire plus, plus vite, tout le temps, sans effort supplémentaire. Nous concevons et déployons des workflows automatisés qui remplacent les tâches répétitives et libèrent du temps pour les activités à forte valeur ajoutée.
+
+Fonctionnalités :
+- Workflows n8n personnalisés
+- Intégrations API multi-services
+- Model Context Protocol (MCP) pour orchestration d'agents
+- Automatisation 24/7 sans intervention humaine
+- Connecteurs CRM, ERP, outils métier
+- Monitoring et alertes sur les workflows
+
+### Data Management
+
+Valoriser ce que votre entreprise a de plus précieux : son savoir. Nous structurons, centralisons et enrichissons vos données pour les rendre exploitables par l'IA et vos équipes.
+
+Fonctionnalités :
+- Centralisation des données multi-sources
+- Construction de bases de connaissances
+- ETL & pipelines de données automatisés
+- Contrôle qualité des données
+- Vectorisation et embeddings pour RAG
+- Tableaux de bord et reporting automatisé
+
+### Processus Métier
+
+Augmenter la qualité, la vitesse et la précision du travail de vos collaborateurs. Nous digitalisons vos processus métier pour éliminer les erreurs, garantir la traçabilité et mesurer les gains de productivité.
+
+Fonctionnalités :
+- Digitalisation des processus existants
+- Réduction des erreurs humaines
+- Traçabilité complète des opérations
+- Gains de productivité mesurables
+- Formulaires et workflows intelligents
+- Intégration avec les outils existants
+
+### Prospection Commerciale IA
+
+Boosté par l'IA, vos équipes Sales détectent en amont des leads plus qualifiés, ont une meilleure connaissance de leurs cibles et clients, et transforment mieux et plus vite.
+
+Fonctionnalités :
+- Enrichissement automatique de leads (données firmographiques, technographiques)
+- Scoring prédictif par machine learning
+- Intégration CRM native (HubSpot, Salesforce, Pipedrive)
+- Veille automatisée sur prospects et marchés
+- Séquences de prospection intelligentes
+- Analyse des signaux d'intention d'achat
+
+### IA & Machine Learning
+
+Connaître les forces et faiblesses de chaque modèle d'IA, les entraîner efficacement, pour répondre efficacement à chaque besoin métier, à chaque scénario.
+
+Fonctionnalités :
+- Déploiement de LLM personnalisés (Claude, Mistral, Llama)
+- Agents IA autonomes pour tâches complexes
+- Fine-tuning sur données métier
+- RAG (Retrieval-Augmented Generation) & embeddings
+- Évaluation et benchmark de modèles
+- Orchestration multi-agents
+
+## Chiffres clés
+
+- 100+ agents IA déployés en production
+- 99.9% de disponibilité garantie
+- 130+ workflows automatisés actifs
+- 24/7 disponibilité technique
+- 20+ ans d'expérience IT du fondateur
+- Tarification : 600€ à 800€ par jour
+
+## Méthodologie
+
+1. **Audit** — Analyse de votre existant, vos outils, vos irritants
+2. **Étude de faisabilité** — Identification de ce qui peut être automatisé et du ROI attendu
+3. **PRD** (Product Requirements Document) — Formalisation de la solution, des étapes et des livrables
+4. **Implémentation IA** — Construction, tests et déploiement
+5. **Maintenance & évolution** — Ajustements, améliorations et évolutions continues
+
+## Questions fréquentes
+
+**Quels types d'entreprises accompagnez-vous ?**
+Nous travaillons principalement avec des PME innovantes, prêtes à embrasser l'IA pour gagner en compétitivité. Des entreprises qui veulent aller vite, qui comprennent que l'automatisation n'est plus une option mais un levier de croissance. Peu importe votre secteur — ce qui compte, c'est votre volonté d'avancer.
+
+**Combien coûtent vos prestations ?**
+Nos interventions sont facturées entre 600€ et 800€ la journée, selon la complexité du projet et les compétences mobilisées. Pas de surprise : on cadre ensemble le périmètre, on estime le nombre de jours, et on s'y tient. Chaque euro investi doit générer un retour mesurable.
+
+**Que peut-on faire avec un Agent IA ?**
+Un Agent IA travaille pour vous, 24h/24, sans fatigue ni oubli. Il peut gérer des processus métiers complets de bout en bout : qualifier des leads, enrichir des données, rédiger des rapports, surveiller vos systèmes, répondre à vos clients, orchestrer des workflows complexes entre vos outils. Ce qui prenait des heures à une équipe devient instantané et systématique.
+
+**Pourquoi BubbleStone AI ?**
+Plus de 20 ans d'expérience terrain dans l'IT : infrastructure, cloud, dev, data, marketing digital et automatisation. On sait ce qui est robuste, ce qui ne l'est pas et ce qui doit être fait. Aujourd'hui, on met cette expertise au service de l'IA appliquée — pas pour suivre la tendance, mais pour vous donner un avantage concret et durable.
+
+**Comment se déroule une mission type ?**
+1. Audit — On analyse votre existant, vos outils, vos irritants. 2. Étude de faisabilité — On identifie ce qui peut être automatisé et le ROI attendu. 3. PRD — On formalise la solution, les étapes, les livrables. 4. Implémentation IA — On construit, on teste, on déploie. 5. Maintenance & évolution — On reste présents pour ajuster, améliorer et faire évoluer.
+
+## Valeurs
+
+- **Clarté** — Pas de jargon. On traduit la complexité pour que tout soit clair.
+- **Autonomie** — L'objectif : que vous n'ayez plus besoin de nous.
+- **Simplicité** — La solution la plus simple qui fonctionne. Toujours.
+- **Durabilité** — Des solutions qui tiennent, documentées, maintenables.
+
+## Contact
+
+- Email: florent.coulon@bubblestone.ai
+- Site: https://bubblestone.ai
+- LinkedIn: https://www.linkedin.com/company/bubblestoneai
+- Fondateur: Florent Coulon (https://www.linkedin.com/in/florentcoulon)
+- Localisation: France

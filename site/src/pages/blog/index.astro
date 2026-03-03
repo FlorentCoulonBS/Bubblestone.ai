@@ -89,9 +89,9 @@ const posts = (await getCollection('blog'))
     padding: 0 1.5rem;
   }
 
-  /* Hero compact */
+  /* Hero compact — override global section padding (8rem) */
   .blog-hero {
-    padding: 2rem 0 0;
+    padding: 2rem 0 0 !important;
   }
 
   .hero-inner {
@@ -134,9 +134,9 @@ const posts = (await getCollection('blog'))
     line-height: 1.5;
   }
 
-  /* Posts */
+  /* Posts — override global section padding (8rem) */
   .blog-list {
-    padding: 0 0 4rem;
+    padding: 0 0 4rem !important;
   }
 
   .posts-grid {

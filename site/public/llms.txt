@@ -22,11 +22,12 @@ Fondée par Florent Coulon, expert IT avec plus de 20 ans d'expérience en infra
 ## À propos
 
 - [Équipe BubbleStone](https://bubblestone.ai/teams): Notre équipe technique et nos agents IA.
-- [Fondateur — Florent Coulon](https://www.linkedin.com/in/florentcoulon): 20+ ans d'expérience IT, fondateur de BubbleStone AI.
+- [Fondateur — Florent Coulon](https://www.linkedin.com/in/coulonflorent): 20+ ans d'expérience IT, fondateur de BubbleStone AI.
 
 ## Blog
 
-- [Articles et veille IA](https://bubblestone.ai/blog): Analyses, tutoriels et études de cas sur l'IA appliquée en entreprise. (À venir)
+- [Articles et veille IA](https://bubblestone.ai/blog): Analyses, tutoriels et études de cas sur l'IA appliquée en entreprise.
+- [Flux RSS](https://bubblestone.ai/feed.xml): Suivre nos publications au format RSS.
 
 ## Contact
 

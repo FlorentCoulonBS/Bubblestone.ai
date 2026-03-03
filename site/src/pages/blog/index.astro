@@ -53,16 +53,8 @@ const posts = (await getCollection('blog'))
                   <h2>{post.data.title}</h2>
                   <p class="post-excerpt">{post.data.description}</p>
                   <div class="post-footer">
-                    <div class="post-author">
-                      <img src="/images/team/florent.jpg" alt="" class="author-tiny" />
-                      <span>{post.data.author}</span>
-                    </div>
-                    <span class="read-more">
-                      Lire
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7"></path>
-                      </svg>
-                    </span>
+                    <span class="post-author-name">{post.data.author}</span>
+                    <span class="read-more">Lire →</span>
                   </div>
                 </div>
               </a>
@@ -217,37 +209,20 @@ const posts = (await getCollection('blog'))
     justify-content: space-between;
     align-items: center;
     margin-top: 1rem;
-    padding-top: 0.85rem;
+    padding-top: 0.75rem;
     border-top: 1px solid var(--color-gray-100);
   }
 
-  .post-author {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .author-tiny {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  .post-author span {
+  .post-author-name {
     font-size: 0.8rem;
     color: var(--color-gray-400);
     font-weight: 500;
   }
 
   .read-more {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
     color: var(--color-accent);
     font-weight: 600;
     font-size: 0.8rem;
-    letter-spacing: 0.02em;
   }
 
   .no-posts {
@@ -260,10 +235,5 @@ const posts = (await getCollection('blog'))
   @media (max-width: 768px) {
     .blog-hero h1 { font-size: 1.5rem; }
     .post-card-inner { padding: 1.25rem; }
-    .post-footer {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.5rem;
-    }
   }
 </style>

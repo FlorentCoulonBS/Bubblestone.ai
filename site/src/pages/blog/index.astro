@@ -16,143 +16,31 @@ const posts = (await getCollection('blog'))
 >
   <Header />
   
-  <div id="blog-wrapper">
-    <div id="blog-inner">
-      <p class="blog-badge">📖 Blog</p>
-      <h1 class="blog-title">L'IA appliquée, sans bullshit.</h1>
-      <p class="blog-sub">Analyses, retours d'expérience et veille tech sur l'IA en entreprise.</p>
+  <div style="padding: 120px 1.5rem 4rem !important; max-width: 780px; margin: 0 auto; background: #fff; min-height: 100vh;">
+    <p style="font-size: 0.85rem; font-weight: 500; color: #3b82f6; margin: 0 0 0.4rem;">📖 Blog</p>
+    <h1 style="font-family: Poppins, system-ui, sans-serif; font-size: 1.75rem !important; font-weight: 700; color: #020617; margin: 0 0 0.3rem !important; line-height: 1.3;">L'IA appliquée, sans bullshit.</h1>
+    <p style="color: #64748b; font-size: 0.95rem; margin: 0 0 1.5rem; line-height: 1.5;">Analyses, retours d'expérience et veille tech sur l'IA en entreprise.</p>
 
-      {posts.length === 0 ? (
-        <p style="text-align:center;color:#94a3b8;padding:3rem 0;">Les premiers articles arrivent bientôt.</p>
-      ) : (
-        posts.map((post) => (
-          <a href={`/blog/${post.slug}/`} class="blog-card">
-            <div class="card-meta">
-              <span class="card-date">
-                {post.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </span>
-              {post.data.tags.slice(0, 2).map((tag: string) => (
-                <span class="card-tag">{tag}</span>
-              ))}
-            </div>
-            <h2 class="card-title">{post.data.title}</h2>
-            <p class="card-excerpt">{post.data.description}</p>
-            <span class="card-cta">Lire l'article →</span>
-          </a>
-        ))
-      )}
-    </div>
+    {posts.length === 0 ? (
+      <p style="text-align:center; color:#94a3b8; padding:3rem 0;">Les premiers articles arrivent bientôt.</p>
+    ) : (
+      posts.map((post) => (
+        <a href={`/blog/${post.slug}/`} style="display: block; padding: 1.25rem 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #3b82f6; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; flex-wrap: wrap;">
+            <span style="font-size: 0.78rem; color: #94a3b8; font-weight: 500;">
+              {post.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+            {post.data.tags.slice(0, 2).map((tag: string) => (
+              <span style="font-size: 0.68rem; padding: 0.1rem 0.5rem; background: rgba(59,130,246,0.07); color: #3b82f6; border-radius: 99px; font-weight: 500;">{tag}</span>
+            ))}
+          </div>
+          <h2 style="font-family: Poppins, system-ui, sans-serif; font-size: 1.1rem !important; font-weight: 600; color: #020617; margin: 0 0 0.3rem !important; line-height: 1.35;">{post.data.title}</h2>
+          <p style="color: #64748b; font-size: 0.875rem; line-height: 1.5; margin: 0 0 0.6rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{post.data.description}</p>
+          <span style="font-size: 0.8rem; color: #3b82f6; font-weight: 600;">Lire l'article →</span>
+        </a>
+      ))
+    )}
   </div>
 
   <Footer />
 </Layout>
-
-<style is:global>
-  #blog-wrapper {
-    padding: 120px 1.5rem 4rem;
-    max-width: 780px;
-    margin: 0 auto;
-    background: #fff;
-    min-height: 100vh;
-  }
-
-  #blog-inner > * + * {
-    /* No extra spacing trick needed */
-  }
-
-  .blog-badge {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #3b82f6;
-    margin: 0 0 0.4rem;
-  }
-
-  .blog-title {
-    font-family: "Poppins", system-ui, sans-serif;
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #020617;
-    margin: 0 0 0.3rem;
-    line-height: 1.3;
-  }
-
-  .blog-sub {
-    color: #64748b;
-    font-size: 0.95rem;
-    margin: 0 0 1.5rem;
-    line-height: 1.5;
-  }
-
-  .blog-card {
-    display: block;
-    padding: 1.25rem 1.5rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-left: 3px solid #3b82f6;
-    border-radius: 8px;
-    text-decoration: none;
-    color: inherit;
-    margin-bottom: 1rem;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-
-  .blog-card:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.12);
-  }
-
-  .card-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.4rem;
-    flex-wrap: wrap;
-  }
-
-  .card-date {
-    font-size: 0.78rem;
-    color: #94a3b8;
-    font-weight: 500;
-  }
-
-  .card-tag {
-    font-size: 0.68rem;
-    padding: 0.1rem 0.5rem;
-    background: rgba(59, 130, 246, 0.07);
-    color: #3b82f6;
-    border-radius: 99px;
-    font-weight: 500;
-  }
-
-  .card-title {
-    font-family: "Poppins", system-ui, sans-serif;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #020617;
-    margin: 0 0 0.3rem;
-    line-height: 1.35;
-  }
-
-  .card-excerpt {
-    color: #64748b;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    margin: 0 0 0.6rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .card-cta {
-    font-size: 0.8rem;
-    color: #3b82f6;
-    font-weight: 600;
-  }
-
-  @media (max-width: 768px) {
-    #blog-wrapper { padding: 100px 1rem 3rem; }
-    .blog-title { font-size: 1.4rem; }
-    .blog-card { padding: 1rem 1.25rem; }
-  }
-</style>

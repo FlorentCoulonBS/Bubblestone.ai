@@ -1,0 +1,224 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog'))
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<Layout 
+  title="Blog — Veille IA & Automatisation" 
+  description="Articles, analyses et études de cas sur l'intégration de l'IA en entreprise. Automatisation, agents IA, infrastructure cloud, data management."
+  type="website"
+>
+  <Header />
+  
+  <main class="blog-page">
+    <section class="blog-hero">
+      <div class="container">
+        <span class="section-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+          Blog & Veille IA
+        </span>
+        <h1>L'IA appliquée, sans bullshit.</h1>
+        <p class="blog-hero-sub">Analyses, tutoriels et retours d'expérience sur l'intégration de l'IA en entreprise.</p>
+      </div>
+    </section>
+
+    <section class="blog-list">
+      <div class="container">
+        {posts.length === 0 ? (
+          <p class="no-posts">Les premiers articles arrivent bientôt. Revenez vite.</p>
+        ) : (
+          <div class="posts-grid">
+            {posts.map((post) => (
+              <a href={`/blog/${post.slug}/`} class="post-card">
+                <div class="post-card-content">
+                  <div class="post-meta">
+                    <time datetime={post.data.date.toISOString()}>
+                      {post.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </time>
+                    {post.data.tags.length > 0 && (
+                      <span class="post-tag">{post.data.tags[0]}</span>
+                    )}
+                  </div>
+                  <h2>{post.data.title}</h2>
+                  <p>{post.data.description}</p>
+                  <div class="post-author">
+                    <span>Par {post.data.author}</span>
+                    <span class="read-more">
+                      Lire l'article
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"></path>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .blog-page {
+    padding-top: 80px;
+  }
+
+  .blog-hero {
+    padding: 4rem 0 3rem;
+    text-align: center;
+    background: var(--gradient-hero);
+  }
+
+  .blog-hero h1 {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 1rem 0 0.5rem;
+  }
+
+  .blog-hero-sub {
+    color: var(--color-gray-500);
+    font-size: 1.125rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-accent);
+  }
+
+  .blog-list {
+    padding: 2rem 0 4rem;
+  }
+
+  .posts-grid {
+    display: grid;
+    gap: 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .post-card {
+    display: block;
+    padding: 2rem;
+    background: var(--crystal-bg);
+    border: 1px solid var(--crystal-border);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    box-shadow: var(--crystal-shadow);
+  }
+
+  .post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--crystal-shadow-hover);
+    border-color: var(--color-accent);
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .post-meta time {
+    font-size: 0.875rem;
+    color: var(--color-gray-400);
+  }
+
+  .post-tag {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-accent);
+    border-radius: var(--radius-full);
+    font-weight: 500;
+  }
+
+  .post-card h2 {
+    font-family: var(--font-heading);
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin: 0 0 0.5rem;
+    line-height: 1.3;
+  }
+
+  .post-card p {
+    color: var(--color-gray-500);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .post-author {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-gray-100);
+  }
+
+  .post-author span {
+    font-size: 0.875rem;
+    color: var(--color-gray-400);
+  }
+
+  .read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--color-accent) !important;
+    font-weight: 500;
+  }
+
+  .no-posts {
+    text-align: center;
+    color: var(--color-gray-400);
+    padding: 4rem 0;
+    font-size: 1.1rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .post-card {
+      padding: 1.5rem;
+    }
+    .post-author {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+  }
+</style>

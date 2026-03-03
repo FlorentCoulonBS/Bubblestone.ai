@@ -1,0 +1,329 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const courseSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "item": {
+        "@type": "Course",
+        "name": "Automatisation IA pour PME",
+        "description": "Apprenez à identifier, concevoir et déployer des workflows automatisés avec l'IA. De la qualification de leads à l'orchestration multi-agents.",
+        "provider": { "@type": "Organization", "name": "BubbleStone AI", "url": "https://bubblestone.ai" },
+        "educationalLevel": "Intermediate",
+        "inLanguage": "fr",
+        "offers": { "@type": "Offer", "category": "Sur devis" }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "item": {
+        "@type": "Course",
+        "name": "Agents IA : de la théorie à la production",
+        "description": "Comprenez le fonctionnement des LLM, apprenez à construire des agents autonomes et à les déployer en production.",
+        "provider": { "@type": "Organization", "name": "BubbleStone AI", "url": "https://bubblestone.ai" },
+        "educationalLevel": "Advanced",
+        "inLanguage": "fr",
+        "offers": { "@type": "Offer", "category": "Sur devis" }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "item": {
+        "@type": "Course",
+        "name": "Data & IA : valoriser vos données d'entreprise",
+        "description": "Structurez, nettoyez et exploitez vos données avec l'IA. RAG, embeddings, bases de connaissances et pipelines de données.",
+        "provider": { "@type": "Organization", "name": "BubbleStone AI", "url": "https://bubblestone.ai" },
+        "educationalLevel": "Intermediate",
+        "inLanguage": "fr",
+        "offers": { "@type": "Offer", "category": "Sur devis" }
+      }
+    }
+  ]
+});
+---
+
+<Layout 
+  title="Formations IA pour entreprises" 
+  description="Formations pratiques en intelligence artificielle pour PME. Automatisation, agents IA, data management. Formez vos équipes aux compétences IA de demain."
+>
+  <Header />
+  
+  <main class="formations-page">
+    <section class="formations-hero">
+      <div class="container">
+        <span class="section-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c0 2 4 3 6 3s6-1 6-3v-5"></path>
+          </svg>
+          Formations
+        </span>
+        <h1>L'IA, ça s'apprend.<br><span class="text-gradient">On vous montre comment.</span></h1>
+        <p class="hero-sub">Des formations concrètes, pas des slides PowerPoint. Vos équipes repartent avec des compétences applicables immédiatement.</p>
+      </div>
+    </section>
+
+    <section class="formations-grid-section">
+      <div class="container">
+        <div class="formations-grid">
+          
+          <div class="formation-card">
+            <div class="formation-badge">Populaire</div>
+            <div class="formation-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </div>
+            <h2>Automatisation IA pour PME</h2>
+            <p class="formation-level">Intermédiaire · 2 jours</p>
+            <p>Apprenez à identifier, concevoir et déployer des workflows automatisés avec l'IA. De la qualification de leads à l'orchestration multi-agents.</p>
+            <ul>
+              <li>Identifier les processus automatisables</li>
+              <li>Construire des workflows n8n</li>
+              <li>Intégrer des LLM dans vos processus</li>
+              <li>Mesurer le ROI de vos automatisations</li>
+            </ul>
+            <a href="/#contact" class="btn-formation">Demander un devis →</a>
+          </div>
+
+          <div class="formation-card">
+            <div class="formation-icon icon-purple">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"></path>
+                <path d="M12 14a7 7 0 0 1 7 7H5a7 7 0 0 1 7-7z"></path>
+              </svg>
+            </div>
+            <h2>Agents IA : de la théorie à la production</h2>
+            <p class="formation-level">Avancé · 3 jours</p>
+            <p>Comprenez le fonctionnement des LLM, apprenez à construire des agents autonomes et à les déployer en production de manière fiable.</p>
+            <ul>
+              <li>Fonctionnement des LLM (Claude, Mistral, Llama)</li>
+              <li>Architecture d'agents autonomes</li>
+              <li>RAG et bases de connaissances</li>
+              <li>Déploiement, monitoring et maintenance</li>
+            </ul>
+            <a href="/#contact" class="btn-formation">Demander un devis →</a>
+          </div>
+
+          <div class="formation-card">
+            <div class="formation-icon icon-green">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              </svg>
+            </div>
+            <h2>Data & IA : valoriser vos données</h2>
+            <p class="formation-level">Intermédiaire · 2 jours</p>
+            <p>Structurez, nettoyez et exploitez vos données avec l'IA. Apprenez à construire des pipelines de données et des bases de connaissances.</p>
+            <ul>
+              <li>Audit et structuration des données</li>
+              <li>Vectorisation et embeddings</li>
+              <li>Construire un RAG d'entreprise</li>
+              <li>Pipelines ETL automatisés</li>
+            </ul>
+            <a href="/#contact" class="btn-formation">Demander un devis →</a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="formations-cta">
+      <div class="container">
+        <div class="cta-box">
+          <h2>Formation sur mesure ?</h2>
+          <p>Chaque entreprise a des besoins spécifiques. On construit votre programme de formation adapté à votre secteur, vos outils et vos objectifs.</p>
+          <a href="/#contact" class="btn btn-primary btn-lg">
+            Discutons de votre projet
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="application/ld+json" set:html={courseSchema} />
+  <Footer />
+</Layout>
+
+<style>
+  .formations-page { padding-top: 80px; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+  .formations-hero {
+    padding: 4rem 0 3rem;
+    text-align: center;
+    background: var(--gradient-hero);
+  }
+  .formations-hero h1 {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 1rem 0 0.75rem;
+    line-height: 1.2;
+  }
+  .text-gradient {
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    color: var(--color-gray-500);
+    font-size: 1.125rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-accent);
+  }
+
+  .formations-grid-section { padding: 2rem 0 4rem; }
+  .formations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+  .formation-card {
+    position: relative;
+    padding: 2rem;
+    background: var(--crystal-bg);
+    border: 1px solid var(--crystal-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--crystal-shadow);
+    transition: all 0.3s ease;
+  }
+  .formation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--crystal-shadow-hover);
+  }
+  .formation-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .formation-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: var(--radius-md);
+    color: var(--color-accent);
+    margin-bottom: 1.25rem;
+  }
+  .icon-purple {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+  }
+  .icon-green {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+  }
+  .formation-card h2 {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin: 0 0 0.5rem;
+  }
+  .formation-level {
+    font-size: 0.8rem;
+    color: var(--color-accent);
+    font-weight: 500;
+    margin: 0 0 1rem;
+  }
+  .formation-card p {
+    color: var(--color-gray-500);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  .formation-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 1.25rem 0;
+  }
+  .formation-card li {
+    position: relative;
+    padding-left: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-gray-600);
+    font-size: 0.9rem;
+  }
+  .formation-card li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+  .btn-formation {
+    display: inline-block;
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    margin-top: 0.5rem;
+  }
+  .btn-formation:hover { opacity: 0.8; }
+
+  .formations-cta { padding: 0 0 4rem; }
+  .cta-box {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: var(--stone-dark);
+    border-radius: var(--radius-xl);
+    color: white;
+  }
+  .cta-box h2 {
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    margin: 0 0 0.75rem;
+  }
+  .cta-box p {
+    color: var(--color-gray-400);
+    max-width: 500px;
+    margin: 0 auto 1.5rem;
+    line-height: 1.6;
+  }
+  .btn { 
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 1.5rem; border-radius: var(--radius-md);
+    font-weight: 600; text-decoration: none; font-size: 0.95rem;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--color-accent); color: white; }
+  .btn-primary:hover { background: var(--color-accent-dark); }
+
+  @media (max-width: 768px) {
+    .formations-grid { grid-template-columns: 1fr; }
+  }
+</style>

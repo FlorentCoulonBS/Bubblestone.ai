@@ -1,0 +1,99 @@
+/* Blog page styles — external file to pass CSP style-src 'self' */
+#bp {
+  padding: 160px 1.5rem 4rem;
+  max-width: 780px;
+  margin: 0 auto;
+  background: #fff;
+  min-height: 100vh;
+  text-align: center;
+}
+#bp-badge {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #3b82f6;
+  margin: 0 0 0.5rem;
+}
+#bp-h1 {
+  font-family: "Poppins", system-ui, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #020617;
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}
+#bp-sub {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0 0 2.5rem;
+  line-height: 1.5;
+}
+#bp-empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 3rem 0;
+}
+#bp .bp-card {
+  display: block;
+  padding: 1.25rem 1.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #3b82f6;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 1rem;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#bp .bp-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.12);
+}
+#bp .bp-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+}
+#bp .bp-date {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+#bp .bp-tag {
+  font-size: 0.68rem;
+  padding: 0.1rem 0.5rem;
+  background: rgba(59, 130, 246, 0.07);
+  color: #3b82f6;
+  border-radius: 99px;
+  font-weight: 500;
+}
+#bp .bp-title {
+  font-family: "Poppins", system-ui, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #020617;
+  margin: 0 0 0.3rem;
+  line-height: 1.35;
+}
+#bp .bp-excerpt {
+  color: #64748b;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0 0 0.6rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#bp .bp-cta {
+  font-size: 0.8rem;
+  color: #3b82f6;
+  font-weight: 600;
+}
+@media (max-width: 768px) {
+  #bp { padding: 140px 1rem 3rem; }
+  #bp-h1 { font-size: 1.4rem; }
+  #bp .bp-card { padding: 1rem 1.25rem; }
+}

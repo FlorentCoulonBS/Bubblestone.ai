@@ -139,6 +139,9 @@ const faqSchema = JSON.stringify({
 
     <title>{fullTitle}</title>
 
+    <!-- Extra head content from pages -->
+    <slot name="head" />
+
     <!-- Schema.org JSON-LD -->
     <script type="application/ld+json" set:html={organizationSchema} />
     <script type="application/ld+json" set:html={websiteSchema} />

@@ -80,7 +80,7 @@ const posts = (await getCollection('blog'))
   .blog-page {
     padding-top: 80px;
     min-height: 100vh;
-    background: var(--color-gray-50);
+    background: white;
   }
 
   .container {
@@ -91,9 +91,7 @@ const posts = (await getCollection('blog'))
 
   /* Hero compact */
   .blog-hero {
-    padding: 3rem 0 2rem;
-    background: white;
-    border-bottom: 1px solid var(--color-gray-100);
+    padding: 2.5rem 0 1.5rem;
   }
 
   .hero-inner {
@@ -138,7 +136,7 @@ const posts = (await getCollection('blog'))
 
   /* Posts */
   .blog-list {
-    padding: 2rem 0 4rem;
+    padding: 0 0 4rem;
   }
 
   .posts-grid {
@@ -148,7 +146,7 @@ const posts = (await getCollection('blog'))
 
   .post-card {
     display: block;
-    background: white;
+    background: var(--color-gray-50);
     border: 1px solid var(--color-gray-200);
     border-radius: var(--radius-md);
     text-decoration: none;

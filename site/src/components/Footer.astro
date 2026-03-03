@@ -81,8 +81,11 @@ const legal = [
         <div class="footer-column">
           <h4>Newsletter</h4>
           <p class="newsletter-text">Recevez chaque semaine des conseils sur l'automatisation.</p>
-          <form class="newsletter-form" action="https://formspree.io/f/mlggnzdz" method="POST">
-            <input type="email" name="email" placeholder="Votre email" required />
+          <form class="newsletter-form" action="https://formspree.io/f/mlggnzdz" method="POST"
+                toolname="subscribe_bubblestone_newsletter"
+                tooldescription="Subscribe to BubbleStone AI weekly newsletter about AI automation, agents, and enterprise integration">
+            <input type="email" name="email" placeholder="Votre email" required
+                   toolparamdescription="Email address to receive weekly AI automation tips and insights" />
             <button type="submit" class="btn btn-primary">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7"/>

@@ -64,26 +64,32 @@
       </div>
 
       <div class="contact-form-wrapper">
-        <form class="contact-form" action="https://formspree.io/f/mlggnzdz" method="POST">
+        <form class="contact-form" action="https://formspree.io/f/mlggnzdz" method="POST"
+              toolname="contact_bubblestone_ai"
+              tooldescription="Contact BubbleStone AI agency for AI consulting, automation, infrastructure, or machine learning services. French AI agency based in France, 600-800€/day, 20+ years IT experience.">
           <div class="form-group">
             <label for="name">Nom complet</label>
-            <input type="text" id="name" name="name" placeholder="Jean Dupont" required />
+            <input type="text" id="name" name="name" placeholder="Jean Dupont" required
+                   toolparamdescription="Full name of the person requesting AI consulting services" />
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label for="email">Email</label>
-              <input type="email" id="email" name="email" placeholder="jean@entreprise.com" required />
+              <input type="email" id="email" name="email" placeholder="jean@entreprise.com" required
+                     toolparamdescription="Business email address for follow-up" />
             </div>
             <div class="form-group">
               <label for="phone">Téléphone</label>
-              <input type="tel" id="phone" name="phone" placeholder="+33 6 12 34 56 78" />
+              <input type="tel" id="phone" name="phone" placeholder="+33 6 12 34 56 78"
+                     toolparamdescription="Phone number (optional)" />
             </div>
           </div>
 
           <div class="form-group">
             <label for="subject">Sujet</label>
-            <select id="subject" name="subject" required>
+            <select id="subject" name="subject" required
+                    toolparamdescription="Service category: pilotage-it (IT management), automatisation (AI workflow automation), data (data management), processus (business process), prospection (AI sales prospection), ia-ml (AI & Machine Learning), recrutement (hiring), other">
               <option value="">Sélectionnez un sujet</option>
               <option value="pilotage-it">Pilotage IT</option>
               <option value="automatisation">Automatisation</option>
@@ -98,7 +104,8 @@
 
           <div class="form-group">
             <label for="message">Votre message</label>
-            <textarea id="message" name="message" rows="4" placeholder="Décrivez votre projet ou vos besoins..." required></textarea>
+            <textarea id="message" name="message" rows="4" placeholder="Décrivez votre projet ou vos besoins..." required
+                      toolparamdescription="Description of the AI project, business needs, or questions"></textarea>
           </div>
 
           <button type="submit" class="btn btn-primary btn-lg">

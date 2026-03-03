@@ -152,6 +152,9 @@ const faqSchema = JSON.stringify({
   </head>
   <body>
     <slot />
+    <!-- WebMCP: AI agent discovery (polyfill + tools) -->
+    <script src="/mcp-b-polyfill.js" defer></script>
+    <script src="/webmcp.js" defer></script>
   </body>
 </html>
 

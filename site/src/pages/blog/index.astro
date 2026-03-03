@@ -19,42 +19,47 @@ const posts = (await getCollection('blog'))
   <main class="blog-page">
     <section class="blog-hero">
       <div class="container">
-        <span class="section-badge">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-          </svg>
-          Blog & Veille IA
-        </span>
-        <h1>L'IA appliquée, sans bullshit.</h1>
-        <p class="blog-hero-sub">Analyses, tutoriels et retours d'expérience sur l'intégration de l'IA en entreprise.</p>
+        <div class="hero-inner">
+          <span class="section-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            Blog
+          </span>
+          <h1>L'IA appliquée, <span class="text-gradient">sans bullshit.</span></h1>
+          <p class="blog-hero-sub">Analyses, retours d'expérience et veille tech sur l'IA en entreprise.</p>
+        </div>
       </div>
     </section>
 
     <section class="blog-list">
       <div class="container">
         {posts.length === 0 ? (
-          <p class="no-posts">Les premiers articles arrivent bientôt. Revenez vite.</p>
+          <p class="no-posts">Les premiers articles arrivent bientôt.</p>
         ) : (
           <div class="posts-grid">
-            {posts.map((post) => (
-              <a href={`/blog/${post.slug}/`} class="post-card">
-                <div class="post-card-content">
+            {posts.map((post, i) => (
+              <a href={`/blog/${post.slug}/`} class={`post-card ${i === 0 ? 'post-featured' : ''}`}>
+                <div class="post-card-inner">
                   <div class="post-meta">
                     <time datetime={post.data.date.toISOString()}>
-                      {post.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      {post.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </time>
-                    {post.data.tags.length > 0 && (
-                      <span class="post-tag">{post.data.tags[0]}</span>
-                    )}
+                    {post.data.tags.slice(0, 2).map((tag: string) => (
+                      <span class="post-tag">{tag}</span>
+                    ))}
                   </div>
                   <h2>{post.data.title}</h2>
-                  <p>{post.data.description}</p>
-                  <div class="post-author">
-                    <span>Par {post.data.author}</span>
+                  <p class="post-excerpt">{post.data.description}</p>
+                  <div class="post-footer">
+                    <div class="post-author">
+                      <img src="/images/team/florent.jpg" alt="" class="author-tiny" />
+                      <span>{post.data.author}</span>
+                    </div>
                     <span class="read-more">
-                      Lire l'article
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      Lire
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M5 12h14M12 5l7 7-7 7"></path>
                       </svg>
                     </span>
@@ -74,87 +79,116 @@ const posts = (await getCollection('blog'))
 <style>
   .blog-page {
     padding-top: 80px;
+    min-height: 100vh;
+    background: var(--color-gray-50);
   }
 
-  .blog-hero {
-    padding: 4rem 0 3rem;
-    text-align: center;
-    background: var(--gradient-hero);
-  }
-
-  .blog-hero h1 {
-    font-family: var(--font-heading);
-    font-size: clamp(2rem, 4vw, 3rem);
-    font-weight: 700;
-    color: var(--color-primary);
-    margin: 1rem 0 0.5rem;
-  }
-
-  .blog-hero-sub {
-    color: var(--color-gray-500);
-    font-size: 1.125rem;
-    max-width: 600px;
+  .container {
+    max-width: 860px;
     margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  /* Hero compact */
+  .blog-hero {
+    padding: 3rem 0 2rem;
+    background: white;
+    border-bottom: 1px solid var(--color-gray-100);
+  }
+
+  .hero-inner {
+    max-width: 600px;
   }
 
   .section-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(59, 130, 246, 0.08);
-    border: 1px solid rgba(59, 130, 246, 0.15);
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    background: rgba(59, 130, 246, 0.06);
+    border: 1px solid rgba(59, 130, 246, 0.12);
     border-radius: var(--radius-full);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     font-weight: 500;
     color: var(--color-accent);
   }
 
+  .blog-hero h1 {
+    font-family: var(--font-heading);
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0.85rem 0 0.5rem;
+    line-height: 1.25;
+  }
+
+  .text-gradient {
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .blog-hero-sub {
+    color: var(--color-gray-500);
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* Posts */
   .blog-list {
     padding: 2rem 0 4rem;
   }
 
   .posts-grid {
     display: grid;
-    gap: 1.5rem;
-    max-width: 800px;
-    margin: 0 auto;
+    gap: 1rem;
   }
 
   .post-card {
     display: block;
-    padding: 2rem;
-    background: var(--crystal-bg);
-    border: 1px solid var(--crystal-border);
-    border-radius: var(--radius-lg);
+    background: white;
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
     text-decoration: none;
     color: inherit;
-    transition: all 0.3s ease;
-    box-shadow: var(--crystal-shadow);
+    transition: all 0.2s ease;
+    overflow: hidden;
   }
 
   .post-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--crystal-shadow-hover);
     border-color: var(--color-accent);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .post-featured {
+    border-left: 3px solid var(--color-accent);
+  }
+
+  .post-card-inner {
+    padding: 1.5rem 1.75rem;
   }
 
   .post-meta {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+    flex-wrap: wrap;
   }
 
   .post-meta time {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--color-gray-400);
+    font-weight: 500;
   }
 
   .post-tag {
-    font-size: 0.75rem;
-    padding: 0.2rem 0.6rem;
-    background: rgba(59, 130, 246, 0.1);
+    font-size: 0.7rem;
+    padding: 0.15rem 0.55rem;
+    background: rgba(59, 130, 246, 0.07);
     color: var(--color-accent);
     border-radius: var(--radius-full);
     font-weight: 500;
@@ -162,60 +196,73 @@ const posts = (await getCollection('blog'))
 
   .post-card h2 {
     font-family: var(--font-heading);
-    font-size: 1.375rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--color-primary);
-    margin: 0 0 0.5rem;
-    line-height: 1.3;
+    margin: 0 0 0.4rem;
+    line-height: 1.35;
   }
 
-  .post-card p {
+  .post-excerpt {
     color: var(--color-gray-500);
-    font-size: 0.95rem;
-    line-height: 1.6;
+    font-size: 0.9rem;
+    line-height: 1.55;
     margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--color-gray-100);
   }
 
   .post-author {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 1.25rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--color-gray-100);
+    gap: 0.5rem;
+  }
+
+  .author-tiny {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
   }
 
   .post-author span {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--color-gray-400);
+    font-weight: 500;
   }
 
   .read-more {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    color: var(--color-accent) !important;
-    font-weight: 500;
+    gap: 0.3rem;
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
   }
 
   .no-posts {
     text-align: center;
     color: var(--color-gray-400);
     padding: 4rem 0;
-    font-size: 1.1rem;
-  }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
+    font-size: 1rem;
   }
 
   @media (max-width: 768px) {
-    .post-card {
-      padding: 1.5rem;
-    }
-    .post-author {
+    .blog-hero h1 { font-size: 1.5rem; }
+    .post-card-inner { padding: 1.25rem; }
+    .post-footer {
       flex-direction: column;
       align-items: flex-start;
       gap: 0.5rem;

@@ -17,52 +17,35 @@ const posts = (await getCollection('blog'))
   <Header />
   
   <main class="blog-page">
-    <section class="blog-hero">
-      <div class="container">
-        <div class="hero-inner">
-          <span class="section-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-            </svg>
-            Blog
-          </span>
-          <h1>L'IA appliquée, <span class="text-gradient">sans bullshit.</span></h1>
-          <p class="blog-hero-sub">Analyses, retours d'expérience et veille tech sur l'IA en entreprise.</p>
-        </div>
+    <div class="blog-container">
+      <div class="blog-intro">
+        <span class="badge">📖 Blog</span>
+        <h1>L'IA appliquée, <span class="text-gradient">sans bullshit.</span></h1>
+        <p>Analyses, retours d'expérience et veille tech sur l'IA en entreprise.</p>
       </div>
-    </section>
 
-    <section class="blog-list">
-      <div class="container">
-        {posts.length === 0 ? (
-          <p class="no-posts">Les premiers articles arrivent bientôt.</p>
-        ) : (
-          <div class="posts-grid">
-            {posts.map((post, i) => (
-              <a href={`/blog/${post.slug}/`} class={`post-card ${i === 0 ? 'post-featured' : ''}`}>
-                <div class="post-card-inner">
-                  <div class="post-meta">
-                    <time datetime={post.data.date.toISOString()}>
-                      {post.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </time>
-                    {post.data.tags.slice(0, 2).map((tag: string) => (
-                      <span class="post-tag">{tag}</span>
-                    ))}
-                  </div>
-                  <h2>{post.data.title}</h2>
-                  <p class="post-excerpt">{post.data.description}</p>
-                  <div class="post-footer">
-                    <span class="post-author-name">{post.data.author}</span>
-                    <span class="read-more">Lire →</span>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
+      {posts.length === 0 ? (
+        <p class="no-posts">Les premiers articles arrivent bientôt.</p>
+      ) : (
+        <div class="posts-grid">
+          {posts.map((post) => (
+            <a href={`/blog/${post.slug}/`} class="post-card">
+              <div class="post-meta">
+                <time datetime={post.data.date.toISOString()}>
+                  {post.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </time>
+                {post.data.tags.slice(0, 2).map((tag: string) => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </div>
+              <h2>{post.data.title}</h2>
+              <p class="excerpt">{post.data.description}</p>
+              <span class="read-cta">Lire l'article →</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
   </main>
 
   <Footer />
@@ -70,46 +53,37 @@ const posts = (await getCollection('blog'))
 
 <style>
   .blog-page {
-    padding-top: 80px;
+    padding-top: 100px;
+    padding-bottom: 4rem;
     min-height: 100vh;
     background: white;
   }
 
-  .container {
-    max-width: 860px;
+  .blog-container {
+    max-width: 780px;
     margin: 0 auto;
     padding: 0 1.5rem;
   }
 
-  /* Hero compact — override global section padding (8rem) */
-  .blog-hero {
-    padding: 2rem 0 0 !important;
+  .blog-intro {
+    margin-bottom: 2rem;
   }
 
-  .hero-inner {
-    max-width: 600px;
-  }
-
-  .section-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.85rem;
-    background: rgba(59, 130, 246, 0.06);
-    border: 1px solid rgba(59, 130, 246, 0.12);
-    border-radius: var(--radius-full);
+  .badge {
+    display: inline-block;
     font-size: 0.8rem;
     font-weight: 500;
     color: var(--color-accent);
+    margin-bottom: 0.5rem;
   }
 
-  .blog-hero h1 {
+  .blog-intro h1 {
     font-family: var(--font-heading);
-    font-size: 1.85rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--color-primary);
-    margin: 0.5rem 0 0.25rem;
-    line-height: 1.25;
+    margin: 0 0 0.25rem;
+    line-height: 1.3;
   }
 
   .text-gradient {
@@ -119,16 +93,10 @@ const posts = (await getCollection('blog'))
     background-clip: text;
   }
 
-  .blog-hero-sub {
+  .blog-intro p {
     color: var(--color-gray-500);
     font-size: 0.95rem;
-    margin: 0 0 1rem;
-    line-height: 1.5;
-  }
-
-  /* Posts — override global section padding (8rem) */
-  .blog-list {
-    padding: 0 0 4rem !important;
+    margin: 0;
   }
 
   .posts-grid {
@@ -138,102 +106,78 @@ const posts = (await getCollection('blog'))
 
   .post-card {
     display: block;
+    padding: 1.25rem 1.5rem;
     background: var(--color-gray-50);
     border: 1px solid var(--color-gray-200);
-    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-accent);
+    border-radius: 0.5rem;
     text-decoration: none;
     color: inherit;
-    transition: all 0.2s ease;
-    overflow: hidden;
+    transition: all 0.15s ease;
   }
 
   .post-card:hover {
     border-color: var(--color-accent);
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
-    transform: translateY(-1px);
-  }
-
-  .post-featured {
-    border-left: 3px solid var(--color-accent);
-  }
-
-  .post-card-inner {
-    padding: 1.5rem 1.75rem;
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.1);
   }
 
   .post-meta {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.65rem;
+    margin-bottom: 0.4rem;
     flex-wrap: wrap;
   }
 
   .post-meta time {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--color-gray-400);
     font-weight: 500;
   }
 
-  .post-tag {
-    font-size: 0.7rem;
-    padding: 0.15rem 0.55rem;
+  .tag {
+    font-size: 0.68rem;
+    padding: 0.1rem 0.5rem;
     background: rgba(59, 130, 246, 0.07);
     color: var(--color-accent);
-    border-radius: var(--radius-full);
+    border-radius: 99px;
     font-weight: 500;
   }
 
   .post-card h2 {
     font-family: var(--font-heading);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--color-primary);
-    margin: 0 0 0.4rem;
+    margin: 0 0 0.3rem;
     line-height: 1.35;
   }
 
-  .post-excerpt {
+  .excerpt {
     color: var(--color-gray-500);
-    font-size: 0.9rem;
-    line-height: 1.55;
-    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0 0 0.6rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
-  .post-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--color-gray-100);
-  }
-
-  .post-author-name {
+  .read-cta {
     font-size: 0.8rem;
-    color: var(--color-gray-400);
-    font-weight: 500;
-  }
-
-  .read-more {
     color: var(--color-accent);
     font-weight: 600;
-    font-size: 0.8rem;
   }
 
   .no-posts {
     text-align: center;
     color: var(--color-gray-400);
-    padding: 4rem 0;
-    font-size: 1rem;
+    padding: 3rem 0;
   }
 
   @media (max-width: 768px) {
-    .blog-hero h1 { font-size: 1.5rem; }
-    .post-card-inner { padding: 1.25rem; }
+    .blog-intro h1 { font-size: 1.4rem; }
+    .post-card { padding: 1rem 1.25rem; }
   }
 </style>

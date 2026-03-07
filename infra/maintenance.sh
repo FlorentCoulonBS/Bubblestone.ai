@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # MAINTENANCE SCRIPT — BubbleStoneAI (72.62.190.147)
-# Version 3.2 — Fix apt lock, cached security scans, remove AIDE
+# Version 3.3 — Stop apt timers during maintenance, log apt errors
 # =============================================================================
 set -o pipefail
 
@@ -257,6 +257,10 @@ log "========== MAINTENANCE $HOSTNAME_SRV START =========="
 
 # ÉTAPE 1 — Mises à jour système
 log "--- ÉTAPE 1 : Mises à jour système ---"
+# Stop apt timers to prevent unattended-upgrades from grabbing locks during maintenance
+systemctl stop apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+pkill -f unattended-upgrade 2>/dev/null || true
+sleep 2
 if wait_apt_lock; then
     APT_OUTPUT=$(apt-get update 2>&1)
     if [ $? -eq 0 ]; then
@@ -271,7 +275,7 @@ if wait_apt_lock; then
         else
             # Retry: fix-broken then dist-upgrade
             # VPS blocks suid bit on chrome-sandbox, use --force-all as fallback
-            log "dist-upgrade echoue, tentative fix-broken + force-all..."
+            log "dist-upgrade echoue (erreur: $(echo "$UPGRADE_OUTPUT" | tail -5)), tentative fix-broken + force-all..."
             DEBIAN_FRONTEND=noninteractive apt --fix-broken install -y 2>&1 >/dev/null || true
             DEBIAN_FRONTEND=noninteractive dpkg --force-all --configure -a 2>/dev/null || true
             apt-get update -q 2>&1 >/dev/null
@@ -281,13 +285,17 @@ if wait_apt_lock; then
                 DEBIAN_FRONTEND=noninteractive apt-get autoremove -y 2>&1 >/dev/null
                 step_ok "Mises à jour système" "${UPGRADED} paquet(s) mis à jour (retry+force)"
             else
+                log "dist-upgrade retry echoue: $(echo "$UPGRADE_OUTPUT" | tail -10)"
                 step_err "Mises à jour système" "apt dist-upgrade échoué après retry"
             fi
         fi
     else
+        log "apt update echoue: $(echo "$APT_OUTPUT" | tail -5)"
         step_err "Mises à jour système" "apt update échoué"
     fi
 fi
+# Restart apt timers
+systemctl start apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
 
 # ÉTAPE 2 — Mises à jour Docker
 log "--- ÉTAPE 2 : Mises à jour Docker ---"

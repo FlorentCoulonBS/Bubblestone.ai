@@ -239,12 +239,17 @@ MIME-Version: 1.0
 
 <p style="text-align:center;color:#666;margin-bottom:25px">⏱ Duree totale: ${DURATION_MIN}min ${DURATION_SEC}s</p>
 
+<table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
+<tr><td colspan='3' style='padding:14px 12px 6px;font-weight:700;color:#667eea;border-bottom:2px solid #667eea;font-size:13px;text-transform:uppercase;letter-spacing:1px'>🔧 Étapes maintenance</td></tr>
+$REPORT
+</table>
+
 <table style="width:100%;border-collapse:collapse;font-size:14px">
 $ROWS
 </table>
 
 </div>
-<div style="background:#f8f9fa;padding:15px;text-align:center;color:#999;font-size:12px">Email automatique — $HOSTNAME_SRV Maintenance v3.2</div>
+<div style="background:#f8f9fa;padding:15px;text-align:center;color:#999;font-size:12px">Email automatique — $HOSTNAME_SRV Maintenance v3.3</div>
 </div>
 </body></html>
 EOF

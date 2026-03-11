@@ -24,7 +24,8 @@ jobs:
           ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash -s << 'DEPLOY'
             set -e
             cd /opt/repos/bubblestone
-            git pull origin main
+            git checkout main
+            git pull --ff-only origin main
             docker build -t 555:latest -f apps/555-trend-monitor/ai_trend_monitor/Dockerfile apps/555-trend-monitor/ai_trend_monitor/
             docker compose -f infra/docker-compose.yml -p projects up -d 555
             sleep 5

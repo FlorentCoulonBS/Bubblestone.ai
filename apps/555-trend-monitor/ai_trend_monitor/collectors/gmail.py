@@ -101,6 +101,26 @@ def _is_noise(url, title):
     return False
 
 
+def _is_non_latin(title):
+    """Reject titles with >30% non-Latin characters (CJK, Arabic, Cyrillic, etc.).
+    Keeps French (accents), English, and other Latin-based languages."""
+    if not title:
+        return True
+    # Count characters that are NOT Latin, digits, punctuation, or whitespace
+    non_latin = 0
+    total = 0
+    for ch in title:
+        if ch.isalpha():
+            total += 1
+            cp = ord(ch)
+            # Latin + Latin Extended + Latin Supplement (covers FR accents)
+            if not (0x0041 <= cp <= 0x024F):
+                non_latin += 1
+    if total == 0:
+        return True
+    return (non_latin / total) > 0.3
+
+
 def _parse_beehiiv(html, subject):
     """Parse beehiiv newsletters (The Neuron, TLDR AI, etc.)
     Strategy: look for links inside article content blocks, skip sidebar/footer."""

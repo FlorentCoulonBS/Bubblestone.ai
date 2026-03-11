@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/audit-platform/**'
       - '.github/workflows/deploy-audit.yml'
+  workflow_dispatch:
 
 jobs:
   deploy:

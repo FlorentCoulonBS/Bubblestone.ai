@@ -12,17 +12,9 @@ from pathlib import Path
 
 from flask import Flask, render_template, request, Response, jsonify, redirect, url_for
 
-# Import clustering helpers - use the clawd version which has clustering functions
-import importlib.util
-_dump_topics_path = os.environ.get("DUMP_TOPICS_PATH", "/home/pinceouverte/clawd/dump_topics.py")
-_spec = importlib.util.spec_from_file_location("dump_topics_clawd", _dump_topics_path)
-_dt = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_dt)
-cluster_topics = _dt.cluster_topics
-merge_cluster = _dt.merge_cluster
-get_trend_history = _dt.get_trend_history
-normalize = _dt.normalize
-extract_entities = _dt.extract_entities
+from ai_trend_monitor.dump_topics import (
+    cluster_topics, merge_cluster, get_trend_history, normalize, extract_entities
+)
 
 DB_PATH = os.environ.get("DATABASE_PATH", "/root/data/trends.db")
 OG_CACHE_PATH = os.environ.get("OG_CACHE_PATH", "/root/data/og_cache.json")

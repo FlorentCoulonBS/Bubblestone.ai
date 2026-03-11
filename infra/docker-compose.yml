@@ -59,12 +59,8 @@ services:
       - OPML_PATH=/data/feeds.opml
       - GMAIL_USER=${GMAIL_USER}
       - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
-      - DUMP_TOPICS_PATH=/home/pinceouverte/clawd/scripts/dump_topics.py
     volumes:
-      - /root/data:/root/data
       - /root/data:/data
-      - /root/src:/root/src
-      - /home/pinceouverte/clawd:/home/pinceouverte/clawd
     networks:
       npmnet:
         ipv4_address: 172.18.0.2

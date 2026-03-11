@@ -24,7 +24,8 @@ jobs:
           ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash -s << 'DEPLOY'
             set -e
             cd /opt/repos/bubblestone
-            git pull origin main
+            git checkout main
+            git pull --ff-only origin main
             docker build -t linkedin-generator:latest apps/linkedin-generator/
             docker compose -f infra/docker-compose.yml -p projects up -d linkedin-generator
             sleep 5

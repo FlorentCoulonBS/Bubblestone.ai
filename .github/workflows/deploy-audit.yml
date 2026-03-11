@@ -8,6 +8,10 @@ on:
       - '.github/workflows/deploy-audit.yml'
   workflow_dispatch:
 
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -26,8 +30,9 @@ jobs:
           ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash -s << 'DEPLOY'
             set -e
             cd /opt/repos/bubblestone
+            git fetch origin main
             git checkout main
-            git pull --ff-only origin main
+            git reset --hard origin/main
             docker build -t bubblestone-audit:latest apps/audit-platform/
             docker compose -f infra/docker-compose.yml -p projects up -d bubblestone-audit
             sleep 10

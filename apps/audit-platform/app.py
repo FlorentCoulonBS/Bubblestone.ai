@@ -77,6 +77,14 @@ def init_db():
         db.execute("ALTER TABLE audits ADD COLUMN lang TEXT DEFAULT 'fr'")
     except:
         pass
+    try:
+        db.execute("ALTER TABLE audits ADD COLUMN htaccess_user TEXT DEFAULT ''")
+    except:
+        pass
+    try:
+        db.execute("ALTER TABLE audits ADD COLUMN htaccess_pass TEXT DEFAULT ''")
+    except:
+        pass
     # Create default admin
     cur = db.execute("SELECT id FROM users WHERE username='admin'")
     if not cur.fetchone():
@@ -170,9 +178,11 @@ def new_audit():
     wp_admin_url = request.form.get('wp_admin_url', '').strip()
     wp_username = request.form.get('wp_username', '').strip()
     wp_password = request.form.get('wp_password', '').strip()
+    htaccess_user = request.form.get('htaccess_user', '').strip()
+    htaccess_pass = request.form.get('htaccess_pass', '').strip()
     db = get_db()
-    cur = db.execute("INSERT INTO audits (url, domain, status, wp_admin_url, wp_username, wp_password, lang) VALUES (?,?,?,?,?,?,?)",
-                     (url, domain, 'pending', wp_admin_url, wp_username, wp_password, lang))
+    cur = db.execute("INSERT INTO audits (url, domain, status, wp_admin_url, wp_username, wp_password, htaccess_user, htaccess_pass, lang) VALUES (?,?,?,?,?,?,?,?,?)",
+                     (url, domain, 'pending', wp_admin_url, wp_username, wp_password, htaccess_user, htaccess_pass, lang))
     db.commit()
     audit_id = cur.lastrowid
     # Launch audit in background
@@ -180,6 +190,8 @@ def new_audit():
     if wp_username and wp_password:
         cmd += ['--wp-admin', wp_admin_url or (url.rstrip('/') + '/wp-admin/'),
                 '--wp-user', wp_username, '--wp-pass', wp_password]
+    if htaccess_user and htaccess_pass:
+        cmd += ['--htaccess-user', htaccess_user, '--htaccess-pass', htaccess_pass]
     subprocess.Popen(cmd, cwd='/app', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return redirect(url_for('admin'))
 
@@ -277,14 +289,22 @@ def api_audit():
     wp_admin = data.get('wp_admin_url', '')
     wp_user = data.get('wp_username', '')
     wp_pass = data.get('wp_password', '')
+    ht_user = data.get('htaccess_user', '')
+    ht_pass = data.get('htaccess_pass', '')
     if wp_user:
         db.execute("UPDATE audits SET wp_admin_url=?, wp_username=?, wp_password=? WHERE id=?",
                    (wp_admin, wp_user, wp_pass, audit_id))
+        db.commit()
+    if ht_user:
+        db.execute("UPDATE audits SET htaccess_user=?, htaccess_pass=? WHERE id=?",
+                   (ht_user, ht_pass, audit_id))
         db.commit()
     cmd = ['python3', '/app/run_audit.py', str(audit_id), url, '--lang', lang]
     if wp_user and wp_pass:
         cmd += ['--wp-admin', wp_admin or (url.rstrip('/') + '/wp-admin/'),
                 '--wp-user', wp_user, '--wp-pass', wp_pass]
+    if ht_user and ht_pass:
+        cmd += ['--htaccess-user', ht_user, '--htaccess-pass', ht_pass]
     subprocess.Popen(cmd, cwd='/app', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return jsonify({'id': audit_id, 'status': 'pending'}), 201
 

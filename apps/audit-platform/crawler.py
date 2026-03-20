@@ -168,16 +168,34 @@ class PageParser(HTMLParser):
             if href and not href.startswith(('javascript:', 'mailto:', 'tel:', '#')):
                 self.links.append(href)
         elif self._tag == 'img':
+            src = a.get('src', '')
+            # Skip SVG placeholders (lazy loading) — not real content images
+            if src.startswith('data:image/svg') or src.startswith('data:image/gif'):
+                real_src = a.get('data-src', a.get('data-lazy-src', ''))
+                if real_src:
+                    src = real_src
+                else:
+                    return  # Pure placeholder, skip entirely
             self.imgs_total += 1
             alt = a.get('alt', '').strip()
             if not alt:
                 self.imgs_no_alt += 1
+            # Detect lazy loading: native loading="lazy", JS-based class="lazyload",
+            # data-src, data-lazy-src, or LiteSpeed data-lazyloaded
+            has_lazy = bool(
+                a.get('loading', '').lower() == 'lazy'
+                or 'lazyload' in a.get('class', '').lower()
+                or a.get('data-src')
+                or a.get('data-lazy-src')
+                or a.get('data-lazyloaded') is not None
+            )
             self.images.append({
-                'src': a.get('src', ''),
+                'src': src,
                 'alt': alt,
                 'has_dimensions': bool(a.get('width') or a.get('height')),
                 'loading': a.get('loading', ''),
-                'has_srcset': bool(a.get('srcset', '')),
+                'has_lazy_loading': has_lazy,
+                'has_srcset': bool(a.get('srcset', '') or a.get('data-srcset', '')),
             })
         elif self._tag == 'script':
             self._in_script = True
@@ -398,16 +416,24 @@ def _detect_format(url, content_type=''):
 
 
 def _get_image_size(url, session):
-    """HEAD request to get image size in KB. Returns None on failure."""
+    """HEAD request to get image size in KB and actual format. Returns (size_kb, actual_format)."""
     try:
         _img_rate_wait()
-        r = session.head(url, timeout=5, allow_redirects=True)
+        # Send Accept: image/webp to detect server-side WebP conversion
+        r = session.head(url, timeout=5, allow_redirects=True,
+                         headers={'Accept': 'image/webp,image/*,*/*'})
         cl = r.headers.get('Content-Length')
-        if cl:
-            return round(int(cl) / 1024, 1)
-        return None
+        size_kb = round(int(cl) / 1024, 1) if cl else None
+        ct = r.headers.get('Content-Type', '')
+        actual_format = _detect_format(url, ct)
+        # If server returns WebP despite .jpg/.png extension (server-side conversion)
+        if 'webp' in ct.lower():
+            actual_format = 'webp'
+        elif 'avif' in ct.lower():
+            actual_format = 'avif'
+        return size_kb, actual_format
     except Exception:
-        return None
+        return None, None
 
 
 def analyze_images(pages, session):
@@ -430,7 +456,7 @@ def analyze_images(pages, session):
                     'size_kb': None,
                     'format': _detect_format(abs_url),
                     'has_dimensions': img.get('has_dimensions', False),
-                    'has_lazy_loading': img.get('loading', '').lower() == 'lazy',
+                    'has_lazy_loading': img.get('has_lazy_loading', img.get('loading', '').lower() == 'lazy'),
                     'has_srcset': img.get('has_srcset', False),
                     'pages_count': 1,
                 }
@@ -440,13 +466,13 @@ def analyze_images(pages, session):
                     image_map[abs_url]['alt'] = img['alt']
                 if img.get('has_dimensions'):
                     image_map[abs_url]['has_dimensions'] = True
-                if img.get('loading', '').lower() == 'lazy':
+                if img.get('has_lazy_loading') or img.get('loading', '').lower() == 'lazy':
                     image_map[abs_url]['has_lazy_loading'] = True
                 if img.get('has_srcset'):
                     image_map[abs_url]['has_srcset'] = True
 
-    # HEAD requests for sizes (cap at 200)
-    urls_to_check = list(image_map.keys())[:200]
+    # HEAD requests for sizes and real format detection
+    urls_to_check = list(image_map.keys())[:600]
     print(f"  [crawler] Checking sizes for {len(urls_to_check)} unique images...")
 
     with ThreadPoolExecutor(max_workers=3) as executor:
@@ -454,8 +480,10 @@ def analyze_images(pages, session):
         for future in as_completed(futures):
             url = futures[future]
             try:
-                size = future.result()
-                image_map[url]['size_kb'] = size
+                size_kb, actual_format = future.result()
+                image_map[url]['size_kb'] = size_kb
+                if actual_format:
+                    image_map[url]['format'] = actual_format
             except Exception:
                 pass
 
@@ -844,6 +872,18 @@ def crawl_site(url, output_dir):
     print(f"  [crawler] Building Schema.org inventory...")
     schema_inventory = _build_schema_inventory(pages)
     print(f"  [crawler] Schema: {len(schema_inventory['all_types_found'])} types across {schema_inventory['pages_with_schema']} pages")
+
+    # Extract GEO-relevant data from HTML before cleaning
+    for p in pages:
+        html = p.get('html', '')
+        if html:
+            html_lower = html.lower()
+            # Headings H2/H3 for question detection
+            h2h3 = re.findall(r'<h[2-3][^>]*>(.*?)</h[2-3]>', html, re.IGNORECASE | re.DOTALL)
+            p['headings_h2h3'] = [re.sub(r'<[^>]+>', '', h).strip() for h in h2h3]
+            # Structural elements
+            p['has_lists'] = '<ul' in html_lower or '<ol' in html_lower
+            p['has_tables'] = '<table' in html_lower
 
     # Clean heavy fields from pages to reduce JSON size
     for p in pages:

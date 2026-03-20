@@ -30,7 +30,7 @@ def version_tuple(v):
     return tuple(int(p) for p in parts) if parts else (0,)
 
 
-def scan_wordpress_internal(url, wp_admin_url, wp_username, wp_password):
+def scan_wordpress_internal(url, wp_admin_url, wp_username, wp_password, htaccess_user="", htaccess_pass=""):
     """Authenticate to WP admin and perform deep internal audit."""
     checks = []
     total = 0
@@ -57,14 +57,19 @@ def scan_wordpress_internal(url, wp_admin_url, wp_username, wp_password):
     sess = requests.Session()
     sess.headers['User-Agent'] = 'BubbleStone-Audit/1.0'
     sess.verify = False
+    if htaccess_user and htaccess_pass:
+        sess.auth = (htaccess_user, htaccess_pass)
 
     # ── 1. Login ──────────────────────────────────────────────
     if not wp_admin_url:
         wp_admin_url = url.rstrip('/') + '/wp-admin/'
-    login_url = wp_admin_url.rstrip('/').replace('/wp-admin', '') + '/wp-login.php'
+    base_site = url.rstrip('/')
+    real_wp_admin = base_site + '/wp-admin/'
 
     try:
-        login_page = sess.get(login_url, timeout=15)
+        # Navigate to wp_admin_url which may redirect (e.g. iThemes Security hidden login)
+        login_page = sess.get(wp_admin_url, timeout=15)
+        actual_login_url = login_page.url
         if login_page.status_code != 200:
             return {"score": 0, "checks": [{"name": "Connexion", "passed": False, "weight": 0, "detail": f"Login page HTTP {login_page.status_code}", "category": "auth"}], "details": details, "authenticated": False}
 
@@ -72,17 +77,17 @@ def scan_wordpress_internal(url, wp_admin_url, wp_username, wp_password):
             'log': wp_username,
             'pwd': wp_password,
             'wp-submit': 'Se connecter',
-            'redirect_to': wp_admin_url,
+            'redirect_to': real_wp_admin,
             'testcookie': '1',
         }
         sess.cookies.set('wordpress_test_cookie', 'WP Cookie check')
-        r = sess.post(login_url, data=login_data, timeout=15, allow_redirects=True)
+        r = sess.post(actual_login_url, data=login_data, timeout=15, allow_redirects=True)
 
         logged_in = 'wp-admin' in r.url and 'login' not in r.url.lower()
         if not logged_in:
             # Try English submit
             login_data['wp-submit'] = 'Log In'
-            r = sess.post(login_url, data=login_data, timeout=15, allow_redirects=True)
+            r = sess.post(actual_login_url, data=login_data, timeout=15, allow_redirects=True)
             logged_in = 'wp-admin' in r.url and 'login' not in r.url.lower()
 
         check("Connexion admin", logged_in, 0, "OK" if logged_in else "Échec d'authentification", "auth")
@@ -91,7 +96,7 @@ def scan_wordpress_internal(url, wp_admin_url, wp_username, wp_password):
     except Exception as e:
         return {"score": 0, "checks": [{"name": "Connexion", "passed": False, "weight": 0, "detail": str(e), "category": "auth"}], "details": details, "authenticated": False}
 
-    base_admin = wp_admin_url.rstrip('/')
+    base_admin = real_wp_admin.rstrip('/')
 
     # ── 2. Updates Page ───────────────────────────────────────
     try:
@@ -303,8 +308,13 @@ def scan_wordpress_internal(url, wp_admin_url, wp_username, wp_password):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 4:
-        print("Usage: wordpress_internal.py <url> <wp_admin_url> <username> <password>")
+        print("Usage: wordpress_internal.py <url> <wp_admin_url> <username> <password> [htaccess_user] [htaccess_pass]")
         sys.exit(1)
     import json
-    result = scan_wordpress_internal(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else '')
+    result = scan_wordpress_internal(
+        sys.argv[1], sys.argv[2], sys.argv[3],
+        sys.argv[4] if len(sys.argv) > 4 else '',
+        htaccess_user=sys.argv[5] if len(sys.argv) > 5 else '',
+        htaccess_pass=sys.argv[6] if len(sys.argv) > 6 else '',
+    )
     print(json.dumps(result, indent=2, ensure_ascii=False))

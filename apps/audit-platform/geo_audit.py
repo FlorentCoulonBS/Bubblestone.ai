@@ -231,32 +231,44 @@ def _audit_content_structure(pages):
     total_content_pages = 0
 
     for page in pages:
-        html = page.get('html', page.get('body', ''))
-        if not html or len(html) < 500:
+        # Use word_count from crawl (html is stripped to save memory)
+        word_count = page.get('word_count', 0)
+        if word_count < 50:
             continue
         total_content_pages += 1
 
-        # FAQ detection
-        html_lower = html.lower()
-        has_faq = ('faqpage' in html_lower or
-                   'itemtype="https://schema.org/faqpage"' in html_lower or
-                   '<faq' in html_lower)
-        if has_faq:
+        # FAQ detection from schema_types (crawl preserves this)
+        schema_types = page.get('schema_types', [])
+        if isinstance(schema_types, list):
+            if any('faq' in t.lower() for t in schema_types):
+                faq_count += 1
+        elif isinstance(schema_types, str) and 'faq' in schema_types.lower():
             faq_count += 1
 
-        # Question headings
-        headings = re.findall(r'<h[2-3][^>]*>(.*?)</h[2-3]>', html, re.IGNORECASE | re.DOTALL)
+        # Question headings from crawl data
+        headings = page.get('headings_h2h3', [])
+        if not headings:
+            html = page.get('html', page.get('body', ''))
+            if html:
+                headings = [re.sub(r'<[^>]+>', '', h).strip()
+                            for h in re.findall(r'<h[2-3][^>]*>(.*?)</h[2-3]>', html, re.IGNORECASE | re.DOTALL)]
         question_headings = [h for h in headings if QUESTION_RE.search(h)]
         if question_headings:
             pages_with_questions += 1
 
-        # Lists
-        if '<ul' in html_lower or '<ol' in html_lower:
+        # Lists from crawl data
+        if page.get('has_lists', False):
             pages_with_lists += 1
+        elif page.get('html', ''):
+            if '<ul' in page['html'].lower() or '<ol' in page['html'].lower():
+                pages_with_lists += 1
 
-        # Tables
-        if '<table' in html_lower:
+        # Tables from crawl data
+        if page.get('has_tables', False):
             pages_with_tables += 1
+        elif page.get('html', ''):
+            if '<table' in page['html'].lower():
+                pages_with_tables += 1
 
     total = max(total_content_pages, 1)
 
@@ -367,20 +379,27 @@ def _audit_factual(pages):
     total_content_pages = 0
 
     for page in pages:
-        html = page.get('html', page.get('body', ''))
-        if not html or len(html) < 500:
+        # Use word_count from crawl (html is stripped to save memory)
+        word_count = page.get('word_count', 0)
+        if word_count < 50:
             continue
         total_content_pages += 1
 
-        # Stats/numbers
-        text = re.sub(r'<[^>]+>', ' ', html)
+        # Stats/numbers — check from html if available, otherwise from title/h1
+        html = page.get('html', page.get('body', ''))
+        if html:
+            text = re.sub(r'<[^>]+>', ' ', html)
+        else:
+            text = ' '.join(filter(None, [page.get('title', ''), page.get('h1', '')]))
         if STATS_RE.search(text):
             pages_with_stats += 1
 
-        # External links (authority sources)
-        ext_links = re.findall(r'href=["\']https?://([^"\']+)', html)
-        page_domain = urlparse(page.get('url', '')).netloc
-        external = [l for l in ext_links if page_domain not in l]
+        # External links from crawl data
+        external = page.get('external_links', [])
+        if not external and html:
+            ext_links = re.findall(r'href=["\']https?://([^"\']+)', html)
+            page_domain = urlparse(page.get('url', '')).netloc
+            external = [l for l in ext_links if page_domain not in l]
         if len(external) >= 2:
             pages_with_external_links += 1
 
@@ -414,24 +433,34 @@ def _audit_topic_coverage(pages, crawl_data):
     blog_detected = False
 
     for page in pages:
-        html = page.get('html', page.get('body', ''))
         page_url = page.get('url', '')
 
-        if html:
-            text = re.sub(r'<[^>]+>', ' ', html)
-            words = len([w for w in text.split() if len(w) > 2])
-            if words > 500:
-                substantial_pages += 1
+        # Use word_count from crawl data (html is stripped after crawl to save memory)
+        word_count = page.get('word_count', 0)
+        if not word_count:
+            html = page.get('html', page.get('body', ''))
+            if html:
+                text = re.sub(r'<[^>]+>', ' ', html)
+                word_count = len([w for w in text.split() if len(w) > 2])
 
-            # Extract title
-            title_match = re.search(r'<title[^>]*>(.*?)</title>', html, re.I | re.DOTALL)
-            if title_match:
-                titles.add(title_match.group(1).strip()[:80])
+        if word_count > 500:
+            substantial_pages += 1
 
-            # H1
-            h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', html, re.I | re.DOTALL)
-            if h1_match:
-                titles.add(re.sub(r'<[^>]+>', '', h1_match.group(1)).strip()[:80])
+        # Extract title from crawl data or html
+        title = page.get('title', '')
+        if not title:
+            html = page.get('html', page.get('body', ''))
+            if html:
+                title_match = re.search(r'<title[^>]*>(.*?)</title>', html, re.I | re.DOTALL)
+                if title_match:
+                    title = title_match.group(1).strip()
+        if title:
+            titles.add(title[:80])
+
+        # H1 from crawl data
+        h1 = page.get('h1', '')
+        if h1:
+            titles.add(re.sub(r'<[^>]+>', '', h1).strip()[:80])
 
         # Blog detection
         if re.search(r'(/blog|/actualites|/articles|/news|/magazine)', page_url, re.I):

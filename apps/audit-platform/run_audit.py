@@ -2,6 +2,7 @@
 """BubbleStone.ai — Python audit orchestrator. Replaces audit.sh for webapp mode."""
 import json
 import os
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -246,6 +247,31 @@ def extract_lighthouse(data):
     return scores, cwv, opportunities, seo_checks, a11y_issues
 
 def extract_zap(data):
+    # Alerts that are false positives or already covered by other audit modules
+    ZAP_SUPPRESSED = {
+        # CSP is checked separately via headers module
+        'Content Security Policy (CSP) Header Not Set',
+        "CSP: Wildcard Directive",
+        "CSP: script-src unsafe-inline",
+        "CSP: style-src unsafe-inline",
+        # Anti-CSRF on public WP forms is normal (WP uses nonces on admin forms)
+        'Absence of Anti-CSRF Tokens',
+        # SRI is incompatible with GTM/dynamic script loaders
+        'Sub Resource Integrity Attribute Missing',
+        # jQuery bundled with WP core — flagged as "vulnerable" but maintained by WP team
+        'Vulnerable JS Library',
+        # Informational alerts that are not actionable
+        'Cookie without SameSite Attribute',
+        'Cookie Without Secure Flag',
+        'X-Content-Type-Options Header Missing',  # checked in headers module
+        'Strict-Transport-Security Header Not Set',  # checked in headers module
+        'Missing Anti-clickjacking Header',  # checked via X-Frame-Options in headers module
+        'Server Leaks Information via "X-Powered-By" HTTP Response Header Field(s)',
+        'Information Disclosure - Suspicious Comments',
+        'Timestamp Disclosure - Unix',
+        'Modern Web Application',
+    }
+
     alerts = []
     # API format: {"alerts": [{"alert": "...", "risk": "...", ...}]}
     alert_list = data.get("alerts", [])
@@ -254,6 +280,8 @@ def extract_zap(data):
         seen = {}
         for a in alert_list:
             name = a.get("name", a.get("alert", ""))
+            if name in ZAP_SUPPRESSED:
+                continue
             if name not in seen:
                 seen[name] = {
                     "name": name,
@@ -270,8 +298,11 @@ def extract_zap(data):
         if isinstance(site_list, list):
             for site in site_list:
                 for alert in site.get("alerts", []):
+                    name = alert.get("name", alert.get("alert", ""))
+                    if name in ZAP_SUPPRESSED:
+                        continue
                     alerts.append({
-                        "name": alert.get("name", alert.get("alert", "")),
+                        "name": name,
                         "risk": alert.get("riskdesc", alert.get("risk", "")),
                         "description": alert.get("desc", ""),
                         "count": len(alert.get("instances", [])),
@@ -652,20 +683,40 @@ def build_recommendations(scores, headers_data, zap_alerts, a11y_issues, deep_se
         recs.append({"text": t['maintain_good'], "priority": t['low'], "category": t['cat_general']})
     return recs[:15]
 
-def run_audit(audit_id, url, wp_admin_url="", wp_username="", wp_password="", lang='fr'):
+def run_audit(audit_id, url, wp_admin_url="", wp_username="", wp_password="", htaccess_user="", htaccess_pass="", lang='fr'):
     update_status(audit_id, 'running')
     tmpdir = tempfile.mkdtemp(prefix=f'audit_{audit_id}_')
 
-    # 1. Lighthouse
-    print(f"[{audit_id}] Running Lighthouse...")
+    # 1. Lighthouse (median of 3 runs for stable scores)
+    print(f"[{audit_id}] Running Lighthouse (3 runs, taking median)...")
     lh_path = os.path.join(tmpdir, 'lighthouse.json')
-    subprocess.run([
-        'lighthouse', url,
-        '--chrome-flags=--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --js-flags=--max-old-space-size=512',
-        '--output=json', f'--output-path={lh_path}',
-        '--only-categories=performance,seo,accessibility,best-practices',
-        '--quiet'
-    ], capture_output=True, timeout=300)
+    lh_scores = []
+    lh_best_path = lh_path
+    for lh_run in range(3):
+        run_path = os.path.join(tmpdir, f'lighthouse_run{lh_run}.json')
+        subprocess.run([
+            'lighthouse', url,
+            '--chrome-flags=--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --js-flags=--max-old-space-size=512',
+            '--output=json', f'--output-path={run_path}',
+            '--only-categories=performance,seo,accessibility,best-practices',
+            '--quiet'
+        ], capture_output=True, timeout=300)
+        try:
+            with open(run_path) as _f:
+                _d = json.load(_f)
+                perf = _d.get('categories', {}).get('performance', {}).get('score', 0)
+                lh_scores.append((perf, run_path))
+                print(f"[{audit_id}]   Run {lh_run+1}: performance={round(perf*100)}")
+        except Exception:
+            pass
+    # Pick the median run (or best of 2 if one failed)
+    if lh_scores:
+        lh_scores.sort(key=lambda x: x[0])
+        median_idx = len(lh_scores) // 2
+        lh_best_path = lh_scores[median_idx][1]
+        print(f"[{audit_id}]   Median: performance={round(lh_scores[median_idx][0]*100)}")
+    if os.path.exists(lh_best_path):
+        shutil.copy2(lh_best_path, lh_path)
 
     # 2. ZAP (daemon mode via API)
     print(f"[{audit_id}] Running ZAP...")
@@ -891,7 +942,7 @@ def run_audit(audit_id, url, wp_admin_url="", wp_username="", wp_password="", la
         print(f"[{audit_id}] WordPress internal audit (authenticated)...")
         try:
             from wordpress_internal import scan_wordpress_internal
-            wp_internal = scan_wordpress_internal(url, wp_admin_url, wp_username, wp_password)
+            wp_internal = scan_wordpress_internal(url, wp_admin_url, wp_username, wp_password, htaccess_user, htaccess_pass)
             if wp_internal.get('authenticated'):
                 print(f"[{audit_id}] WP internal audit score: {wp_internal['score']}/100")
             else:
@@ -915,11 +966,14 @@ if __name__ == '__main__':
     parser.add_argument('--wp-admin', default='')
     parser.add_argument('--wp-user', default='')
     parser.add_argument('--wp-pass', default='')
+    parser.add_argument('--htaccess-user', default='')
+    parser.add_argument('--htaccess-pass', default='')
     parser.add_argument('--lang', default='fr', choices=['fr', 'en'])
     args = parser.parse_args()
     try:
         run_audit(args.audit_id, args.url,
                   wp_admin_url=args.wp_admin, wp_username=args.wp_user, wp_password=args.wp_pass,
+                  htaccess_user=args.htaccess_user, htaccess_pass=args.htaccess_pass,
                   lang=args.lang)
     except Exception as e:
         print(f"[{args.audit_id}] ERROR: {e}")

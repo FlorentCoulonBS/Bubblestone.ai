@@ -538,6 +538,26 @@ tr:hover{background:#FAFBFC}
     </table>
     {% if orphans|length > 30 %}<p style="color:#6B7280;font-size:11px;margin-top:4px">… et {{ orphans|length - 30 }} autres</p>{% endif %}
     {% endif %}
+
+    {# Anchor text analysis #}
+    {% set anchors = crawl.get('anchor_analysis', {}) if crawl else {} %}
+    {% if anchors and anchors.get('total_anchors', 0) > 0 %}
+    <h4 style="margin:18px 0 8px;font-size:13px;color:#E5E7EB">Qualité des textes d'ancre</h4>
+    <div class="cwv-grid">
+      <div class="cwv-card"><div class="cwv-metric">Ancres totales</div><div class="cwv-value" style="color:#2563EB">{{ anchors.total_anchors }}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Ancres descriptives</div><div class="cwv-value" style="color:#16A34A">{{ anchors.descriptive_count }}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Ancres génériques</div><div class="cwv-value" style="color:{% if anchors.ratio_generic_pct > 20 %}#DC2626{% else %}#F59E0B{% endif %}">{{ anchors.generic_count }} ({{ anchors.ratio_generic_pct }}%)</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Ancres vides</div><div class="cwv-value" style="color:{% if anchors.empty_count > 5 %}#DC2626{% else %}#16A34A{% endif %}">{{ anchors.empty_count }}</div></div>
+    </div>
+    {% if anchors.get('generic_examples') %}
+    <table class="data-table" style="margin-top:8px"><thead><tr><th>Page source</th><th>Ancre</th><th>Destination</th></tr></thead>
+    <tbody>{% for ex in anchors.generic_examples[:10] %}<tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">{{ ex.source[:60] }}</td>
+      <td style="color:#F59E0B">{{ ex.anchor_text }}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">{{ ex.target[:60] }}</td>
+    </tr>{% endfor %}</tbody></table>
+    {% endif %}
+    {% endif %}
   </div>
   {% endif %}
 
@@ -638,6 +658,32 @@ tr:hover{background:#FAFBFC}
       </tbody>
     </table>
     {% if thin|length > 30 %}<p style="color:#6B7280;font-size:11px;margin-top:4px">… et {{ thin|length - 30 }} autres</p>{% endif %}
+    {% endif %}
+
+    {# Title/H1/Meta coherence #}
+    {% set coherence = crawl.get('title_h1_coherence', {}) if crawl else {} %}
+    {% if coherence and coherence.get('incoherent_count', 0) > 0 %}
+    <h4 style="margin:18px 0 8px;font-size:13px;color:#E5E7EB">Cohérence Titre / H1 / Meta description</h4>
+    <p style="color:#9CA3AF;font-size:11px;margin-bottom:8px">{{ coherence.incoherent_count }} page(s) sur {{ coherence.total_checked }} avec un title et un H1 qui ne partagent pas les mêmes mots-clés (chevauchement &lt; 30%)</p>
+    <table class="data-table"><thead><tr><th>URL</th><th>Title</th><th>H1</th></tr></thead>
+    <tbody>{% for p in coherence.incoherent_pages[:15] %}<tr>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">{{ p.url[:50] }}</td>
+      <td style="font-size:11px">{{ p.title }}</td>
+      <td style="font-size:11px">{{ p.h1 }}</td>
+    </tr>{% endfor %}</tbody></table>
+    {% endif %}
+
+    {# Keyword cannibalization #}
+    {% set cannibal = crawl.get('cannibalization', {}) if crawl else {} %}
+    {% if cannibal and cannibal.get('total_groups', 0) > 0 %}
+    <h4 style="margin:18px 0 8px;font-size:13px;color:#E5E7EB">Cannibalisation de mots-clés</h4>
+    <p style="color:#9CA3AF;font-size:11px;margin-bottom:8px">{{ cannibal.total_groups }} groupe(s) de pages en concurrence sur les mêmes mots-clés — {{ cannibal.total_pages_affected }} pages concernées</p>
+    {% for g in cannibal.groups[:10] %}
+    <div style="margin:8px 0;padding:8px;background:#1F2937;border-radius:6px;border-left:3px solid #F59E0B">
+      <div style="font-size:11px;color:#F59E0B;margin-bottom:4px">Mots-clés partagés : {{ g.shared_keywords|join(', ') }}</div>
+      {% for p in g.pages %}<div style="font-size:11px;color:#D1D5DB">• {{ p.title }} <span style="color:#6B7280">— {{ p.url[:50] }}</span></div>{% endfor %}
+    </div>
+    {% endfor %}
     {% endif %}
   </div>
   {% endif %}

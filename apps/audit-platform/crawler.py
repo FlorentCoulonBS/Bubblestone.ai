@@ -41,6 +41,18 @@ SCHEMA_TYPES_TRACKED = [
     'Recipe', 'Review', 'Service', 'ContactPoint',
 ]
 
+# Generic anchor texts to flag
+GENERIC_ANCHORS = {
+    # French
+    'cliquez ici', 'cliquer ici', 'en savoir plus', 'lire la suite',
+    'plus d\'infos', 'plus d\'informations', 'ici', 'voir plus',
+    'découvrir', 'en savoir +', 'suite', 'voir', 'lien',
+    # English
+    'click here', 'read more', 'learn more', 'here', 'more',
+    'find out more', 'see more', 'continue reading', 'link',
+    'go', 'this', 'more info',
+}
+
 # Rate limiter
 _rate_lock = threading.Lock()
 _last_request_time = 0.0
@@ -143,6 +155,7 @@ class PageParser(HTMLParser):
         self.imgs_total = 0
         self.imgs_no_alt = 0
         self.links = []
+        self.link_anchors = []  # list of {href, anchor_text}
         self.images = []  # list of image dicts with attributes
         self._tag = None
         self._in_title = False
@@ -150,6 +163,9 @@ class PageParser(HTMLParser):
         self._h1_done = False
         self._in_script = False
         self._script_type = ''
+        self._in_a = False
+        self._a_href = ''
+        self._a_text = ''
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
@@ -167,6 +183,9 @@ class PageParser(HTMLParser):
             href = a.get('href', '').strip()
             if href and not href.startswith(('javascript:', 'mailto:', 'tel:', '#')):
                 self.links.append(href)
+                self._in_a = True
+                self._a_href = href
+                self._a_text = ''
         elif self._tag == 'img':
             self.imgs_total += 1
             alt = a.get('alt', '').strip()
@@ -196,6 +215,12 @@ class PageParser(HTMLParser):
         elif tag == 'h1':
             self._in_h1 = False
             self._h1_done = True
+        elif tag == 'a' and self._in_a:
+            self.link_anchors.append({
+                'href': self._a_href,
+                'anchor_text': self._a_text.strip(),
+            })
+            self._in_a = False
         elif tag == 'script':
             self._in_script = False
 
@@ -204,6 +229,8 @@ class PageParser(HTMLParser):
             self.title += data
         elif self._in_h1 and not self._h1_done:
             self.h1 += data
+        if self._in_a:
+            self._a_text += data
 
 
 def fetch_sitemap_urls(base_url, session):
@@ -284,6 +311,7 @@ def fetch_page(url, session):
         'imgs_no_alt': 0,
         'internal_links': [],
         'external_links': [],
+        'internal_link_anchors': [],
         'cache_control': '',
         'error': None,
     }
@@ -350,6 +378,16 @@ def fetch_page(url, session):
                 result['internal_links'].append(abs_url)
             else:
                 result['external_links'].append(abs_url)
+
+        # Resolve link anchors
+        for la in parser.link_anchors:
+            abs_url = urljoin(r.url, la['href'])
+            abs_url = normalize_url(abs_url)
+            if abs_url and is_same_domain(abs_url, base_domain):
+                result['internal_link_anchors'].append({
+                    'url': abs_url,
+                    'anchor_text': la['anchor_text'],
+                })
 
     except requests.exceptions.Timeout:
         result['error'] = 'timeout'
@@ -678,6 +716,46 @@ def _build_schema_inventory(pages):
     }
 
 
+def _analyze_anchor_texts(pages):
+    """Analyze internal link anchor texts. Flag generic/empty anchors."""
+    total_anchors = 0
+    generic_count = 0
+    empty_count = 0
+    generic_examples = []
+
+    for p in pages:
+        if p.get('status') != 200:
+            continue
+        source = p['url']
+        for la in p.get('internal_link_anchors', []):
+            anchor = la.get('anchor_text', '').strip()
+            total_anchors += 1
+            if not anchor:
+                empty_count += 1
+            elif anchor.lower() in GENERIC_ANCHORS:
+                generic_count += 1
+                if len(generic_examples) < 20:
+                    generic_examples.append({
+                        'source': source,
+                        'target': la['url'],
+                        'anchor_text': anchor,
+                    })
+
+    descriptive_count = total_anchors - generic_count - empty_count
+    ratio_generic = round(generic_count / max(total_anchors, 1) * 100)
+    ratio_empty = round(empty_count / max(total_anchors, 1) * 100)
+
+    return {
+        'total_anchors': total_anchors,
+        'generic_count': generic_count,
+        'empty_count': empty_count,
+        'descriptive_count': descriptive_count,
+        'ratio_generic_pct': ratio_generic,
+        'ratio_empty_pct': ratio_empty,
+        'generic_examples': generic_examples,
+    }
+
+
 def crawl_site(url, output_dir):
     """Main crawl function. Returns a results dict with v2 deep analysis."""
     parsed = urlparse(url)
@@ -845,10 +923,15 @@ def crawl_site(url, output_dir):
     schema_inventory = _build_schema_inventory(pages)
     print(f"  [crawler] Schema: {len(schema_inventory['all_types_found'])} types across {schema_inventory['pages_with_schema']} pages")
 
+    print(f"  [crawler] Analyzing anchor texts...")
+    anchor_analysis = _analyze_anchor_texts(pages)
+    print(f"  [crawler] Anchors: {anchor_analysis['total_anchors']} total, {anchor_analysis['generic_count']} generic ({anchor_analysis['ratio_generic_pct']}%)")
+
     # Clean heavy fields from pages to reduce JSON size
     for p in pages:
         p.pop('images_raw', None)
         p.pop('html', None)
+        p.pop('internal_link_anchors', None)
         # Keep redirect_chain for redirect analysis but cap it
         chain = p.get('redirect_chain', [])
         if len(chain) > 5:
@@ -873,6 +956,7 @@ def crawl_site(url, output_dir):
         'thin_content': thin_content,
         'redirect_analysis': redirect_analysis,
         'schema_inventory': schema_inventory,
+        'anchor_analysis': anchor_analysis,
     }
 
     # Export

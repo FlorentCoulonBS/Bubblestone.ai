@@ -1,7 +1,7 @@
 """RSS/OPML collector - fetches AI-related entries from RSS feeds."""
 
 import logging
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from time import mktime
 

@@ -20,6 +20,7 @@ dependencies = [
     "flask",
     "flask-httpauth",
     "gunicorn>=22.0",
+    "defusedxml>=0.7",
 ]
 
 [project.optional-dependencies]

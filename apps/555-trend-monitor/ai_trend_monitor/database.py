@@ -71,7 +71,7 @@ def _migrate_schema() -> None:
 
             # Get existing columns — PRAGMA doesn't support parameters,
             # so we whitelist-validate the identifier above.
-            cursor.execute("PRAGMA table_info(%s)" % table)  # noqa: S608
+            cursor.execute("PRAGMA table_info(%s)" % table)  # noqa: S608  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # identifier validated by regex
             existing = {row[1] for row in cursor.fetchall()}
 
             if not existing:
@@ -86,7 +86,7 @@ def _migrate_schema() -> None:
                         col_name,
                         col_def,
                     )
-                    cursor.execute(stmt)
+                    cursor.execute(stmt)  # nosemgrep: formatted-sql-query, sqlalchemy-execute-raw-query  # identifier validated by regex
                     logger.info("Migration: added %s.%s", table, col_name)
 
         conn.commit()

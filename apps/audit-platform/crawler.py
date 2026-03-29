@@ -53,6 +53,27 @@ GENERIC_ANCHORS = {
     'go', 'this', 'more info',
 }
 
+# Stop words for keyword extraction (FR + EN)
+STOP_WORDS = {
+    # French
+    'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'en', 'au',
+    'aux', 'ce', 'ces', 'est', 'sont', 'par', 'pour', 'que', 'qui', 'sur',
+    'pas', 'plus', 'dans', 'avec', 'nous', 'vous', 'ils', 'elle', 'son',
+    'ses', 'nos', 'vos', 'tout', 'tous', 'cette', 'mon', 'ton', 'votre',
+    'notre', 'leur', 'leurs', 'mais', 'ou', 'donc', 'car', 'ni', 'ne',
+    'se', 'si', 'bien', 'aussi', 'comme', 'peut', 'fait', 'etre', 'avoir',
+    'quand', 'sans', 'entre', 'chez', 'tres', 'meme', 'autre',
+    # English
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+    'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were', 'be', 'been',
+    'has', 'have', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+    'should', 'may', 'might', 'can', 'not', 'no', 'so', 'if', 'as', 'it',
+    'its', 'my', 'your', 'his', 'her', 'our', 'their', 'this', 'that',
+    'these', 'those', 'all', 'each', 'every', 'both', 'few', 'more',
+    'most', 'other', 'some', 'such', 'than', 'too', 'very', 'just',
+    'about', 'up', 'out', 'how', 'what', 'when', 'where', 'who', 'which',
+}
+
 # Rate limiter
 _rate_lock = threading.Lock()
 _last_request_time = 0.0
@@ -756,6 +777,126 @@ def _analyze_anchor_texts(pages):
     }
 
 
+def _extract_keywords(text):
+    """Extract significant words from text (lowercase, >3 chars, no stop words)."""
+    words = re.findall(r'[a-zà-ÿ]{4,}', text.lower())
+    return {w for w in words if w not in STOP_WORDS}
+
+
+def _analyze_title_h1_meta_coherence(pages):
+    """Check coherence between title, H1 and meta description per page."""
+    incoherent_pages = []
+    total_checked = 0
+
+    for p in pages:
+        if p.get('status') != 200:
+            continue
+        title = p.get('title', '').strip()
+        h1 = p.get('h1', '').strip()
+        meta = p.get('meta_description', '').strip()
+        if not title or (not h1 and not meta):
+            continue
+        total_checked += 1
+
+        kw_title = _extract_keywords(title)
+        kw_h1 = _extract_keywords(h1) if h1 else set()
+        kw_meta = _extract_keywords(meta) if meta else set()
+
+        if not kw_title:
+            continue
+
+        issues = []
+
+        # Title vs H1
+        if kw_h1:
+            overlap = len(kw_title & kw_h1) / max(len(kw_title | kw_h1), 1)
+            if overlap < 0.3:
+                issues.append({
+                    'type': 'title_h1',
+                    'overlap_pct': round(overlap * 100),
+                    'title_kw': sorted(kw_title)[:5],
+                    'h1_kw': sorted(kw_h1)[:5],
+                })
+
+        # Title vs Meta
+        if kw_meta:
+            overlap = len(kw_title & kw_meta) / max(len(kw_title | kw_meta), 1)
+            if overlap < 0.3:
+                issues.append({
+                    'type': 'title_meta',
+                    'overlap_pct': round(overlap * 100),
+                })
+
+        if issues:
+            incoherent_pages.append({
+                'url': p['url'],
+                'title': title[:80],
+                'h1': h1[:80],
+                'meta': meta[:100],
+                'issues': issues,
+            })
+
+    return {
+        'total_checked': total_checked,
+        'incoherent_count': len(incoherent_pages),
+        'incoherent_pages': incoherent_pages[:30],
+    }
+
+
+def _detect_keyword_cannibalization(pages):
+    """Detect pages competing for the same keywords based on title overlap."""
+    page_keywords = {}
+    for p in pages:
+        if p.get('status') != 200:
+            continue
+        title = p.get('title', '').strip()
+        if not title:
+            continue
+        kw = _extract_keywords(title)
+        if len(kw) >= 2:
+            page_keywords[p['url']] = kw
+
+    urls = list(page_keywords.keys())
+    groups = {}
+
+    for i in range(len(urls)):
+        for j in range(i + 1, len(urls)):
+            kw_a = page_keywords[urls[i]]
+            kw_b = page_keywords[urls[j]]
+            overlap = kw_a & kw_b
+            union = kw_a | kw_b
+            if len(overlap) / max(len(union), 1) > 0.5:
+                key = frozenset(overlap)
+                if key not in groups:
+                    groups[key] = set()
+                groups[key].add(urls[i])
+                groups[key].add(urls[j])
+
+    cannibalization_groups = []
+    for keywords, group_urls in groups.items():
+        pages_in_group = []
+        for u in group_urls:
+            title = ''
+            for p in pages:
+                if p['url'] == u:
+                    title = p.get('title', '')[:80]
+                    break
+            pages_in_group.append({'url': u, 'title': title})
+        cannibalization_groups.append({
+            'shared_keywords': sorted(keywords)[:5],
+            'pages': pages_in_group,
+            'count': len(pages_in_group),
+        })
+
+    cannibalization_groups.sort(key=lambda x: x['count'], reverse=True)
+
+    return {
+        'groups': cannibalization_groups[:20],
+        'total_groups': len(cannibalization_groups),
+        'total_pages_affected': len(set().union(*(g_urls for g_urls in groups.values()))) if groups else 0,
+    }
+
+
 def crawl_site(url, output_dir):
     """Main crawl function. Returns a results dict with v2 deep analysis."""
     parsed = urlparse(url)
@@ -927,6 +1068,14 @@ def crawl_site(url, output_dir):
     anchor_analysis = _analyze_anchor_texts(pages)
     print(f"  [crawler] Anchors: {anchor_analysis['total_anchors']} total, {anchor_analysis['generic_count']} generic ({anchor_analysis['ratio_generic_pct']}%)")
 
+    print(f"  [crawler] Analyzing title/H1/meta coherence...")
+    title_h1_coherence = _analyze_title_h1_meta_coherence(pages)
+    print(f"  [crawler] Coherence: {title_h1_coherence['incoherent_count']}/{title_h1_coherence['total_checked']} pages incoherent")
+
+    print(f"  [crawler] Detecting keyword cannibalization...")
+    cannibalization = _detect_keyword_cannibalization(pages)
+    print(f"  [crawler] Cannibalization: {cannibalization['total_groups']} groups, {cannibalization['total_pages_affected']} pages affected")
+
     # Clean heavy fields from pages to reduce JSON size
     for p in pages:
         p.pop('images_raw', None)
@@ -957,6 +1106,8 @@ def crawl_site(url, output_dir):
         'redirect_analysis': redirect_analysis,
         'schema_inventory': schema_inventory,
         'anchor_analysis': anchor_analysis,
+        'title_h1_coherence': title_h1_coherence,
+        'cannibalization': cannibalization,
     }
 
     # Export

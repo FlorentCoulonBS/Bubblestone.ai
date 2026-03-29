@@ -1,0 +1,94 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # 1. Semgrep — static analysis (OWASP, injection, XSS, etc.)
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config auto \
+            --config p/owasp-top-ten \
+            --config p/python \
+            --config p/javascript \
+            --error \
+            --json --output semgrep-results.json \
+            --exclude='node_modules' --exclude='.git' --exclude='dist' \
+            . || true
+
+      - name: Check for high/critical findings
+        run: |
+          if [ -f semgrep-results.json ]; then
+            python3 -c "
+          import json, sys
+          data = json.load(open('semgrep-results.json'))
+          results = data.get('results', [])
+          critical = [r for r in results if r.get('extra', {}).get('severity', '') in ('ERROR', 'WARNING')]
+          for r in critical[:10]:
+              sev = r['extra']['severity']
+              cid = r['check_id']
+              path = r['path']
+              line = r['start']['line']
+              msg = r.get('extra', {}).get('message', '')[:120]
+              print(f'  {sev}: {cid}')
+              print(f'    {path}:{line}')
+              print(f'    {msg}')
+              print()
+          if any(r['extra']['severity'] == 'ERROR' for r in results):
+              print('::error::Critical security findings detected')
+              sys.exit(1)
+          else:
+              print('No critical findings.')
+          "
+          fi
+
+  # 2. Trivy — dependency vulnerabilities + Dockerfile scan
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          ignore-unfixed: true
+
+      - name: Scan Dockerfiles
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+  # 3. Secret detection — prevent credential leaks
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

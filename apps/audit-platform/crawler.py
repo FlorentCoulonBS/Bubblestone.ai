@@ -897,6 +897,103 @@ def _detect_keyword_cannibalization(pages):
     }
 
 
+# Local business detection patterns
+LOCAL_ADDRESS_RE = re.compile(
+    r'(\d{1,5}\s+[\w\s,.-]+(?:rue|avenue|boulevard|place|chemin|route|impasse|allée|street|road|ave|blvd|drive|lane|way)\b)',
+    re.IGNORECASE)
+LOCAL_PHONE_RE = re.compile(
+    r'(?:tel|téléphone|phone|tél|appel)[^\d]*(\+?\d[\d\s./-]{7,})',
+    re.IGNORECASE)
+LOCAL_MAPS_RE = re.compile(
+    r'(google\.com/maps|maps\.google|goo\.gl/maps|iframe[^>]*google\.com[^>]*maps)',
+    re.IGNORECASE)
+LOCAL_SERVICE_AREA_RE = re.compile(
+    r'(zone\s+de\s+service|service\s+area|nous\s+intervenons|we\s+serve|serving\s|dessert\s)',
+    re.IGNORECASE)
+
+
+def _detect_local_business(pages, homepage_url):
+    """Detect local business signals across the site."""
+    signals = {
+        'has_address': False,
+        'has_phone': False,
+        'has_maps_embed': False,
+        'has_service_area': False,
+        'has_local_schema': False,
+        'has_opening_hours': False,
+    }
+    signal_details = []
+
+    for p in pages[:30]:  # Check first 30 pages
+        if p.get('status') != 200:
+            continue
+        html = p.get('html', p.get('body', ''))
+        if not html:
+            continue
+        url = p.get('url', '')
+
+        # Address
+        if not signals['has_address'] and LOCAL_ADDRESS_RE.search(html):
+            signals['has_address'] = True
+            signal_details.append({'signal': 'address', 'url': url})
+
+        # Phone
+        if not signals['has_phone'] and LOCAL_PHONE_RE.search(html):
+            signals['has_phone'] = True
+            signal_details.append({'signal': 'phone', 'url': url})
+
+        # Google Maps embed
+        if not signals['has_maps_embed'] and LOCAL_MAPS_RE.search(html):
+            signals['has_maps_embed'] = True
+            signal_details.append({'signal': 'maps_embed', 'url': url})
+
+        # Service area
+        if not signals['has_service_area'] and LOCAL_SERVICE_AREA_RE.search(html):
+            signals['has_service_area'] = True
+            signal_details.append({'signal': 'service_area', 'url': url})
+
+        # LocalBusiness schema
+        if not signals['has_local_schema']:
+            schema_types = p.get('schema_types', [])
+            if any(t in ('LocalBusiness', 'Restaurant', 'Hotel', 'LodgingBusiness',
+                         'FoodEstablishment', 'HealthAndBeautyBusiness', 'Store',
+                         'AutoDealer', 'MedicalBusiness', 'LegalService',
+                         'RealEstateAgent', 'FinancialService')
+                   for t in schema_types):
+                signals['has_local_schema'] = True
+                signal_details.append({'signal': 'local_schema', 'url': url})
+
+        # Opening hours
+        if not signals['has_opening_hours']:
+            if re.search(r'(horaires|opening.hours|heures.d.ouverture|hours.of.operation|lundi|monday)', html, re.IGNORECASE):
+                signals['has_opening_hours'] = True
+                signal_details.append({'signal': 'opening_hours', 'url': url})
+
+    signal_count = sum(1 for v in signals.values() if v)
+    is_local = signal_count >= 2  # At least 2 signals to qualify
+
+    missing = []
+    if is_local:
+        if not signals['has_address']:
+            missing.append('address')
+        if not signals['has_phone']:
+            missing.append('phone')
+        if not signals['has_local_schema']:
+            missing.append('local_schema')
+        if not signals['has_maps_embed']:
+            missing.append('maps_embed')
+        if not signals['has_opening_hours']:
+            missing.append('opening_hours')
+
+    return {
+        'is_local_business': is_local,
+        'signal_count': signal_count,
+        'signals': signals,
+        'signal_details': signal_details[:10],
+        'missing': missing,
+    }
+
+
 def crawl_site(url, output_dir):
     """Main crawl function. Returns a results dict with v2 deep analysis."""
     parsed = urlparse(url)
@@ -1076,6 +1173,13 @@ def crawl_site(url, output_dir):
     cannibalization = _detect_keyword_cannibalization(pages)
     print(f"  [crawler] Cannibalization: {cannibalization['total_groups']} groups, {cannibalization['total_pages_affected']} pages affected")
 
+    print(f"  [crawler] Detecting local business signals...")
+    local_business = _detect_local_business(pages, url)
+    if local_business['is_local_business']:
+        print(f"  [crawler] Local business detected ({local_business['signal_count']} signals)")
+    else:
+        print(f"  [crawler] Not a local business ({local_business['signal_count']} signals)")
+
     # Clean heavy fields from pages to reduce JSON size
     for p in pages:
         p.pop('images_raw', None)
@@ -1108,6 +1212,7 @@ def crawl_site(url, output_dir):
         'anchor_analysis': anchor_analysis,
         'title_h1_coherence': title_h1_coherence,
         'cannibalization': cannibalization,
+        'local_business': local_business,
     }
 
     # Export

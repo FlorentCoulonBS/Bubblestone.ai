@@ -13,9 +13,12 @@ from urllib.parse import urlparse, urljoin
 
 
 # --- AI bots to check in robots.txt ---
-AI_BOTS = ['GPTBot', 'ChatGPT-User', 'Google-Extended', 'ClaudeBot',
-           'PerplexityBot', 'Amazonbot', 'anthropic-ai', 'Bytespider',
-           'CCBot', 'cohere-ai']
+# Search bots (allow for AI search visibility)
+AI_BOTS_SEARCH = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'PerplexityBot']
+# Training bots (ok to block)
+AI_BOTS_TRAINING = ['CCBot', 'Bytespider', 'Google-Extended', 'anthropic-ai', 'cohere-ai']
+# Combined (for backward compatibility)
+AI_BOTS = AI_BOTS_SEARCH + AI_BOTS_TRAINING
 
 # --- Schema types we look for ---
 IMPORTANT_SCHEMAS = [
@@ -499,13 +502,14 @@ def _audit_ai_accessibility(url, base_url, crawl_data, deep_seo_data):
     score = 0
     details = []
     bots_blocked = []
+    bots_search_blocked = []
+    bots_training_blocked = []
 
-    # 1. robots.txt — AI bots (0-5)
+    # 1. robots.txt — AI bots (0-4)
     try:
         robots_url = base_url.rstrip('/') + '/robots.txt'
         r = requests.get(robots_url, timeout=10, headers={'User-Agent': 'BubbleStone-Audit/1.0'})
         if r.status_code == 200:
-            robots_text = r.text.lower()
             for bot in AI_BOTS:
                 # Check if bot is specifically disallowed
                 bot_lower = bot.lower()
@@ -519,17 +523,25 @@ def _audit_ai_accessibility(url, base_url, crawl_data, deep_seo_data):
                     elif in_bot_section and line_stripped.startswith('disallow:'):
                         path = line_stripped.split(':', 1)[1].strip()
                         if path == '/' and agent == bot_lower:
+                            if bot in AI_BOTS_SEARCH:
+                                bots_search_blocked.append(bot)
+                            else:
+                                bots_training_blocked.append(bot)
                             bots_blocked.append(bot)
                             break
 
-            if not bots_blocked:
-                score += 5
-                details.append("Aucun bot IA bloqué dans robots.txt")
+            if not bots_search_blocked:
+                score += 4  # Full points if no search bots blocked
+                if bots_training_blocked:
+                    details.append(f"Bots IA de recherche accessibles. Bots d'entraînement bloqués : {', '.join(bots_training_blocked)} (OK)")
+                else:
+                    details.append("Aucun bot IA bloqué dans robots.txt")
             else:
-                # Partial score if only some are blocked
-                blocked_ratio = len(bots_blocked) / len(AI_BOTS)
-                score += max(0, int(5 * (1 - blocked_ratio)))
-                details.append(f"Bots IA bloqués dans robots.txt : {', '.join(bots_blocked)}")
+                blocked_ratio = len(bots_search_blocked) / len(AI_BOTS_SEARCH)
+                score += max(0, int(4 * (1 - blocked_ratio)))
+                details.append(f"Bots IA de recherche bloqués : {', '.join(bots_search_blocked)} (pénalisant pour la visibilité IA)")
+                if bots_training_blocked:
+                    details.append(f"Bots d'entraînement bloqués : {', '.join(bots_training_blocked)} (OK)")
         else:
             score += 3  # No robots.txt = partially open
             details.append("Pas de robots.txt (les bots IA peuvent accéder au site)")
@@ -550,8 +562,7 @@ def _audit_ai_accessibility(url, base_url, crawl_data, deep_seo_data):
     else:
         details.append("Sitemap.xml absent ou non valide")
 
-    # 3. JS rendering (0-3)
-    stack_js_heavy = False
+    # 3. JS rendering (0-2)
     # Check if pages have substantial content in HTML (not JS-only)
     pages = crawl_data.get('pages', [])
     pages_with_content = 0
@@ -563,7 +574,7 @@ def _audit_ai_accessibility(url, base_url, crawl_data, deep_seo_data):
                 pages_with_content += 1
 
     if pages_with_content >= 5:
-        score += 3
+        score += 2
         details.append("Contenu HTML accessible sans JavaScript")
     elif pages_with_content >= 2:
         score += 1
@@ -586,20 +597,45 @@ def _audit_ai_accessibility(url, base_url, crawl_data, deep_seo_data):
         score += 1  # Unknown = assume ok
         details.append("Temps de réponse non mesuré")
 
-    # 5. No login wall (0-2)
+    # 5. No login wall (0-1)
     login_wall = False
     for page in pages[:10]:
         html = page.get('html', page.get('body', '')).lower()
         if html and ('login' in html or 'connexion' in html):
             # Check if it's the main content or just a nav link
             pass  # Basic check — login pages don't block everything
-    score += 2  # Assume no login wall unless detected
+    score += 1  # Assume no login wall unless detected
     details.append("Pas de contenu derrière un mur de connexion détecté")
+
+    # 6. llms.txt (0-3)
+    llms_txt_found = False
+    llms_txt_structured = False
+    try:
+        llms_url = base_url.rstrip('/') + '/llms.txt'
+        r_llms = requests.get(llms_url, timeout=5, headers={'User-Agent': 'BubbleStone-Audit/1.0'})
+        if r_llms.status_code == 200 and len(r_llms.text.strip()) > 20:
+            llms_txt_found = True
+            # Check if it's structured (has markdown headings or links)
+            if '#' in r_llms.text or '](http' in r_llms.text or '- [' in r_llms.text:
+                llms_txt_structured = True
+                score += 3
+                details.append("llms.txt présent et structuré")
+            else:
+                score += 1
+                details.append("llms.txt présent mais peu structuré")
+        else:
+            details.append("Pas de fichier llms.txt (guide pour les crawlers IA)")
+    except Exception:
+        details.append("Impossible de vérifier llms.txt")
 
     score = min(15, score)
     return {
         'score': score, 'max': 15, 'details': details,
         '_bots_blocked': bots_blocked,
+        '_bots_search_blocked': bots_search_blocked,
+        '_bots_training_blocked': bots_training_blocked,
+        '_llms_txt': llms_txt_found,
+        '_llms_txt_structured': llms_txt_structured,
     }
 
 
@@ -659,12 +695,12 @@ def _build_recommendations(categories, schema_result, ai_access_result):
         })
 
     # --- AI bots ---
-    bots_blocked = ai_access_result.get('_bots_blocked', [])
-    if bots_blocked:
+    bots_search_blocked = ai_access_result.get('_bots_search_blocked', [])
+    if bots_search_blocked:
         recs.append({
             'priority': 'critique',
-            'problem': f"Bots IA bloqués dans robots.txt : {', '.join(bots_blocked)}",
-            'action': f"Supprimer ou modifier les règles Disallow pour {', '.join(bots_blocked)} dans robots.txt",
+            'problem': f"Bots IA de recherche bloqués dans robots.txt : {', '.join(bots_search_blocked)}",
+            'action': f"Supprimer ou modifier les règles Disallow pour {', '.join(bots_search_blocked)} dans robots.txt",
             'impact': "Ces bots ne peuvent pas crawler votre site — vous êtes invisible pour les moteurs IA correspondants (ChatGPT, Perplexity, etc.)",
         })
 

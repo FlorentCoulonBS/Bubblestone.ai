@@ -1,6 +1,7 @@
 """Database engine and session management."""
 
 import logging
+import re
 import sqlite3
 from pathlib import Path
 from collections.abc import Generator
@@ -9,6 +10,8 @@ from sqlalchemy import event
 from sqlmodel import Session, SQLModel, create_engine
 
 from ai_trend_monitor.config import DATABASE_PATH
+
+_IDENTIFIER_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 logger = logging.getLogger(__name__)
 
@@ -62,8 +65,13 @@ def _migrate_schema() -> None:
         cursor = conn.cursor()
 
         for table, columns in _MIGRATIONS.items():
-            # Get existing columns
-            cursor.execute(f"PRAGMA table_info({table})")
+            # Validate identifiers to prevent SQL injection
+            if not _IDENTIFIER_RE.match(table):
+                raise ValueError(f"Invalid table name: {table}")
+
+            # Get existing columns — PRAGMA doesn't support parameters,
+            # so we whitelist-validate the identifier above.
+            cursor.execute("PRAGMA table_info(%s)" % table)  # noqa: S608
             existing = {row[1] for row in cursor.fetchall()}
 
             if not existing:
@@ -71,7 +79,13 @@ def _migrate_schema() -> None:
 
             for col_name, col_def in columns:
                 if col_name not in existing:
-                    stmt = f"ALTER TABLE {table} ADD COLUMN {col_name} {col_def}"
+                    if not _IDENTIFIER_RE.match(col_name):
+                        raise ValueError(f"Invalid column name: {col_name}")
+                    stmt = "ALTER TABLE %s ADD COLUMN %s %s" % (  # noqa: S608
+                        table,
+                        col_name,
+                        col_def,
+                    )
                     cursor.execute(stmt)
                     logger.info("Migration: added %s.%s", table, col_name)
 

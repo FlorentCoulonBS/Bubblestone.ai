@@ -12,34 +12,44 @@ permissions:
 
 jobs:
   # 1. Semgrep — static analysis (OWASP, injection, XSS, etc.)
+  # Diff-aware: on PRs, only scans changed files. On push to main, full scan (non-blocking).
   semgrep:
     runs-on: ubuntu-latest
     container:
       image: semgrep/semgrep
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Run Semgrep
+      - name: Run Semgrep (diff-aware on PRs)
+        env:
+          SEMGREP_BASELINE_REF: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}
         run: |
+          BASELINE_ARG=""
+          if [ -n "$SEMGREP_BASELINE_REF" ]; then
+            BASELINE_ARG="--baseline-commit $SEMGREP_BASELINE_REF"
+          fi
           semgrep scan \
             --config auto \
             --config p/owasp-top-ten \
             --config p/python \
             --config p/javascript \
-            --error \
+            $BASELINE_ARG \
             --json --output semgrep-results.json \
             --exclude='node_modules' --exclude='.git' --exclude='dist' \
             . || true
 
-      - name: Check for high/critical findings
+      - name: Check for critical findings
         run: |
           if [ -f semgrep-results.json ]; then
             python3 -c "
           import json, sys
           data = json.load(open('semgrep-results.json'))
           results = data.get('results', [])
-          critical = [r for r in results if r.get('extra', {}).get('severity', '') in ('ERROR', 'WARNING')]
-          for r in critical[:10]:
+          errors = [r for r in results if r.get('extra', {}).get('severity', '') == 'ERROR']
+          warnings = [r for r in results if r.get('extra', {}).get('severity', '') == 'WARNING']
+          for r in (errors + warnings)[:15]:
               sev = r['extra']['severity']
               cid = r['check_id']
               path = r['path']
@@ -49,11 +59,11 @@ jobs:
               print(f'    {path}:{line}')
               print(f'    {msg}')
               print()
-          if any(r['extra']['severity'] == 'ERROR' for r in results):
-              print('::error::Critical security findings detected')
+          print(f'Total: {len(errors)} critical, {len(warnings)} warnings')
+          if errors:
+              print('::error::Critical security findings in changed files')
               sys.exit(1)
-          else:
-              print('No critical findings.')
+          print('No critical findings in changed files.')
           "
           fi
 

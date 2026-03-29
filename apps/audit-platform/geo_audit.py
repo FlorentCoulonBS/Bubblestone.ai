@@ -228,6 +228,7 @@ def _audit_content_structure(pages):
     pages_with_questions = 0
     pages_with_lists = 0
     pages_with_tables = 0
+    pages_with_concise_answers = 0
     total_content_pages = 0
 
     for page in pages:
@@ -250,6 +251,21 @@ def _audit_content_structure(pages):
         if question_headings:
             pages_with_questions += 1
 
+        # Concise answers: question heading followed by short paragraph
+        if question_headings:
+            has_concise = False
+            for match in re.finditer(
+                r'</h[2-3]>\s*<p[^>]*>(.*?)</p>',
+                html, re.IGNORECASE | re.DOTALL
+            ):
+                para_text = re.sub(r'<[^>]+>', '', match.group(1)).strip()
+                sentence_count = len(re.findall(r'[.!?]+', para_text))
+                if 20 < len(para_text) < 300 and 1 <= sentence_count <= 3:
+                    has_concise = True
+                    break
+            if has_concise:
+                pages_with_concise_answers += 1
+
         # Lists
         if '<ul' in html_lower or '<ol' in html_lower:
             pages_with_lists += 1
@@ -260,26 +276,34 @@ def _audit_content_structure(pages):
 
     total = max(total_content_pages, 1)
 
-    # FAQ (0-6)
+    # FAQ (0-5, was 6)
     if faq_count > 0:
-        score += min(6, faq_count * 3)
+        score += min(5, faq_count * 2 + 1)
         details.append(f"{faq_count} page(s) FAQ détectée(s)")
     else:
         details.append("Aucune page FAQ structurée détectée")
 
-    # Questions in headings (0-6)
+    # Questions in headings (0-5, was 6)
     q_ratio = pages_with_questions / total
-    score += min(6, int(q_ratio * 12))
+    score += min(5, int(q_ratio * 10))
     details.append(f"{pages_with_questions}/{total} pages avec des titres sous forme de questions ({q_ratio:.0%})")
 
-    # Lists (0-4)
+    # Concise answers (0-4, NEW)
+    if pages_with_questions > 0:
+        ca_ratio = pages_with_concise_answers / max(pages_with_questions, 1)
+        score += min(4, int(ca_ratio * 6))
+        details.append(f"{pages_with_concise_answers}/{pages_with_questions} pages avec réponses concises après les questions ({ca_ratio:.0%})")
+    else:
+        details.append("Pas de titres-questions détectés pour évaluer les réponses concises")
+
+    # Lists (0-3, was 4)
     l_ratio = pages_with_lists / total
-    score += min(4, int(l_ratio * 6))
+    score += min(3, int(l_ratio * 5))
     details.append(f"{pages_with_lists}/{total} pages avec listes structurées")
 
-    # Tables (0-4)
+    # Tables (0-3, was 4)
     t_ratio = pages_with_tables / total
-    score += min(4, int(t_ratio * 8))
+    score += min(3, int(t_ratio * 6))
     if pages_with_tables:
         details.append(f"{pages_with_tables} page(s) avec tableaux de données")
 
@@ -288,6 +312,7 @@ def _audit_content_structure(pages):
     return {
         'score': score, 'max': 20, 'details': details,
         '_faq_count': faq_count,
+        '_concise_answer_count': pages_with_concise_answers,
     }
 
 

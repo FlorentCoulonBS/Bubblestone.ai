@@ -684,6 +684,26 @@ tr:hover{background:#FAFBFC}
   </div>
   {% endif %}
 
+  {# LOCAL SEO (conditional) #}
+  {% set local = crawl.get('local_business', {}) if crawl else {} %}
+  {% if local and local.get('is_local_business') %}
+  <div class="section">
+    <div class="section-title"><span class="icon">📍</span> Local SEO</div>
+    <p style="color:#9CA3AF;font-size:12px;margin-bottom:12px">Local business detected ({{ local.signal_count }} signals). Here is the status of essential elements for local search ranking.</p>
+    <div class="cwv-grid">
+      <div class="cwv-card"><div class="cwv-metric">Physical address</div><div class="cwv-value" style="color:{% if local.signals.has_address %}#16A34A{% else %}#DC2626{% endif %}">{% if local.signals.has_address %}Detected{% else %}Missing{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Phone</div><div class="cwv-value" style="color:{% if local.signals.has_phone %}#16A34A{% else %}#DC2626{% endif %}">{% if local.signals.has_phone %}Detected{% else %}Missing{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Google Maps</div><div class="cwv-value" style="color:{% if local.signals.has_maps_embed %}#16A34A{% else %}#F59E0B{% endif %}">{% if local.signals.has_maps_embed %}Integrated{% else %}Missing{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">LocalBusiness Schema</div><div class="cwv-value" style="color:{% if local.signals.has_local_schema %}#16A34A{% else %}#DC2626{% endif %}">{% if local.signals.has_local_schema %}Present{% else %}Missing{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Opening hours</div><div class="cwv-value" style="color:{% if local.signals.has_opening_hours %}#16A34A{% else %}#F59E0B{% endif %}">{% if local.signals.has_opening_hours %}Detected{% else %}Missing{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Service area</div><div class="cwv-value" style="color:#6B7280">{% if local.signals.has_service_area %}Detected{% else %}Not detected{% endif %}</div></div>
+    </div>
+    {% if local.get('missing') %}
+    <p style="color:#F59E0B;font-size:11px;margin-top:8px">Missing elements for optimal local SEO: {{ local.missing|join(', ') }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
   <!-- REDIRECTS (V2 — deep analysis) -->
   {% set redirect_analysis = crawl.get('redirect_analysis', []) if crawl else [] %}
   {% if redirect_analysis %}
@@ -1294,6 +1314,17 @@ tr:hover{background:#FAFBFC}
       </div>
     </div>
 
+    {# Citability info #}
+    {% set cs_geo = geo.get('categories', {}).get('content_structure', {}) if geo else {} %}
+    {% if cs_geo and cs_geo.get('_citable_blocks_count', 0) is defined %}
+    {% set citable = cs_geo.get('_citable_blocks_count', 0) %}
+    {% if citable > 0 %}
+    <div style="background:#fff;padding:0 24px 12px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB">
+    <p style="color:#9CA3AF;font-size:11px;margin-top:4px">{{ citable }} page(s) with citable blocks (100-200 words) — optimal format for AI citations</p>
+    </div>
+    {% endif %}
+    {% endif %}
+
     {% if geo.get('schemas_found') or geo.get('schemas_missing') %}
     <div style="background:#fff;padding:24px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB">
       <div style="font-size:16px;font-weight:700;color:#7C3AED;margin-bottom:16px">🏷️ Schema.org — Detection</div>
@@ -1318,7 +1349,29 @@ tr:hover{background:#FAFBFC}
     </div>
     {% endif %}
 
-    {% if geo.get('ai_bots_blocked') %}
+    {# AI Crawler categorization #}
+    {% set ai_acc = geo.get('categories', {}).get('ai_accessibility', {}) if geo else {} %}
+    {% if ai_acc %}
+    {% set search_blocked = ai_acc.get('_bots_search_blocked', []) %}
+    {% set training_blocked = ai_acc.get('_bots_training_blocked', []) %}
+    {% set llms_txt = ai_acc.get('_llms_txt', False) %}
+    {% if search_blocked or training_blocked or llms_txt is not none %}
+    <div style="background:#fff;padding:24px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB">
+    <h4 style="margin:0 0 8px;font-size:13px;color:#7C3AED">AI Crawlers & llms.txt</h4>
+    <div class="cwv-grid">
+      <div class="cwv-card"><div class="cwv-metric">AI search bots</div><div class="cwv-value" style="color:{% if search_blocked %}#DC2626{% else %}#16A34A{% endif %}">{% if search_blocked %}{{ search_blocked|length }} blocked{% else %}Accessible{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Training bots</div><div class="cwv-value" style="color:#6B7280">{% if training_blocked %}{{ training_blocked|length }} blocked{% else %}Accessible{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">llms.txt</div><div class="cwv-value" style="color:{% if llms_txt %}#16A34A{% else %}#F59E0B{% endif %}">{% if llms_txt %}Present{% else %}Missing{% endif %}</div></div>
+    </div>
+    {% if search_blocked %}
+    <p style="color:#DC2626;font-size:11px;margin-top:4px">⚠ Search bots blocked: {{ search_blocked|join(', ') }} — these bots make your site visible in ChatGPT, Perplexity, etc.</p>
+    {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- AI Bots Blocked (legacy fallback) -->
+    {% if geo.get('ai_bots_blocked') and not ai_acc %}
     <div style="background:#fff;padding:24px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB">
       <div style="background:#FEE2E2;border:2px solid #DC2626;border-radius:10px;padding:20px;display:flex;align-items:center;gap:16px">
         <span style="font-size:40px">🚫</span>

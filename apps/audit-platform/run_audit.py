@@ -76,6 +76,10 @@ I18N = {
         'duplicate_descs': "{n} groupes de pages avec des meta descriptions identiques — diversifier",
         'thin_content': "{n} pages avec contenu insuffisant (<300 mots) — enrichir ou consolider",
         'redirect_long_chains': "{n} chaînes de redirections > 1 saut — réduire à 1 redirection directe",
+        'anchor_generic': "{n}% des ancres de liens internes sont génériques (\"cliquez ici\", \"en savoir plus\"…) — utiliser des textes d'ancre descriptifs",
+        'anchor_empty': "{n} liens internes sans texte d'ancre — ajouter un texte descriptif",
+        'title_h1_incoherent': "{n} pages avec titre et H1 incohérents — aligner le title et le H1 sur les mêmes mots-clés",
+        'cannibalization': "{n} groupes de pages en concurrence sur les mêmes mots-clés — consolider ou différencier le contenu",
         'cwv_poor_lcp': "{n} pages avec LCP > 4s — optimiser le chargement du contenu principal",
         'cwv_poor_cls': "{n} pages avec CLS > 0.25 — stabiliser la mise en page visuelle",
         # Priorities & categories
@@ -154,6 +158,10 @@ I18N = {
         'duplicate_descs': "{n} groups of pages with identical meta descriptions — diversify",
         'thin_content': "{n} pages with insufficient content (<300 words) — enrich or consolidate",
         'redirect_long_chains': "{n} redirect chains > 1 hop — reduce to single direct redirects",
+        'anchor_generic': "{n}% of internal link anchors are generic (\"click here\", \"read more\"…) — use descriptive anchor text",
+        'anchor_empty': "{n} internal links without anchor text — add descriptive text",
+        'title_h1_incoherent': "{n} pages with incoherent title and H1 — align title and H1 on the same keywords",
+        'cannibalization': "{n} groups of pages competing for the same keywords — consolidate or differentiate content",
         'cwv_poor_lcp': "{n} pages with LCP > 4s — optimize main content loading",
         'cwv_poor_cls': "{n} pages with CLS > 0.25 — stabilize visual layout",
         # Priorities & categories
@@ -638,6 +646,24 @@ def build_recommendations(scores, headers_data, zap_alerts, a11y_issues, deep_se
         long_chains = [r for r in redirect_analysis if r.get('is_long_chain')]
         if long_chains:
             recs.append({"text": t['redirect_long_chains'].format(n=len(long_chains)), "priority": t['high'], "category": "SEO"})
+
+        # V3: Anchor text recommendations
+        anchor = crawl.get('anchor_analysis', {})
+        if anchor:
+            if anchor.get('ratio_generic_pct', 0) > 20:
+                recs.append({"text": t['anchor_generic'].format(n=anchor['ratio_generic_pct']), "priority": t['medium'], "category": t.get('cat_maillage', 'SEO')})
+            if anchor.get('empty_count', 0) > 5:
+                recs.append({"text": t['anchor_empty'].format(n=anchor['empty_count']), "priority": t['medium'], "category": t.get('cat_maillage', 'SEO')})
+
+        # V3: Title/H1/Meta coherence recommendations
+        coherence = crawl.get('title_h1_coherence', {})
+        if coherence and coherence.get('incoherent_count', 0) > 0:
+            recs.append({"text": t['title_h1_incoherent'].format(n=coherence['incoherent_count']), "priority": t['high'], "category": "SEO"})
+
+        # V3: Keyword cannibalization recommendations
+        cannibal = crawl.get('cannibalization', {})
+        if cannibal and cannibal.get('total_groups', 0) > 0:
+            recs.append({"text": t['cannibalization'].format(n=cannibal['total_groups']), "priority": t['high'], "category": t.get('cat_content', 'SEO')})
 
     # V2: CWV per page recommendations
     if cwv_per_page:

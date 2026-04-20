@@ -1,5 +1,7 @@
 name: Deploy 555
 
+permissions: {}
+
 on:
   push:
     branches: [main]
@@ -16,25 +18,32 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
+    timeout-minutes: 15
     steps:
-      - name: Install SSH key
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          SSH_HOST_KEY: ${{ secrets.SSH_HOST_KEY }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > ~/.ssh/deploy_key
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Deploy 555
+        env:
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
-          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash -s << 'DEPLOY'
-            set -e
-            cd /opt/repos/bubblestone
-            git fetch origin main
-            git checkout main
-            git reset --hard origin/main
-            docker build -t 555:latest -f apps/555-trend-monitor/ai_trend_monitor/Dockerfile apps/555-trend-monitor/ai_trend_monitor/
-            docker compose -f infra/docker-compose.yml -p projects up -d 555
-            sleep 5
-            curl -sf http://127.0.0.1:5000/ > /dev/null || { echo "Health check failed"; exit 1; }
-            echo "555 deployed successfully"
-          DEPLOY
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/deploy_key" \
+              -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+              -o StrictHostKeyChecking=yes \
+              "$VPS_USER@$VPS_HOST" 555
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts

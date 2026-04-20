@@ -1,11 +1,13 @@
 name: Deploy Site
 
+permissions: {}
+
 on:
   push:
     branches: [main]
     paths:
       - 'site/**'
-      - '.github/workflows/deploy.yml'
+      - '.github/workflows/deploy-site.yml'
   workflow_dispatch:
     inputs:
       target:
@@ -17,9 +19,16 @@ on:
           - staging
           - production
 
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: site
@@ -42,11 +51,12 @@ jobs:
 
       - name: Verify build (team members count)
         run: |
+          set -euo pipefail
           EXPECTED=$(grep -c "    name:" src/pages/teams.astro)
           ACTUAL=$(grep -o "team-name" dist/teams/index.html | wc -l)
           echo "Source: $EXPECTED members | Build: $ACTUAL members"
           if [ "$ACTUAL" -ne "$EXPECTED" ]; then
-            echo "ERROR: Build has $ACTUAL members but source has $EXPECTED!"
+            echo "ERROR: Build has $ACTUAL members but source has $EXPECTED!" >&2
             exit 1
           fi
 
@@ -59,6 +69,7 @@ jobs:
   deploy-staging:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'staging')
     environment: staging
     steps:
@@ -68,22 +79,38 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Install SSH key
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          SSH_HOST_KEY: ${{ secrets.SSH_HOST_KEY }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > ~/.ssh/deploy_key
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Deploy to staging
-        run: rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key" dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/bubblestone-staging/dist/
+        env:
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          set -euo pipefail
+          tar -czf - -C dist . | ssh -i "$HOME/.ssh/deploy_key" \
+              -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+              -o StrictHostKeyChecking=yes \
+              "$VPS_USER@$VPS_HOST" site-staging
 
-      - name: Restart staging container
-        run: ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "docker restart projects-bubblestone-staging-1"
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts
 
   deploy-production:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production'
     environment: production
     steps:
@@ -93,15 +120,30 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Install SSH key
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          SSH_HOST_KEY: ${{ secrets.SSH_HOST_KEY }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > ~/.ssh/deploy_key
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Deploy to production
-        run: rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key" dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/bubblestone/dist/
+        env:
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          set -euo pipefail
+          tar -czf - -C dist . | ssh -i "$HOME/.ssh/deploy_key" \
+              -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+              -o StrictHostKeyChecking=yes \
+              "$VPS_USER@$VPS_HOST" site-production
 
-      - name: Restart production container
-        run: ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "docker restart projects-bubblestone-site-1"
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts

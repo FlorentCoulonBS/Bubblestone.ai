@@ -204,11 +204,14 @@ def score_color(score):
 def extract_lighthouse(data):
     cats = data.get("categories", {})
     audits = data.get("audits", {})
+    def _pct(cat_key):
+        s = cats.get(cat_key, {}).get("score")
+        return round(s * 100) if isinstance(s, (int, float)) else 0
     scores = {
-        "performance": round(cats.get("performance", {}).get("score", 0) * 100),
-        "seo": round(cats.get("seo", {}).get("score", 0) * 100),
-        "accessibility": round(cats.get("accessibility", {}).get("score", 0) * 100),
-        "best_practices": round(cats.get("best-practices", {}).get("score", 0) * 100),
+        "performance": _pct("performance"),
+        "seo": _pct("seo"),
+        "accessibility": _pct("accessibility"),
+        "best_practices": _pct("best-practices"),
     }
     def audit_val(key):
         a = audits.get(key, {})

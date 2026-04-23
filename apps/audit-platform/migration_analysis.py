@@ -268,7 +268,8 @@ def _estimate_infra(stack_data, lh_data):
 def _performance_gain(lh_data):
     """Estimate performance gain with Astro."""
     cats = lh_data.get("categories", {}) if lh_data else {}
-    current = round(cats.get("performance", {}).get("score", 0) * 100) if cats else 0
+    raw = cats.get("performance", {}).get("score") if cats else None
+    current = round(raw * 100) if isinstance(raw, (int, float)) else 0
     if current == 0:
         current = 50  # fallback
 

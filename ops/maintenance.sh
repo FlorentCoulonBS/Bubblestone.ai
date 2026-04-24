@@ -330,7 +330,7 @@ printf 'put %s %s/\n' "$ARCHIVE" "$REMOTE_DIR" > "$SFTP_BATCH"
 if sftp -b "$SFTP_BATCH" -i "$REMOTE_KEY" -o StrictHostKeyChecking=no "$REMOTE_HOST" >/dev/null 2>&1; then
     step_ok "Sauvegarde" "Archive ${ARCHIVE_SIZE} transférée vers DALMATA"
 else
-    step_err "Sauvegarde" "Transfert SCP échoué (archive locale: ${ARCHIVE_SIZE})"
+    step_err "Sauvegarde" "Transfert SFTP échoué (archive locale: ${ARCHIVE_SIZE})"
 fi
 
 find /opt/backups/n8n -name 'backup-dalmata-*.tar.gz' -mtime +7 -delete 2>/dev/null || true

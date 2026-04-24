@@ -28,9 +28,9 @@ MAINT_VERSION="4.0"
 MAINT_EMAIL_FROM="florent.coulon@bubblestone.ai"
 
 # --- CONFIG (BubbleStone-specific) ---
-REMOTE_HOST="root@69.62.106.57"
+REMOTE_HOST="backup@69.62.106.57"
 REMOTE_KEY="/root/.ssh/id_ed25519_backup"
-REMOTE_DIR="/opt/backups/bubblestone"
+REMOTE_DIR="bubblestone"
 BACKUP_DIR="/tmp/backup_bubblestone"
 COMPOSE_FILE="/opt/repos/bubblestone/infra/docker-compose.yml"
 COMPOSE_PROJECT="projects"
@@ -324,14 +324,18 @@ ARCHIVE="/tmp/backup-bubblestone-${DATE}.tar.gz"
 tar czf "$ARCHIVE" -C "$BACKUP_DIR" . 2>/dev/null || true
 ARCHIVE_SIZE=$(du -sh "$ARCHIVE" 2>/dev/null | cut -f1)
 
-if scp -i "$REMOTE_KEY" -o StrictHostKeyChecking=no "$ARCHIVE" "$REMOTE_HOST:$REMOTE_DIR/" 2>/dev/null; then
+SFTP_BATCH=$(mktemp)
+printf 'put %s %s/\n' "$ARCHIVE" "$REMOTE_DIR" > "$SFTP_BATCH"
+
+if sftp -b "$SFTP_BATCH" -i "$REMOTE_KEY" -o StrictHostKeyChecking=no "$REMOTE_HOST" >/dev/null 2>&1; then
     step_ok "Sauvegarde" "Archive ${ARCHIVE_SIZE} transférée vers DALMATA"
-    ssh -i "$REMOTE_KEY" -o StrictHostKeyChecking=no "$REMOTE_HOST" \
-        "find $REMOTE_DIR -name 'backup-bubblestone-*.tar.gz' -mtime +7 -delete" 2>/dev/null || true
 else
     step_err "Sauvegarde" "Transfert SCP échoué (archive locale: ${ARCHIVE_SIZE})"
 fi
 
+find /opt/backups/n8n -name 'backup-dalmata-*.tar.gz' -mtime +7 -delete 2>/dev/null || true
+
+rm -f "$SFTP_BATCH"
 rm -rf "$BACKUP_DIR" "$ARCHIVE"
 
 # ÉTAPE 6 — Verification

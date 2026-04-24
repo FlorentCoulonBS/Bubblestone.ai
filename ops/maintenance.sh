@@ -363,21 +363,23 @@ step_ok "Cleanup" "$SPACE_CLEAN"
 log "--- Sync Claude config ---"
 SYNC_OK=true
 for SERVER in "69.62.106.57" "85.31.236.58"; do
-    scp -i /root/.ssh/dalmata_key -o ConnectTimeout=10 -q \
-        /root/.claude/CLAUDE.md "root@${SERVER}:/root/.claude/CLAUDE.md" 2>/dev/null || SYNC_OK=false
-    scp -i /root/.ssh/dalmata_key -o ConnectTimeout=10 -q \
-        /root/CLAUDE.local.md "root@${SERVER}:/root/CLAUDE.local.md" 2>/dev/null || SYNC_OK=false
-    ssh -i /root/.ssh/dalmata_key -o ConnectTimeout=10 "root@${SERVER}" \
-        'mkdir -p /root/.claude/projects/-root/memory' 2>/dev/null || true
+    SFTP_BATCH=$(mktemp)
+    {
+        printf 'put /root/.claude/CLAUDE.md CLAUDE.md\n'
+        printf 'put /root/CLAUDE.local.md CLAUDE.local.md\n'
+        printf -- '-mkdir memory\n'
+    } > "$SFTP_BATCH"
     for memfile in /root/.claude/projects/-root/memory/*.md; do
         if [ -f "$memfile" ]; then
-            scp -i /root/.ssh/dalmata_key -o ConnectTimeout=10 -q \
-                "$memfile" "root@${SERVER}:/root/.claude/projects/-root/memory/" 2>/dev/null || SYNC_OK=false
+            printf 'put %s memory/%s\n' "$memfile" "$(basename "$memfile")" >> "$SFTP_BATCH"
         fi
     done
+    sftp -b "$SFTP_BATCH" -i /root/.ssh/claude_sync_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+        "claude-sync@${SERVER}" >/dev/null 2>&1 || SYNC_OK=false
+    rm -f "$SFTP_BATCH"
 done
 if $SYNC_OK; then
-    step_ok "Sync Claude config" "CLAUDE.md + memory synced to 2 servers"
+    step_ok "Sync Claude config" "CLAUDE.md + memory synced to claude-sync inbox on 2 servers"
 else
     step_warn "Sync Claude config" "Sync partielle — vérifier connectivité"
 fi

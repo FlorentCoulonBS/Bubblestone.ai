@@ -111,7 +111,7 @@ Update to remove this path from backup.
 ## GitHub Secrets (already configured)
 - `VPS_SSH_KEY` — base64-encoded SSH deploy key
 - `VPS_HOST` — 72.62.190.147
-- `VPS_USER` — root
+- `VPS_USER` — deploy
 
 No new secrets needed.
 

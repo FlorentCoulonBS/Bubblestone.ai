@@ -1,0 +1,17 @@
+#!/bin/bash
+# SSH ForceCommand for the deploy user.
+# Whitelists deploy actions; nothing else may be invoked.
+set -euo pipefail
+
+cmd="${SSH_ORIGINAL_COMMAND:-}"
+
+case "$cmd" in
+  site-staging|site-production|555|linkedin|audit)
+    exec sudo -n /usr/local/sbin/bubblestone-deploy "$cmd"
+    ;;
+  *)
+    logger -t deploy-dispatcher "rejected SSH_ORIGINAL_COMMAND='$cmd'"
+    echo "Command not allowed" >&2
+    exit 1
+    ;;
+esac

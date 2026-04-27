@@ -333,7 +333,7 @@ else
     step_err "Sauvegarde" "Transfert SFTP échoué (archive locale: ${ARCHIVE_SIZE})"
 fi
 
-find /opt/backups/n8n -name 'backup-dalmata-*.tar.gz' -mtime +6 -delete 2>/dev/null || true
+find /opt/bubblestone-backups-incoming/n8n -name 'backup-dalmata-*.tar.gz' -mtime +6 -delete 2>/dev/null || true
 
 rm -f "$SFTP_BATCH"
 rm -rf "$BACKUP_DIR" "$ARCHIVE"

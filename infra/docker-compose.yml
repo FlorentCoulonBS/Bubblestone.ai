@@ -22,7 +22,7 @@ services:
       - /opt/bubblestone-core/data:/data
       - /opt/bubblestone-core/letsencrypt:/etc/letsencrypt
     networks:
-      npmnet:
+      bubblestone-net:
         ipv4_address: 172.18.0.10
 
   # ============================================
@@ -36,7 +36,7 @@ services:
       - /opt/bubblestone-site-app/dist:/usr/share/nginx/html:ro
       - /opt/bubblestone-site-app/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
-      npmnet:
+      bubblestone-net:
         ipv4_address: 172.18.0.20
 
   # ============================================
@@ -50,7 +50,7 @@ services:
       - /opt/bubblestone-staging-app/dist:/usr/share/nginx/html:ro
       - /opt/bubblestone-staging-app/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
-      npmnet:
+      bubblestone-net:
         ipv4_address: 172.18.0.25
 
   # ============================================
@@ -70,7 +70,7 @@ services:
     volumes:
       - /opt/bubblestone-555-data:/data
     networks:
-      npmnet:
+      bubblestone-net:
         ipv4_address: 172.18.0.2
 
   # ============================================
@@ -88,7 +88,7 @@ services:
     volumes:
       - /opt/bubblestone-audit-data:/data
     networks:
-      npmnet:
+      bubblestone-net:
         ipv4_address: 172.18.0.30
 
   # ============================================
@@ -114,9 +114,9 @@ services:
       - /opt/bubblestone-linkedin-data:/data
       - /opt/bubblestone-555-data/trends.db:/data/trends.db:ro
     networks:
-      npmnet:
+      bubblestone-net:
         ipv4_address: 172.18.0.40
 
 networks:
-  npmnet:
+  bubblestone-net:
     external: true

@@ -1,0 +1,20 @@
+# DalmataAI/BubbleStone leximpact — service legacy standalone
+# Compose project: bubblestone-leximpact
+# Run: docker compose -p bubblestone-leximpact up -d
+# Build context = /opt/bubblestone-leximpact/ on server (HTML/CSS/Dockerfile)
+
+name: bubblestone-leximpact
+
+services:
+  leximpact:
+    build: .
+    container_name: bubblestone-leximpact
+    restart: unless-stopped
+    networks:
+      bubblestone-net:
+        ipv4_address: 172.18.0.60
+
+networks:
+  bubblestone-net:
+    external: true
+    name: bubblestone-net

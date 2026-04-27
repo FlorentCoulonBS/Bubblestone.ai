@@ -1,56 +1,64 @@
-# docker-compose.yml - BubbleStoneAI (Exploit)
-# Serveur: 72.62.190.147
-# Secrets dans .env (JAMAIS commité)
+# docker-compose.yml — BubbleStone
+# Server: 72.62.190.147
+# Compose project: bubblestone
+# Run: docker compose -p bubblestone up -d
+# Secrets in .env (NEVER committed)
+
+name: bubblestone
 
 services:
   # ============================================
-  # Nginx Proxy Manager - Reverse Proxy + SSL
+  # Nginx Proxy Manager — Reverse Proxy + SSL
   # ============================================
   npm:
     image: jc21/nginx-proxy-manager:latest
+    container_name: bubblestone-npm
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
       - "127.0.0.1:8081:81"
     volumes:
-      - /opt/npm/data:/data
-      - /opt/npm/letsencrypt:/etc/letsencrypt
+      - /opt/bubblestone-core/data:/data
+      - /opt/bubblestone-core/letsencrypt:/etc/letsencrypt
     networks:
       npmnet:
         ipv4_address: 172.18.0.10
 
   # ============================================
-  # BubbleStone.ai - Site vitrine (prod)
+  # BubbleStone.ai — Site vitrine (prod)
   # ============================================
   bubblestone-site:
     image: nginx:alpine
+    container_name: bubblestone-site
     restart: unless-stopped
     volumes:
-      - /opt/bubblestone/dist:/usr/share/nginx/html:ro
-      - /opt/bubblestone/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /opt/bubblestone-site-app/dist:/usr/share/nginx/html:ro
+      - /opt/bubblestone-site-app/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       npmnet:
         ipv4_address: 172.18.0.20
 
   # ============================================
-  # BubbleStone.ai - Staging
+  # BubbleStone.ai — Staging
   # ============================================
   bubblestone-staging:
     image: nginx:alpine
+    container_name: bubblestone-staging
     restart: unless-stopped
     volumes:
-      - /opt/bubblestone-staging/dist:/usr/share/nginx/html:ro
-      - /opt/bubblestone-staging/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /opt/bubblestone-staging-app/dist:/usr/share/nginx/html:ro
+      - /opt/bubblestone-staging-app/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       npmnet:
         ipv4_address: 172.18.0.25
 
   # ============================================
-  # 555 - AI Trend Dashboard (Veille IA)
+  # 555 — AI Trend Dashboard (Veille IA)
   # ============================================
   "555":
     image: 555:latest
+    container_name: bubblestone-555
     restart: unless-stopped
     ports:
       - "127.0.0.1:5000:5000"
@@ -60,7 +68,7 @@ services:
       - GMAIL_USER=${GMAIL_USER}
       - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
     volumes:
-      - /opt/data:/data
+      - /opt/bubblestone-555-data:/data
     networks:
       npmnet:
         ipv4_address: 172.18.0.2
@@ -70,6 +78,7 @@ services:
   # ============================================
   bubblestone-audit:
     image: bubblestone-audit:latest
+    container_name: bubblestone-audit
     restart: unless-stopped
     mem_limit: 6g
     ports:
@@ -77,7 +86,7 @@ services:
     environment:
       - DB_PATH=/data/audits.db
     volumes:
-      - /opt/data/audits:/data
+      - /opt/bubblestone-audit-data:/data
     networks:
       npmnet:
         ipv4_address: 172.18.0.30
@@ -88,6 +97,7 @@ services:
   linkedin-generator:
     build: ./linkedin-generator
     image: linkedin-generator:latest
+    container_name: bubblestone-linkedin-generator
     restart: unless-stopped
     ports:
       - "127.0.0.1:5001:5001"
@@ -101,8 +111,8 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - SECRET_KEY=${SECRET_KEY}
     volumes:
-      - /opt/data/linkedin:/data
-      - /opt/data/trends.db:/data/trends.db:ro
+      - /opt/bubblestone-linkedin-data:/data
+      - /opt/bubblestone-555-data/trends.db:/data/trends.db:ro
     networks:
       npmnet:
         ipv4_address: 172.18.0.40

@@ -33,9 +33,9 @@ REMOTE_KEY="/root/.ssh/id_ed25519_backup"
 REMOTE_DIR="bubblestone"
 BACKUP_DIR="/tmp/backup_bubblestone"
 COMPOSE_FILE="/opt/repos/bubblestone/infra/docker-compose.yml"
-COMPOSE_PROJECT="projects"
+COMPOSE_PROJECT="bubblestone"
 SERVICES=(npm bubblestone-site bubblestone-staging 555 bubblestone-audit linkedin-generator)
-container_name() { echo "${COMPOSE_PROJECT}-${1}-1"; }
+container_name() { echo "bubblestone-${1}"; }
 
 # =============================================================================
 # BubbleStone-specific helpers (VPS kernel blocks setuid changes during dpkg)
@@ -112,7 +112,7 @@ send_email() {
     email_section "📊 Veille IA"
     local C555 DB_SIZE DB_TOPICS DB_SNAP POD_COUNT POD_LAST
     C555=$(container_name "555")
-    DB_SIZE=$(du -sh /opt/data/trends.db 2>/dev/null | cut -f1 || echo "?")
+    DB_SIZE=$(du -sh /opt/bubblestone-555-data/trends.db 2>/dev/null | cut -f1 || echo "?")
     DB_TOPICS=$(docker exec "$C555" python3 -c "import sqlite3;c=sqlite3.connect('/data/trends.db');print(c.execute('SELECT COUNT(*) FROM topic').fetchone()[0])" 2>/dev/null || echo "?")
     DB_SNAP=$(docker exec "$C555" python3 -c "import sqlite3;c=sqlite3.connect('/data/trends.db');print(c.execute('SELECT COUNT(*) FROM topicsnapshot').fetchone()[0])" 2>/dev/null || echo "?")
     email_row "✅" "Base veille — ${DB_SIZE}, ${DB_TOPICS} topics, ${DB_SNAP} snapshots"
@@ -234,12 +234,12 @@ tar czf "$BACKUP_DIR/configs.tar.gz" \
     /etc/profile.d/99-hardening.sh \
     /etc/ssh/sshd_config.d/01-hardening.conf \
     /etc/ssh/sshd_config.d/90-hardening.conf \
-    /opt/bubblestone/nginx.conf \
-    /opt/bubblestone-staging/nginx.conf \
+    /opt/bubblestone-site-app/nginx.conf \
+    /opt/bubblestone-staging-app/nginx.conf \
     /etc/crowdsec/acquis.yaml \
     /etc/crowdsec/profiles.yaml \
     /etc/fail2ban/jail.local \
-    /opt/scripts/ \
+    /opt/bubblestone-ops/scripts/ \
     /usr/local/sbin/check-setuid-integrity.sh \
     /usr/local/sbin/weekly-reboot.sh \
     /etc/apt/apt.conf.d/99-check-setuid-integrity \
@@ -263,12 +263,12 @@ tar czf "$BACKUP_DIR/configs.tar.gz" \
 # 5.2 Site Astro
 tar czf "$BACKUP_DIR/site-astro.tar.gz" \
     --exclude='node_modules' \
-    /opt/bubblestone/src /opt/bubblestone/dist \
-    /opt/bubblestone-staging/dist \
+    /opt/bubblestone-site-app/src /opt/bubblestone-site-app/dist \
+    /opt/bubblestone-staging-app/dist \
     2>/dev/null || true
 
 # 5.3 NPM
-tar czf "$BACKUP_DIR/npm.tar.gz" /opt/npm/data /opt/npm/letsencrypt 2>/dev/null || true
+tar czf "$BACKUP_DIR/npm.tar.gz" /opt/bubblestone-core/data /opt/bubblestone-core/letsencrypt 2>/dev/null || true
 
 # 5.4 OpenClaw
 tar czf "$BACKUP_DIR/openclaw.tar.gz" \
@@ -280,15 +280,15 @@ tar czf "$BACKUP_DIR/broll.tar.gz" /home/pinceouverte/clawd/skills/youtube-broll
 docker save broll-pipeline 2>/dev/null | gzip > "$BACKUP_DIR/broll-pipeline-image.tar.gz" || true
 
 # 5.6 Container 555
-tar czf "$BACKUP_DIR/555-data.tar.gz" /opt/data/ /home/pinceouverte/clawd/podcasts/ 2>/dev/null || true
+tar czf "$BACKUP_DIR/555-data.tar.gz" /opt/bubblestone-555-data/ /home/pinceouverte/clawd/podcasts/ 2>/dev/null || true
 docker save 555 2>/dev/null | gzip > "$BACKUP_DIR/555-image.tar.gz" || true
 
 # 5.7 Audit
-tar czf "$BACKUP_DIR/audit-data.tar.gz" /opt/data/audits/ 2>/dev/null || true
+tar czf "$BACKUP_DIR/audit-data.tar.gz" /opt/bubblestone-audit-data/ 2>/dev/null || true
 docker save bubblestone-audit 2>/dev/null | gzip > "$BACKUP_DIR/audit-image.tar.gz" || true
 
 # 5.8 LinkedIn Generator
-tar czf "$BACKUP_DIR/linkedin-data.tar.gz" /opt/data/linkedin/ 2>/dev/null || true
+tar czf "$BACKUP_DIR/linkedin-data.tar.gz" /opt/bubblestone-linkedin-data/ 2>/dev/null || true
 docker save linkedin-generator 2>/dev/null | gzip > "$BACKUP_DIR/linkedin-image.tar.gz" || true
 
 # 5.9 Workspace

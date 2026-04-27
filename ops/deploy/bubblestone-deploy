@@ -1,0 +1,90 @@
+#!/bin/bash
+# Privileged deploy actions for Bubblestone.
+# Invoked via sudo by /usr/local/bin/deploy-dispatcher.
+# Reads a tar of the built site on stdin for site-* actions.
+set -euo pipefail
+
+REPO=/opt/repos/bubblestone
+COMPOSE_FILE="$REPO/infra/docker-compose.yml"
+COMPOSE="docker compose -f $COMPOSE_FILE -p bubblestone"
+LOG_TAG="bubblestone-deploy"
+
+log() { logger -t "$LOG_TAG" -- "$*"; echo "$*"; }
+
+healthcheck_http() {
+  # Considers the service healthy as soon as it returns ANY HTTP status code.
+  # Code 000 means the connection was refused or timed out (container not
+  # listening). Application-level errors (5xx from a buggy app) are out of
+  # scope of an infra-deploy healthcheck.
+  local url="$1" tries=15 i code=000
+  sleep 3
+  for i in $(seq 1 "$tries"); do
+    code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 --connect-timeout 5 "$url" 2>/dev/null) || code="000"
+    if [ "$code" != "000" ]; then
+      log "healthcheck $url -> $code (attempt $i)"
+      return 0
+    fi
+    sleep 2
+  done
+  log "ERROR: healthcheck $url not reachable after $tries attempts"
+  return 1
+}
+
+extract_dist_to() {
+  local target="$1" tmp
+  tmp=$(mktemp -d)
+  trap 'rm -rf "$tmp"' RETURN
+  tar -xzf - -C "$tmp"
+  if [ ! -d "$target" ]; then
+    log "ERROR: target $target does not exist"
+    return 1
+  fi
+  rsync -a --delete "$tmp/" "$target/"
+  log "extracted dist into $target"
+}
+
+git_pull_main() {
+  cd "$REPO"
+  git fetch --quiet origin main
+  git checkout --quiet main
+  git reset --quiet --hard origin/main
+  log "repo synced to $(git rev-parse --short HEAD)"
+}
+
+action="${1:-}"
+case "$action" in
+  site-staging)
+    extract_dist_to /opt/bubblestone-staging-app/dist
+    docker restart bubblestone-staging >/dev/null
+    healthcheck_http http://172.18.0.25/
+    ;;
+  site-production)
+    extract_dist_to /opt/bubblestone-site-app/dist
+    docker restart bubblestone-site >/dev/null
+    healthcheck_http http://172.18.0.20/
+    ;;
+  555)
+    git_pull_main
+    docker build -q -t 555:latest -f apps/555-trend-monitor/ai_trend_monitor/Dockerfile apps/555-trend-monitor/ai_trend_monitor/ >/dev/null
+    $COMPOSE up -d 555 >/dev/null
+    healthcheck_http http://127.0.0.1:5000/
+    ;;
+  linkedin)
+    git_pull_main
+    docker build -q -t linkedin-generator:latest apps/linkedin-generator/ >/dev/null
+    $COMPOSE up -d linkedin-generator >/dev/null
+    healthcheck_http http://127.0.0.1:5001/
+    ;;
+  audit)
+    git_pull_main
+    docker build -q -t bubblestone-audit:latest apps/audit-platform/ >/dev/null
+    $COMPOSE up -d bubblestone-audit >/dev/null
+    healthcheck_http http://127.0.0.1:8080/
+    ;;
+  *)
+    echo "ERROR: unknown action '$action'" >&2
+    exit 2
+    ;;
+esac
+
+log "deploy $action OK"

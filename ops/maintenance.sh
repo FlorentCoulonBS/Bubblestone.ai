@@ -208,11 +208,7 @@ else
     step_ok "OpenClaw + Claude" "$OC_UPDATED"
 fi
 
-# ÉTAPE 4 — Reboot check
-maintenance_reboot_check send_email
-[ $? -eq 2 ] && exit 0
-
-# ÉTAPE 5 — Backup
+# ÉTAPE 4 — Backup
 log "--- Backup ---"
 rm -rf "$BACKUP_DIR"
 mkdir -p "$BACKUP_DIR"
@@ -384,7 +380,11 @@ else
     step_warn "Sync Claude config" "Sync partielle — vérifier connectivité"
 fi
 
-# ÉTAPE 9 — Email report
+# ÉTAPE 9 — Reboot check
+maintenance_reboot_check send_email
+[ $? -eq 2 ] && exit 0
+
+# ÉTAPE 10 — Email report
 log "--- Email report ---"
 send_email
 [ $? -eq 0 ] && log "✅ Email envoyé à $EMAIL" || log "❌ Échec envoi email"

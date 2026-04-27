@@ -9,10 +9,12 @@
 #   MAINT_EMAIL_FROM        (default: maintenance@bubblestone.ai)
 #   MAINT_DISK_WARN_PCT     (default: 80)
 #   MAINT_SSH_WARN_24H      (default: 10)
+#   MAINT_SSH_TRUSTED_IPS   (default: empty; space-separated IPs ignored in SSH warning)
 
 : "${MAINT_EMAIL_FROM:=maintenance@bubblestone.ai}"
 : "${MAINT_DISK_WARN_PCT:=80}"
 : "${MAINT_SSH_WARN_24H:=10}"
+: "${MAINT_SSH_TRUSTED_IPS:=}"
 
 # --- Counters & report state (global; populated by step_* helpers) ---
 SUCCESS=0
@@ -128,16 +130,19 @@ maintenance_apt_upgrade() {
     return 1
 }
 
-# Reboot if /var/run/reboot-required exists. On reboot: call $1 (email callback) + shutdown.
+# Reboot if /var/run/reboot-required exists. On reboot: schedule shutdown + call $1.
 # Returns 2 when reboot triggered → caller should exit.
 maintenance_reboot_check() {
     local email_callback="${1:-email_send}"
     log "--- Reboot check ---"
     if [ -f /var/run/reboot-required ]; then
-        step_warn "Reboot" "Reboot nécessaire — planifié dans 1 minute"
-        $email_callback
-        shutdown -r +1 "Maintenance reboot"
-        return 2
+        if shutdown -r +1 "Maintenance reboot"; then
+            step_ok "Reboot" "Reboot nécessaire — redémarrage planifié dans 1 minute"
+            $email_callback
+            return 2
+        fi
+        step_err "Reboot" "Reboot nécessaire — échec planification redémarrage"
+        return 1
     fi
     step_ok "Reboot" "Pas de reboot nécessaire"
 }
@@ -167,6 +172,10 @@ email_section_uptime_reboot() {
     UPTIME_PRETTY=$(uptime -p 2>/dev/null | sed 's/^up //')
     BOOT_TIME=$(uptime -s 2>/dev/null)
     email_row "✅" "Uptime — ${UPTIME_PRETTY:-?} (dernier boot : ${BOOT_TIME:-?})"
+
+    local PENDING_SHUTDOWN
+    PENDING_SHUTDOWN=$(shutdown --show 2>/dev/null | head -1 || true)
+    [ -n "$PENDING_SHUTDOWN" ] && email_row "🔄" "Reboot planifié — ${PENDING_SHUTDOWN}"
 
     # Next weekly-reboot from systemd timer
     local NEXT_STR NEXT_EPOCH NOW_EPOCH LEFT_SEC LEFT_D LEFT_H
@@ -279,13 +288,24 @@ email_section_securite() {
         fi
     fi
 
-    # SSH failed attempts (24h)
-    local SSH_FAILED
-    SSH_FAILED=$(journalctl _SYSTEMD_UNIT=ssh.service --since "24 hours ago" 2>/dev/null | grep -c "Failed") || SSH_FAILED="0"
-    if [ "$SSH_FAILED" -gt "$MAINT_SSH_WARN_24H" ] 2>/dev/null; then
-        email_row "⚠️" "SSH — ${SSH_FAILED} tentatives echouees (24h)"
+    # SSH failed attempts (24h). Trusted automation IPs are counted but do not trigger warnings.
+    local SSH_FAILED_LINES SSH_FAILED SSH_TRUSTED SSH_SUSPECT SSH_TOP_IP_COUNT TRUSTED_IP
+    SSH_FAILED_LINES=$(journalctl _SYSTEMD_UNIT=ssh.service --since "24 hours ago" 2>/dev/null | grep "Failed" || true)
+    SSH_FAILED=$(printf '%s\n' "$SSH_FAILED_LINES" | sed '/^$/d' | wc -l)
+    SSH_TRUSTED=0
+    for TRUSTED_IP in $MAINT_SSH_TRUSTED_IPS; do
+        SSH_TRUSTED=$(( SSH_TRUSTED + $(printf '%s\n' "$SSH_FAILED_LINES" | grep -c " from ${TRUSTED_IP} " || true) ))
+        SSH_FAILED_LINES=$(printf '%s\n' "$SSH_FAILED_LINES" | grep -v " from ${TRUSTED_IP} " || true)
+    done
+    SSH_SUSPECT=$(printf '%s\n' "$SSH_FAILED_LINES" | sed '/^$/d' | wc -l)
+    SSH_TOP_IP_COUNT=$(printf '%s\n' "$SSH_FAILED_LINES" | sed -nE 's/.* from ([0-9.]+) port.*/\1/p' | sort | uniq -c | sort -nr | awk 'NR==1 {print $1 + 0}')
+    SSH_TOP_IP_COUNT=${SSH_TOP_IP_COUNT:-0}
+    if [ "$SSH_TOP_IP_COUNT" -gt "$MAINT_SSH_WARN_24H" ] 2>/dev/null; then
+        email_row "⚠️" "SSH — ${SSH_SUSPECT}/${SSH_FAILED} tentative(s) suspecte(s) (24h), max ${SSH_TOP_IP_COUNT}/IP"
+    elif [ "$SSH_TRUSTED" -gt 0 ] 2>/dev/null; then
+        email_row "✅" "SSH — ${SSH_SUSPECT}/${SSH_FAILED} tentative(s) suspecte(s) (24h), ${SSH_TRUSTED} trusted ignorée(s)"
     else
-        email_row "✅" "SSH — ${SSH_FAILED} tentative(s) echouee(s) (24h)"
+        email_row "✅" "SSH — ${SSH_SUSPECT} tentative(s) suspecte(s) (24h)"
     fi
 }
 

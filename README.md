@@ -21,6 +21,8 @@ infra/
 - **Site**: push to `main`/`master` → auto-deploy to staging. Manual workflow dispatch for production.
 - **Apps**: deployed via Docker on the server. Code changes must be committed here, then deployed manually.
 
+GitHub Actions reach the server via the `deploy` user, restricted by `/usr/local/bin/deploy-dispatcher` (whitelisted SSH commands only). The dispatcher and the privileged action runner are versioned in [`ops/deploy/`](ops/deploy/README.md).
+
 ## Rules
 
 - **NEVER** commit `.env` files or secrets

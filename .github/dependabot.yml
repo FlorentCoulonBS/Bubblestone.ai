@@ -11,3 +11,56 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: ci
+
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+      site-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: deps(site)
+
+  - package-ecosystem: pip
+    directories:
+      - /apps/audit-platform
+      - /apps/linkedin-generator
+      - /apps/555-trend-monitor
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      python-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: deps(py)
+
+  - package-ecosystem: docker
+    directories:
+      - /apps/audit-platform
+      - /apps/linkedin-generator
+      - /apps/555-trend-monitor
+      - /apps/555-trend-monitor/ai_trend_monitor
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      docker-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: docker

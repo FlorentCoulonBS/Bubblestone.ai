@@ -4,10 +4,11 @@
 import os
 import json
 import base64
-import urllib.request
-import urllib.parse
 from datetime import datetime
 from functools import wraps
+from pathlib import Path
+
+import requests
 
 from flask import (Flask, render_template, request, redirect, url_for,
                    jsonify, session, send_from_directory, flash)
@@ -20,8 +21,8 @@ app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(32).hex()
 
 LOGIN_USER = os.environ.get("LOGIN_USER") or "florent"
 LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD") or "Bricks2026!AI"
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or ""
-GEMINI_MODEL = "gemini-3.1-flash-image-preview"
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_IMAGE_MODEL = "gpt-image-2"
 
 
 # --- Auth ---
@@ -100,7 +101,7 @@ def api_validate(post_id):
     # Generate image
     image_path = None
     error = None
-    if post["image_prompt"] and GEMINI_API_KEY:
+    if post["image_prompt"] and OPENAI_API_KEY:
         try:
             image_path = generate_image(post_id, post["image_prompt"])
         except Exception as e:
@@ -157,40 +158,48 @@ def serve_image(filename):
 # --- Image Generation ---
 
 def generate_image(post_id, prompt):
-    """Generate image using Nano Banana 2 (Gemini API)."""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+    """Generate image using OpenAI gpt-image-2.
+
+    Returns the saved filename (no path), suitable for storage in posts.image_path.
+    Raises requests.HTTPError or ValueError on failure — caller handles.
+    """
+    if not OPENAI_API_KEY:
+        raise ValueError("OPENAI_API_KEY not set")
 
     full_prompt = (
-        f"Generate a photorealistic editorial photograph for a LinkedIn post. "
-        f"Style: photojournalism, magazine quality, shot on Canon R5, dramatic lighting, "
-        f"shallow depth of field. NO cartoon, NO illustration, NO AI-generated look. "
-        f"Aspect ratio 1200x627 (landscape). Subject: {prompt}"
+        "Photorealistic editorial photograph for a LinkedIn post. "
+        "Style: photojournalism, magazine quality, dramatic natural lighting, "
+        "shallow depth of field, no AI-cartoonish look, no text overlay. "
+        f"Subject: {prompt}"
     )
 
-    payload = json.dumps({
-        "contents": [{"parts": [{"text": full_prompt}]}],
-        "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]}
-    }).encode()
+    payload = {
+        "model": OPENAI_IMAGE_MODEL,
+        "prompt": full_prompt,
+        "size": "1024x1024",
+        "quality": "high",
+        "n": 1,
+    }
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json",
+    }
 
-    req = urllib.request.Request(url, data=payload,
-                                headers={"Content-Type": "application/json"})
-    resp = urllib.request.urlopen(req, timeout=60)
-    data = json.loads(resp.read())
+    r = requests.post(
+        "https://api.openai.com/v1/images/generations",
+        json=payload,
+        headers=headers,
+        timeout=120,
+    )
+    r.raise_for_status()
 
-    parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-    for part in parts:
-        if "inlineData" in part:
-            img_data = base64.b64decode(part["inlineData"]["data"])
-            mime = part["inlineData"].get("mimeType", "image/png")
-            ext = "png" if "png" in mime else "jpg"
-            filename = f"post_{post_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
-            filepath = os.path.join(IMAGES_DIR, filename)
-            os.makedirs(IMAGES_DIR, exist_ok=True)
-            with open(filepath, "wb") as f:
-                f.write(img_data)
-            return filename
+    b64 = r.json()["data"][0]["b64_json"]
+    img_bytes = base64.b64decode(b64)
 
-    raise Exception("No image returned by Gemini API")
+    filename = f"post_{post_id}_{datetime.utcnow():%Y%m%d_%H%M%S}.png"
+    Path(IMAGES_DIR).mkdir(parents=True, exist_ok=True)
+    (Path(IMAGES_DIR) / filename).write_bytes(img_bytes)
+    return filename
 
 
 # --- Init ---

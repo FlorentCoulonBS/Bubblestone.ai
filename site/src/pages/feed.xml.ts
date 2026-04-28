@@ -11,8 +11,8 @@ export async function GET() {
   const items = posts.map(post => `
     <item>
       <title><![CDATA[${post.data.title}]]></title>
-      <link>${site}/blog/${post.slug}/</link>
-      <guid isPermaLink="true">${site}/blog/${post.slug}/</guid>
+      <link>${site}/blog/${post.id}/</link>
+      <guid isPermaLink="true">${site}/blog/${post.id}/</guid>
       <description><![CDATA[${post.data.description}]]></description>
       <pubDate>${post.data.date.toUTCString()}</pubDate>
       <author>florent.coulon@bubblestone.ai (Florent Coulon)</author>

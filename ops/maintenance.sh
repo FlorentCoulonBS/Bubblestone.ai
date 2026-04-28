@@ -176,6 +176,7 @@ fix_suid_permissions
 $FSTRIM_WAS_MASKED && systemctl unmask fstrim.service 2>/dev/null || true
 
 # ÉTAPE 2 — Docker image pulls
+# Standalone images used by NPM and the nginx site/staging containers.
 log "--- Docker image pulls ---"
 DOCKER_PULLS=""
 for IMG in jc21/nginx-proxy-manager:latest nginx:alpine; do
@@ -185,6 +186,16 @@ for IMG in jc21/nginx-proxy-manager:latest nginx:alpine; do
     [ "$OLD" != "$NEW" ] && DOCKER_PULLS+="$IMG (updated) " || DOCKER_PULLS+="$IMG (up-to-date) "
 done
 step_ok "Docker pulls" "$DOCKER_PULLS"
+
+# Pull and re-up secondary compose stacks (besides the main one which is rebuilt
+# from CI). Currently: leximpact legacy service.
+maintenance_docker_pull_update \
+    "/opt/repos/bubblestone/infra/bubblestone-leximpact/docker-compose.yml"
+
+# Audit Python deps in the apps shipped from this repo.
+maintenance_pip_audit_files \
+    /opt/repos/bubblestone/apps/audit-platform/requirements.txt \
+    /opt/repos/bubblestone/apps/linkedin-generator/requirements.txt
 
 # ÉTAPE 3 — OpenClaw + Claude Code
 log "--- OpenClaw + Claude Code ---"

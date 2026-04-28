@@ -18,6 +18,7 @@ from ai_trend_monitor.dump_topics import (
 
 DB_PATH = os.environ.get("DATABASE_PATH", "/root/data/trends.db")
 OG_CACHE_PATH = os.environ.get("OG_CACHE_PATH", "/root/data/og_cache.json")
+YOUTUBE_DATA_PATH = os.environ.get("YOUTUBE_DATA_PATH", "/data/youtube_latest.json")
 
 # Load env
 env_file = "/etc/ai-trend-monitor.env"
@@ -185,7 +186,7 @@ def get_topics_for_date(date_str):
         })
 
     # Add YouTube items from API collector
-    yt_path = "/home/pinceouverte/clawd/memory/youtube_latest.json"
+    yt_path = YOUTUBE_DATA_PATH
     try:
         if os.path.exists(yt_path):
             mtime = os.path.getmtime(yt_path)
@@ -317,7 +318,7 @@ def index():
 @app.route("/source/youtube")
 @requires_auth
 def source_youtube():
-    yt_path = "/home/pinceouverte/clawd/memory/youtube_latest.json"
+    yt_path = YOUTUBE_DATA_PATH
     items = []
     try:
         if os.path.exists(yt_path):

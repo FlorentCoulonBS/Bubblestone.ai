@@ -116,9 +116,6 @@ send_email() {
     DB_TOPICS=$(docker exec "$C555" python3 -c "import sqlite3;c=sqlite3.connect('/data/trends.db');print(c.execute('SELECT COUNT(*) FROM topic').fetchone()[0])" 2>/dev/null || echo "?")
     DB_SNAP=$(docker exec "$C555" python3 -c "import sqlite3;c=sqlite3.connect('/data/trends.db');print(c.execute('SELECT COUNT(*) FROM topicsnapshot').fetchone()[0])" 2>/dev/null || echo "?")
     email_row "✅" "Base veille — ${DB_SIZE}, ${DB_TOPICS} topics, ${DB_SNAP} snapshots"
-    POD_COUNT=$(ls /home/pinceouverte/clawd/podcasts/*.mp3 2>/dev/null | wc -l)
-    POD_LAST=$(ls -t /home/pinceouverte/clawd/podcasts/*.mp3 2>/dev/null | head -1 | xargs basename 2>/dev/null | sed 's/555_//;s/\.mp3//' || echo "aucun")
-    email_row "✅" "Podcast Le 5·5·5 — ${POD_COUNT} episode(s), dernier: ${POD_LAST}"
 
     # --- Security (generic) ---
     email_section_securite
@@ -197,26 +194,15 @@ maintenance_pip_audit_files \
     /opt/repos/bubblestone/apps/audit-platform/requirements.txt \
     /opt/repos/bubblestone/apps/linkedin-generator/requirements.txt
 
-# ÉTAPE 3 — OpenClaw + Claude Code
-log "--- OpenClaw + Claude Code ---"
-OC_BEFORE=$(node -p "require('/usr/lib/node_modules/openclaw/package.json').version" 2>/dev/null || echo "unknown")
+# ÉTAPE 3 — Claude Code
+log "--- Claude Code ---"
 CC_BEFORE=$(claude --version 2>/dev/null || echo "unknown")
-npm install -g openclaw@latest --prefix /usr 2>/dev/null
-chmod -R o+rX /usr/lib/node_modules/openclaw/ 2>/dev/null
-/usr/local/bin/openclaw-patch-media.sh 2>/dev/null || true
 npm update -g @anthropic-ai/claude-code 2>/dev/null
-OC_AFTER=$(node -p "require('/usr/lib/node_modules/openclaw/package.json').version" 2>/dev/null || echo "unknown")
 CC_AFTER=$(claude --version 2>/dev/null || echo "unknown")
-OC_UPDATED=""
-if [ "$OC_BEFORE" != "$OC_AFTER" ]; then
-    OC_UPDATED="OpenClaw: $OC_BEFORE → $OC_AFTER "
-    systemctl restart openclaw 2>/dev/null || true
-fi
-[ "$CC_BEFORE" != "$CC_AFTER" ] && OC_UPDATED+="Claude: $CC_BEFORE → $CC_AFTER"
-if [ -z "$OC_UPDATED" ]; then
-    step_ok "OpenClaw + Claude" "Déjà à jour (OC:$OC_AFTER CC:$CC_AFTER)"
+if [ "$CC_BEFORE" != "$CC_AFTER" ]; then
+    step_ok "Claude Code" "$CC_BEFORE → $CC_AFTER"
 else
-    step_ok "OpenClaw + Claude" "$OC_UPDATED"
+    step_ok "Claude Code" "Déjà à jour ($CC_AFTER)"
 fi
 
 # ÉTAPE 4 — Backup
@@ -266,9 +252,6 @@ tar czf "$BACKUP_DIR/configs.tar.gz" \
         link="$repo.claude/skills"
         [ -L "$link" ] && echo "ln -sfn $(readlink -f "$link") $link"
     done
-    for link in /home/pinceouverte/.claude/skills/*/; do
-        [ -L "${link%/}" ] && echo "ln -sfn $(readlink -f "${link%/}") ${link%/}"
-    done
 } > "$BACKUP_DIR/claude-skills-symlinks.sh" 2>/dev/null || true
 
 # 5.2 Site Astro
@@ -281,17 +264,8 @@ tar czf "$BACKUP_DIR/site-astro.tar.gz" \
 # 5.3 NPM
 tar czf "$BACKUP_DIR/npm.tar.gz" /opt/bubblestone-core/data /opt/bubblestone-core/letsencrypt 2>/dev/null || true
 
-# 5.4 OpenClaw
-tar czf "$BACKUP_DIR/openclaw.tar.gz" \
-    --exclude='browser' --exclude='media' \
-    /home/pinceouverte/.openclaw 2>/dev/null || true
-
-# 5.5 B-roll pipeline
-tar czf "$BACKUP_DIR/broll.tar.gz" /home/pinceouverte/clawd/skills/youtube-broll 2>/dev/null || true
-docker save broll-pipeline 2>/dev/null | gzip > "$BACKUP_DIR/broll-pipeline-image.tar.gz" || true
-
 # 5.6 Container 555
-tar czf "$BACKUP_DIR/555-data.tar.gz" /opt/bubblestone-555-data/ /home/pinceouverte/clawd/podcasts/ 2>/dev/null || true
+tar czf "$BACKUP_DIR/555-data.tar.gz" /opt/bubblestone-555-data/ 2>/dev/null || true
 docker save 555 2>/dev/null | gzip > "$BACKUP_DIR/555-image.tar.gz" || true
 
 # 5.7 Audit
@@ -301,11 +275,6 @@ docker save bubblestone-audit 2>/dev/null | gzip > "$BACKUP_DIR/audit-image.tar.
 # 5.8 LinkedIn Generator
 tar czf "$BACKUP_DIR/linkedin-data.tar.gz" /opt/bubblestone-linkedin-data/ 2>/dev/null || true
 docker save linkedin-generator 2>/dev/null | gzip > "$BACKUP_DIR/linkedin-image.tar.gz" || true
-
-# 5.9 Workspace
-tar czf "$BACKUP_DIR/workspace.tar.gz" \
-    --exclude='.git' --exclude='node_modules' \
-    /home/pinceouverte/clawd/ 2>/dev/null || true
 
 log "Restart des containers (docker compose)..."
 docker compose -f "$COMPOSE_FILE" -p "$COMPOSE_PROJECT" start 2>&1 | tail -5

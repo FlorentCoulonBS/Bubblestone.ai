@@ -305,7 +305,7 @@ def collect_gmail():
                        len(links), subject, nl_type, sender)
 
             for url, title in links:
-                link_hash = hashlib.md5(url.encode()).hexdigest()[:8]
+                link_hash = hashlib.md5(url.encode()).hexdigest()[:8]  # nosemgrep: insecure-hash-algorithm-md5  # used for content dedup, not security
                 items.append(
                     CollectedItem(
                         source="gmail",

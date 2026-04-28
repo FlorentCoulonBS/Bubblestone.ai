@@ -22,7 +22,7 @@ AI_KEYWORDS = [
 
 def _fetch_json(url):
     req = urllib.request.Request(url, headers={"User-Agent": "AI-Trend-Monitor/1.0"})
-    resp = urllib.request.urlopen(req, timeout=10)
+    resp = urllib.request.urlopen(req, timeout=10)  # nosemgrep: dynamic-urllib-use-detected  # HN API URLs are hardcoded constants
     return json.loads(resp.read())
 
 

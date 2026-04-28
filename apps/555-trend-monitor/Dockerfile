@@ -44,6 +44,8 @@ RUN printf '#!/bin/bash\nenv | grep -E "^(GMAIL_|DATABASE_|OPML_|PATH=)" > /etc/
 # Supervisord
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 ENTRYPOINT ["/scripts/entrypoint.sh"]
 
 ENV DATABASE_PATH=/data/trends.db
@@ -51,4 +53,5 @@ ENV OPML_PATH=/data/feeds.opml
 
 EXPOSE 5000
 
+USER appuser
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

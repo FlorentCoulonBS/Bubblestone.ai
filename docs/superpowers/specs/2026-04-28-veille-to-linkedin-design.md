@@ -46,7 +46,7 @@ Hors scope : intégration API LinkedIn, push automatique du blog, refonte des 14
                                                                                   └─────────────────┘
 ```
 
-Communication 555 → linkedin via HTTP interne sur le réseau Docker `bubblestone-net` (subnet `172.18.0.0/16`). URL interne : `http://bubblestone-linkedin-generator:5001/api/topic/from-veille`. Pas d'auth token : la route est protégée par un filtre `request.remote_addr` qui doit être dans `172.18.0.0/16` — sinon 404 (silently fail pour ne pas révéler la route à un scanner externe).
+Communication 555 → linkedin via HTTP interne sur le réseau Docker `bubblestone-net`. URL interne : `http://bubblestone-linkedin-generator:5001/api/topic/from-veille`. Pas d'auth applicative côté Flask. Justification : voir section 5.
 
 ## 4. Composants à modifier
 
@@ -82,15 +82,14 @@ def api_validate_topic(topic_id):
 ```python
 @app.route("/api/topic/from-veille", methods=["POST"])
 def api_from_veille():
-    # 1. Filtre IP source: ipaddress.ip_address(request.remote_addr) dans
-    #    ipaddress.ip_network("172.18.0.0/16"), sinon abort(404).
-    # 2. Reçoit {topic_id, title, url, score, sources}
-    # 3. Appelle Anthropic Claude pour générer JSON {post_text, image_prompt, article_md}
+    # Pas de check d'auth (cf. section 5 Sécurité).
+    # 1. Reçoit {topic_id, title, url, score, sources}
+    # 2. Appelle Anthropic Claude pour générer JSON {post_text, image_prompt, article_md}
     #    Modèle: claude-opus-4-7 (clé existante ANTHROPIC_API_KEY)
     #    Prompt système: ton du BRIEF.md (drôle, percutant, sincère)
     #    Format de sortie strict: JSON {post_text, image_prompt, article_md}
-    # 4. INSERT dans posts avec status='proposed', image_path=NULL
-    # 5. Retourne 200 {ok: true, post_id, post_url: f"/post/{post_id}"}
+    # 3. INSERT dans posts avec status='proposed', image_path=NULL
+    # 4. Retourne 200 {ok: true, post_id, post_url: f"/post/{post_id}"}
     #    ou 502 si Anthropic renvoie erreur (Florent re-cliquera depuis veille)
 ```
 
@@ -131,7 +130,6 @@ def generate_image(post_id, prompt):
 
 **Variables d'env nouvelles** :
 - `OPENAI_API_KEY` (déjà ajoutée par Florent au `.env` aujourd'hui)
-- `BUBBLESTONE_NET_SUBNET` (défaut `172.18.0.0/16`, configurable au cas où le subnet change)
 
 ### 4.3 `infra/docker-compose.yml`
 
@@ -151,11 +149,20 @@ Pas besoin du SDK OpenAI : `requests` suffit pour 1 seul endpoint `/v1/images/ge
 
 ## 5. Sécurité
 
-- **Veille** : `/api/validate-topic` reste derrière `@requires_auth` (basic auth admin existante).
-- **LinkedIn** : `/api/topic/from-veille` n'a PAS `@login_required` ni token partagé — la route est protégée par un filtre `request.remote_addr ∈ 172.18.0.0/16` (subnet `bubblestone-net`). Si une requête arrive d'ailleurs (Internet via NPM, localhost host) : `abort(404)` silencieux pour ne pas révéler la route à un scanner. Justification : sur un réseau Docker fermé entre containers de confiance (mêmes mainteneurs), un secret partagé est de la cérémonie sans gain réel — l'isolation réseau Docker fait déjà le boulot.
-- **Réseau** : `linkedin-generator` reste exposé sur `127.0.0.1:5001` (NPM proxy public). L'appel 555 → linkedin se fait via le DNS Docker interne (`bubblestone-linkedin-generator:5001`), donc `request.remote_addr` côté linkedin = `172.18.0.x` (IP du container 555). NPM ne forwarde pas `/api/topic/from-veille` (le check IP rejette tout ce qui ne vient pas du subnet Docker).
-- **OpenAI** : `OPENAI_API_KEY` reste dans `/opt/bubblestone-config/.env`, jamais loggée. Rate-limit / 5xx → erreur UI, pas de retry auto.
-- **Anthropic** : `ANTHROPIC_API_KEY` (déjà présente). Idem.
+**Modèle de menace explicite** :
+
+| Source d'appel | Comment elle atteint la route | Bloquée par |
+|----------------|-------------------------------|-------------|
+| Internet → `https://linkedin.bubblestone.ai/api/topic/from-veille` | Via NPM | **ACL NPM "Florent Only"** (whitelist IP `86.234.192.118`). Toute IP non whitelistée → 403 NPM avant même d'atteindre Flask. |
+| Florent depuis son IP whitelistée | Idem | Florent est l'opérateur légitime — c'est lui qui clique le bouton sur veille, et c'est lui qui contrôle linkedin. Si l'IP de Florent envoie cette requête, c'est lui ou rien. |
+| Container Bubblestone (555, audit, npm, site, staging) | DNS interne `bubblestone-linkedin-generator:5001` | Containers de confiance, mêmes mainteneurs. Pas de menace ici. |
+| Localhost serveur (root sur BubbleStone) | `curl 127.0.0.1:5001` | C'est Florent, ou un attaquant qui a déjà root sur le serveur — auquel cas tout est compromis bien avant cette route. |
+
+**Conclusion** : aucun check applicatif côté Flask. La sécurité repose sur l'ACL NPM en amont, qui est elle-même la couche qui protège tout `linkedin.bubblestone.ai` (login compris). Si l'ACL NPM saute un jour, c'est ce sujet-là qu'il faut traiter, pas une couche redondante par-dessus.
+
+- **Veille** : `/api/validate-topic` reste derrière `@requires_auth` (basic auth admin existante, déjà appliquée à toutes les routes du dashboard 555).
+- **OpenAI** : `OPENAI_API_KEY` dans `/opt/bubblestone-config/.env`, jamais loggée.
+- **Anthropic** : `ANTHROPIC_API_KEY` (déjà présente), idem.
 
 ## 6. Gestion d'erreurs
 

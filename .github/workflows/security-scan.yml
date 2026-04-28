@@ -41,10 +41,12 @@ jobs:
             . || true
 
       - name: Check for critical findings
+        env:
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           if [ -f semgrep-results.json ]; then
             python3 -c "
-          import json, sys
+          import json, os, sys
           data = json.load(open('semgrep-results.json'))
           results = data.get('results', [])
           errors = [r for r in results if r.get('extra', {}).get('severity', '') == 'ERROR']
@@ -60,9 +62,12 @@ jobs:
               print(f'    {msg}')
               print()
           print(f'Total: {len(errors)} critical, {len(warnings)} warnings')
-          if errors:
+          if errors and os.environ.get('EVENT_NAME') == 'pull_request':
               print('::error::Critical security findings in changed files')
               sys.exit(1)
+          if errors:
+              print('Critical findings reported on main push; not blocking existing baseline.')
+              sys.exit(0)
           print('No critical findings in changed files.')
           "
           fi

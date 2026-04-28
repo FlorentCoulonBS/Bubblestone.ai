@@ -6,7 +6,7 @@ DATE_FR=$(date '+%d/%m/%Y')
 ALL_OK=true
 DETAILS=""
 
-for c in npm bubblestone-site bubblestone-staging 555 bubblestone-audit; do
+for c in bubblestone-npm bubblestone-site bubblestone-staging bubblestone-555 bubblestone-audit bubblestone-linkedin-generator; do
   STATUS=$(docker inspect -f '{{.State.Running}}' $c 2>/dev/null)
   if [ "$STATUS" = "true" ]; then
     DETAILS="${DETAILS}Container $c: OK\n"
@@ -16,13 +16,20 @@ for c in npm bubblestone-site bubblestone-staging 555 bubblestone-audit; do
   fi
 done
 
-for u in https://bubblestone.ai https://staging.bubblestone.ai https://audit.bubblestone.ai/login https://veille.bubblestone.ai; do
-  CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$u")
-  DOMAIN=$(echo "$u" | sed 's|https://||' | cut -d/ -f1)
-  if [ "$CODE" = "200" ]; then
-    DETAILS="${DETAILS}${DOMAIN}: HTTP 200\n"
+for check in \
+  "bubblestone.ai|https://bubblestone.ai|200" \
+  "staging internal|http://172.18.0.25|200" \
+  "audit.bubblestone.ai|https://audit.bubblestone.ai/login|200" \
+  "veille.bubblestone.ai|https://veille.bubblestone.ai|200"; do
+  LABEL="${check%%|*}"
+  REST="${check#*|}"
+  URL="${REST%%|*}"
+  EXPECTED="${REST##*|}"
+  CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$URL")
+  if [ "$CODE" = "$EXPECTED" ]; then
+    DETAILS="${DETAILS}${LABEL}: HTTP ${CODE}\n"
   else
-    DETAILS="${DETAILS}${DOMAIN}: HTTP ${CODE}\n"
+    DETAILS="${DETAILS}${LABEL}: HTTP ${CODE} (expected ${EXPECTED})\n"
     ALL_OK=false
   fi
 done

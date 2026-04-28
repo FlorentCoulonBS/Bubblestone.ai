@@ -65,8 +65,8 @@ services:
     environment:
       - DATABASE_PATH=/data/trends.db
       - OPML_PATH=/data/feeds.opml
-      - GMAIL_USER=${GMAIL_USER}
-      - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
+    env_file:
+      - /opt/bubblestone-config/.env
     volumes:
       - /opt/bubblestone-555-data:/data
     networks:
@@ -105,11 +105,8 @@ services:
       - LINKEDIN_DB_PATH=/data/linkedin.db
       - TRENDS_DB_PATH=/data/trends.db
       - IMAGES_DIR=/data/images
-      - LOGIN_USER=${LOGIN_USER}
-      - LOGIN_PASSWORD=${LOGIN_PASSWORD}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - SECRET_KEY=${SECRET_KEY}
+    env_file:
+      - /opt/bubblestone-config/.env
     volumes:
       - /opt/bubblestone-linkedin-data:/data
       - /opt/bubblestone-555-data/trends.db:/data/trends.db:ro

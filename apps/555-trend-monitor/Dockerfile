@@ -44,7 +44,7 @@ RUN printf '#!/bin/bash\nenv | grep -E "^(GMAIL_|DATABASE_|OPML_|PATH=)" > /etc/
 # Supervisord
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 ENTRYPOINT ["/scripts/entrypoint.sh"]
 

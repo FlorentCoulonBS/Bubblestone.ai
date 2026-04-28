@@ -26,7 +26,7 @@ const posts = (await getCollection('blog'))
       <p id="bp-empty">Les premiers articles arrivent bientôt.</p>
     ) : (
       posts.map((post) => (
-        <a href={`/blog/${post.slug}/`} class="bp-card">
+        <a href={`/blog/${post.id}/`} class="bp-card">
           <div class="bp-meta">
             <span class="bp-date">
               {post.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}

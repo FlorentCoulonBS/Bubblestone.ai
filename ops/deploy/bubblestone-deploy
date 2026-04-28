@@ -47,6 +47,7 @@ git_pull_main() {
   sudo -u codex-ops -H git -C "$REPO" fetch --quiet origin main
   sudo -u codex-ops -H git -C "$REPO" checkout --quiet main
   sudo -u codex-ops -H git -C "$REPO" reset --quiet --hard origin/main
+  cd "$REPO"
   log "repo synced to $(sudo -u codex-ops -H git -C "$REPO" rev-parse --short HEAD)"
 }
 

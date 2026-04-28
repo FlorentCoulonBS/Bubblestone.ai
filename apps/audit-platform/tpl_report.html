@@ -538,6 +538,26 @@ tr:hover{background:#FAFBFC}
     </table>
     {% if orphans|length > 30 %}<p style="color:#6B7280;font-size:11px;margin-top:4px">… et {{ orphans|length - 30 }} autres</p>{% endif %}
     {% endif %}
+
+    {# Anchor text analysis #}
+    {% set anchors = crawl.get('anchor_analysis', {}) if crawl else {} %}
+    {% if anchors and anchors.get('total_anchors', 0) > 0 %}
+    <h4 style="margin:18px 0 8px;font-size:13px;color:#E5E7EB">Qualité des textes d'ancre</h4>
+    <div class="cwv-grid">
+      <div class="cwv-card"><div class="cwv-metric">Ancres totales</div><div class="cwv-value" style="color:#2563EB">{{ anchors.total_anchors }}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Ancres descriptives</div><div class="cwv-value" style="color:#16A34A">{{ anchors.descriptive_count }}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Ancres génériques</div><div class="cwv-value" style="color:{% if anchors.ratio_generic_pct > 20 %}#DC2626{% else %}#F59E0B{% endif %}">{{ anchors.generic_count }} ({{ anchors.ratio_generic_pct }}%)</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Ancres vides</div><div class="cwv-value" style="color:{% if anchors.empty_count > 5 %}#DC2626{% else %}#16A34A{% endif %}">{{ anchors.empty_count }}</div></div>
+    </div>
+    {% if anchors.get('generic_examples') %}
+    <table class="data-table" style="margin-top:8px"><thead><tr><th>Page source</th><th>Ancre</th><th>Destination</th></tr></thead>
+    <tbody>{% for ex in anchors.generic_examples[:10] %}<tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">{{ ex.source[:60] }}</td>
+      <td style="color:#F59E0B">{{ ex.anchor_text }}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">{{ ex.target[:60] }}</td>
+    </tr>{% endfor %}</tbody></table>
+    {% endif %}
+    {% endif %}
   </div>
   {% endif %}
 
@@ -638,6 +658,52 @@ tr:hover{background:#FAFBFC}
       </tbody>
     </table>
     {% if thin|length > 30 %}<p style="color:#6B7280;font-size:11px;margin-top:4px">… et {{ thin|length - 30 }} autres</p>{% endif %}
+    {% endif %}
+
+    {# Title/H1/Meta coherence #}
+    {% set coherence = crawl.get('title_h1_coherence', {}) if crawl else {} %}
+    {% if coherence and coherence.get('incoherent_count', 0) > 0 %}
+    <h4 style="margin:18px 0 8px;font-size:13px;color:#E5E7EB">Cohérence Titre / H1 / Meta description</h4>
+    <p style="color:#9CA3AF;font-size:11px;margin-bottom:8px">{{ coherence.incoherent_count }} page(s) sur {{ coherence.total_checked }} avec un title et un H1 qui ne partagent pas les mêmes mots-clés (chevauchement &lt; 30%)</p>
+    <table class="data-table"><thead><tr><th>URL</th><th>Title</th><th>H1</th></tr></thead>
+    <tbody>{% for p in coherence.incoherent_pages[:15] %}<tr>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">{{ p.url[:50] }}</td>
+      <td style="font-size:11px">{{ p.title }}</td>
+      <td style="font-size:11px">{{ p.h1 }}</td>
+    </tr>{% endfor %}</tbody></table>
+    {% endif %}
+
+    {# Keyword cannibalization #}
+    {% set cannibal = crawl.get('cannibalization', {}) if crawl else {} %}
+    {% if cannibal and cannibal.get('total_groups', 0) > 0 %}
+    <h4 style="margin:18px 0 8px;font-size:13px;color:#E5E7EB">Cannibalisation de mots-clés</h4>
+    <p style="color:#9CA3AF;font-size:11px;margin-bottom:8px">{{ cannibal.total_groups }} groupe(s) de pages en concurrence sur les mêmes mots-clés — {{ cannibal.total_pages_affected }} pages concernées</p>
+    {% for g in cannibal.groups[:10] %}
+    <div style="margin:8px 0;padding:8px;background:#1F2937;border-radius:6px;border-left:3px solid #F59E0B">
+      <div style="font-size:11px;color:#F59E0B;margin-bottom:4px">Mots-clés partagés : {{ g.shared_keywords|join(', ') }}</div>
+      {% for p in g.pages %}<div style="font-size:11px;color:#D1D5DB">• {{ p.title }} <span style="color:#6B7280">— {{ p.url[:50] }}</span></div>{% endfor %}
+    </div>
+    {% endfor %}
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# LOCAL SEO (conditional) #}
+  {% set local = crawl.get('local_business', {}) if crawl else {} %}
+  {% if local and local.get('is_local_business') %}
+  <div class="section">
+    <div class="section-title"><span class="icon">📍</span> SEO Local</div>
+    <p style="color:#9CA3AF;font-size:12px;margin-bottom:12px">Business local détecté ({{ local.signal_count }} signaux). Voici l'état des éléments essentiels pour le référencement local.</p>
+    <div class="cwv-grid">
+      <div class="cwv-card"><div class="cwv-metric">Adresse physique</div><div class="cwv-value" style="color:{% if local.signals.has_address %}#16A34A{% else %}#DC2626{% endif %}">{% if local.signals.has_address %}Détectée{% else %}Absente{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Téléphone</div><div class="cwv-value" style="color:{% if local.signals.has_phone %}#16A34A{% else %}#DC2626{% endif %}">{% if local.signals.has_phone %}Détecté{% else %}Absent{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Google Maps</div><div class="cwv-value" style="color:{% if local.signals.has_maps_embed %}#16A34A{% else %}#F59E0B{% endif %}">{% if local.signals.has_maps_embed %}Intégré{% else %}Absent{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Schema LocalBusiness</div><div class="cwv-value" style="color:{% if local.signals.has_local_schema %}#16A34A{% else %}#DC2626{% endif %}">{% if local.signals.has_local_schema %}Présent{% else %}Absent{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Horaires</div><div class="cwv-value" style="color:{% if local.signals.has_opening_hours %}#16A34A{% else %}#F59E0B{% endif %}">{% if local.signals.has_opening_hours %}Détectés{% else %}Absents{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Zone de service</div><div class="cwv-value" style="color:#6B7280">{% if local.signals.has_service_area %}Détectée{% else %}Non détectée{% endif %}</div></div>
+    </div>
+    {% if local.get('missing') %}
+    <p style="color:#F59E0B;font-size:11px;margin-top:8px">Éléments manquants pour un SEO local optimal : {{ local.missing|join(', ') }}</p>
     {% endif %}
   </div>
   {% endif %}
@@ -1290,6 +1356,17 @@ tr:hover{background:#FAFBFC}
       </div>
     </div>
 
+    {# Citability info #}
+    {% set cs_geo = geo.get('categories', {}).get('content_structure', {}) if geo else {} %}
+    {% if cs_geo and cs_geo.get('_citable_blocks_count', 0) is defined %}
+    {% set citable = cs_geo.get('_citable_blocks_count', 0) %}
+    {% if citable > 0 %}
+    <div style="background:#fff;padding:0 24px 12px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB">
+    <p style="color:#9CA3AF;font-size:11px;margin-top:4px">{{ citable }} page(s) avec blocs citables (100-200 mots) — format optimal pour être cité par les IA</p>
+    </div>
+    {% endif %}
+    {% endif %}
+
     <!-- Schemas détectés vs manquants -->
     {% if geo.get('schemas_found') or geo.get('schemas_missing') %}
     <div style="background:#fff;padding:24px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB">
@@ -1315,8 +1392,29 @@ tr:hover{background:#FAFBFC}
     </div>
     {% endif %}
 
-    <!-- Bots IA bloqués -->
-    {% if geo.get('ai_bots_blocked') %}
+    {# AI Crawler categorization #}
+    {% set ai_acc = geo.get('categories', {}).get('ai_accessibility', {}) if geo else {} %}
+    {% if ai_acc %}
+    {% set search_blocked = ai_acc.get('_bots_search_blocked', []) %}
+    {% set training_blocked = ai_acc.get('_bots_training_blocked', []) %}
+    {% set llms_txt = ai_acc.get('_llms_txt', False) %}
+    {% if search_blocked or training_blocked or llms_txt is not none %}
+    <div style="background:#fff;padding:24px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB">
+    <h4 style="margin:0 0 8px;font-size:13px;color:#7C3AED">Crawlers IA et llms.txt</h4>
+    <div class="cwv-grid">
+      <div class="cwv-card"><div class="cwv-metric">Bots de recherche IA</div><div class="cwv-value" style="color:{% if search_blocked %}#DC2626{% else %}#16A34A{% endif %}">{% if search_blocked %}{{ search_blocked|length }} bloqué(s){% else %}Accessibles{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">Bots d'entraînement</div><div class="cwv-value" style="color:#6B7280">{% if training_blocked %}{{ training_blocked|length }} bloqué(s){% else %}Accessibles{% endif %}</div></div>
+      <div class="cwv-card"><div class="cwv-metric">llms.txt</div><div class="cwv-value" style="color:{% if llms_txt %}#16A34A{% else %}#F59E0B{% endif %}">{% if llms_txt %}Présent{% else %}Absent{% endif %}</div></div>
+    </div>
+    {% if search_blocked %}
+    <p style="color:#DC2626;font-size:11px;margin-top:4px">⚠ Bots de recherche bloqués : {{ search_blocked|join(', ') }} — ces bots rendent votre site visible dans ChatGPT, Perplexity, etc.</p>
+    {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Bots IA bloqués (legacy fallback) -->
+    {% if geo.get('ai_bots_blocked') and not ai_acc %}
     <div style="background:#fff;padding:24px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB">
       <div style="background:#FEE2E2;border:2px solid #DC2626;border-radius:10px;padding:20px;display:flex;align-items:center;gap:16px">
         <span style="font-size:40px">🚫</span>

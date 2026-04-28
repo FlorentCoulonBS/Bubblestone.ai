@@ -41,6 +41,39 @@ SCHEMA_TYPES_TRACKED = [
     'Recipe', 'Review', 'Service', 'ContactPoint',
 ]
 
+# Generic anchor texts to flag
+GENERIC_ANCHORS = {
+    # French
+    'cliquez ici', 'cliquer ici', 'en savoir plus', 'lire la suite',
+    'plus d\'infos', 'plus d\'informations', 'ici', 'voir plus',
+    'découvrir', 'en savoir +', 'suite', 'voir', 'lien',
+    # English
+    'click here', 'read more', 'learn more', 'here', 'more',
+    'find out more', 'see more', 'continue reading', 'link',
+    'go', 'this', 'more info',
+}
+
+# Stop words for keyword extraction (FR + EN)
+STOP_WORDS = {
+    # French
+    'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'en', 'au',
+    'aux', 'ce', 'ces', 'est', 'sont', 'par', 'pour', 'que', 'qui', 'sur',
+    'pas', 'plus', 'dans', 'avec', 'nous', 'vous', 'ils', 'elle', 'son',
+    'ses', 'nos', 'vos', 'tout', 'tous', 'cette', 'mon', 'ton', 'votre',
+    'notre', 'leur', 'leurs', 'mais', 'ou', 'donc', 'car', 'ni', 'ne',
+    'se', 'si', 'bien', 'aussi', 'comme', 'peut', 'fait', 'etre', 'avoir',
+    'quand', 'sans', 'entre', 'chez', 'tres', 'meme', 'autre',
+    # English
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+    'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were', 'be', 'been',
+    'has', 'have', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+    'should', 'may', 'might', 'can', 'not', 'no', 'so', 'if', 'as', 'it',
+    'its', 'my', 'your', 'his', 'her', 'our', 'their', 'this', 'that',
+    'these', 'those', 'all', 'each', 'every', 'both', 'few', 'more',
+    'most', 'other', 'some', 'such', 'than', 'too', 'very', 'just',
+    'about', 'up', 'out', 'how', 'what', 'when', 'where', 'who', 'which',
+}
+
 # Rate limiter
 _rate_lock = threading.Lock()
 _last_request_time = 0.0
@@ -143,6 +176,7 @@ class PageParser(HTMLParser):
         self.imgs_total = 0
         self.imgs_no_alt = 0
         self.links = []
+        self.link_anchors = []  # list of {href, anchor_text}
         self.images = []  # list of image dicts with attributes
         self._tag = None
         self._in_title = False
@@ -150,6 +184,9 @@ class PageParser(HTMLParser):
         self._h1_done = False
         self._in_script = False
         self._script_type = ''
+        self._in_a = False
+        self._a_href = ''
+        self._a_text = ''
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
@@ -167,6 +204,9 @@ class PageParser(HTMLParser):
             href = a.get('href', '').strip()
             if href and not href.startswith(('javascript:', 'mailto:', 'tel:', '#')):
                 self.links.append(href)
+                self._in_a = True
+                self._a_href = href
+                self._a_text = ''
         elif self._tag == 'img':
             self.imgs_total += 1
             alt = a.get('alt', '').strip()
@@ -196,6 +236,12 @@ class PageParser(HTMLParser):
         elif tag == 'h1':
             self._in_h1 = False
             self._h1_done = True
+        elif tag == 'a' and self._in_a:
+            self.link_anchors.append({
+                'href': self._a_href,
+                'anchor_text': self._a_text.strip(),
+            })
+            self._in_a = False
         elif tag == 'script':
             self._in_script = False
 
@@ -204,6 +250,8 @@ class PageParser(HTMLParser):
             self.title += data
         elif self._in_h1 and not self._h1_done:
             self.h1 += data
+        if self._in_a:
+            self._a_text += data
 
 
 def fetch_sitemap_urls(base_url, session):
@@ -284,6 +332,7 @@ def fetch_page(url, session):
         'imgs_no_alt': 0,
         'internal_links': [],
         'external_links': [],
+        'internal_link_anchors': [],
         'cache_control': '',
         'error': None,
     }
@@ -350,6 +399,16 @@ def fetch_page(url, session):
                 result['internal_links'].append(abs_url)
             else:
                 result['external_links'].append(abs_url)
+
+        # Resolve link anchors
+        for la in parser.link_anchors:
+            abs_url = urljoin(r.url, la['href'])
+            abs_url = normalize_url(abs_url)
+            if abs_url and is_same_domain(abs_url, base_domain):
+                result['internal_link_anchors'].append({
+                    'url': abs_url,
+                    'anchor_text': la['anchor_text'],
+                })
 
     except requests.exceptions.Timeout:
         result['error'] = 'timeout'
@@ -678,6 +737,263 @@ def _build_schema_inventory(pages):
     }
 
 
+def _analyze_anchor_texts(pages):
+    """Analyze internal link anchor texts. Flag generic/empty anchors."""
+    total_anchors = 0
+    generic_count = 0
+    empty_count = 0
+    generic_examples = []
+
+    for p in pages:
+        if p.get('status') != 200:
+            continue
+        source = p['url']
+        for la in p.get('internal_link_anchors', []):
+            anchor = la.get('anchor_text', '').strip()
+            total_anchors += 1
+            if not anchor:
+                empty_count += 1
+            elif anchor.lower() in GENERIC_ANCHORS:
+                generic_count += 1
+                if len(generic_examples) < 20:
+                    generic_examples.append({
+                        'source': source,
+                        'target': la['url'],
+                        'anchor_text': anchor,
+                    })
+
+    descriptive_count = total_anchors - generic_count - empty_count
+    ratio_generic = round(generic_count / max(total_anchors, 1) * 100)
+    ratio_empty = round(empty_count / max(total_anchors, 1) * 100)
+
+    return {
+        'total_anchors': total_anchors,
+        'generic_count': generic_count,
+        'empty_count': empty_count,
+        'descriptive_count': descriptive_count,
+        'ratio_generic_pct': ratio_generic,
+        'ratio_empty_pct': ratio_empty,
+        'generic_examples': generic_examples,
+    }
+
+
+def _extract_keywords(text):
+    """Extract significant words from text (lowercase, >3 chars, no stop words)."""
+    words = re.findall(r'[a-zà-ÿ]{4,}', text.lower())
+    return {w for w in words if w not in STOP_WORDS}
+
+
+def _analyze_title_h1_meta_coherence(pages):
+    """Check coherence between title, H1 and meta description per page."""
+    incoherent_pages = []
+    total_checked = 0
+
+    for p in pages:
+        if p.get('status') != 200:
+            continue
+        title = p.get('title', '').strip()
+        h1 = p.get('h1', '').strip()
+        meta = p.get('meta_description', '').strip()
+        if not title or (not h1 and not meta):
+            continue
+        total_checked += 1
+
+        kw_title = _extract_keywords(title)
+        kw_h1 = _extract_keywords(h1) if h1 else set()
+        kw_meta = _extract_keywords(meta) if meta else set()
+
+        if not kw_title:
+            continue
+
+        issues = []
+
+        # Title vs H1
+        if kw_h1:
+            overlap = len(kw_title & kw_h1) / max(len(kw_title | kw_h1), 1)
+            if overlap < 0.3:
+                issues.append({
+                    'type': 'title_h1',
+                    'overlap_pct': round(overlap * 100),
+                    'title_kw': sorted(kw_title)[:5],
+                    'h1_kw': sorted(kw_h1)[:5],
+                })
+
+        # Title vs Meta
+        if kw_meta:
+            overlap = len(kw_title & kw_meta) / max(len(kw_title | kw_meta), 1)
+            if overlap < 0.3:
+                issues.append({
+                    'type': 'title_meta',
+                    'overlap_pct': round(overlap * 100),
+                })
+
+        if issues:
+            incoherent_pages.append({
+                'url': p['url'],
+                'title': title[:80],
+                'h1': h1[:80],
+                'meta': meta[:100],
+                'issues': issues,
+            })
+
+    return {
+        'total_checked': total_checked,
+        'incoherent_count': len(incoherent_pages),
+        'incoherent_pages': incoherent_pages[:30],
+    }
+
+
+def _detect_keyword_cannibalization(pages):
+    """Detect pages competing for the same keywords based on title overlap."""
+    page_keywords = {}
+    for p in pages:
+        if p.get('status') != 200:
+            continue
+        title = p.get('title', '').strip()
+        if not title:
+            continue
+        kw = _extract_keywords(title)
+        if len(kw) >= 2:
+            page_keywords[p['url']] = kw
+
+    urls = list(page_keywords.keys())
+    groups = {}
+
+    for i in range(len(urls)):
+        for j in range(i + 1, len(urls)):
+            kw_a = page_keywords[urls[i]]
+            kw_b = page_keywords[urls[j]]
+            overlap = kw_a & kw_b
+            union = kw_a | kw_b
+            if len(overlap) / max(len(union), 1) > 0.5:
+                key = frozenset(overlap)
+                if key not in groups:
+                    groups[key] = set()
+                groups[key].add(urls[i])
+                groups[key].add(urls[j])
+
+    cannibalization_groups = []
+    for keywords, group_urls in groups.items():
+        pages_in_group = []
+        for u in group_urls:
+            title = ''
+            for p in pages:
+                if p['url'] == u:
+                    title = p.get('title', '')[:80]
+                    break
+            pages_in_group.append({'url': u, 'title': title})
+        cannibalization_groups.append({
+            'shared_keywords': sorted(keywords)[:5],
+            'pages': pages_in_group,
+            'count': len(pages_in_group),
+        })
+
+    cannibalization_groups.sort(key=lambda x: x['count'], reverse=True)
+
+    return {
+        'groups': cannibalization_groups[:20],
+        'total_groups': len(cannibalization_groups),
+        'total_pages_affected': len(set().union(*(g_urls for g_urls in groups.values()))) if groups else 0,
+    }
+
+
+# Local business detection patterns
+LOCAL_ADDRESS_RE = re.compile(
+    r'(\d{1,5}\s+[\w\s,.-]+(?:rue|avenue|boulevard|place|chemin|route|impasse|allée|street|road|ave|blvd|drive|lane|way)\b)',
+    re.IGNORECASE)
+LOCAL_PHONE_RE = re.compile(
+    r'(?:tel|téléphone|phone|tél|appel)[^\d]*(\+?\d[\d\s./-]{7,})',
+    re.IGNORECASE)
+LOCAL_MAPS_RE = re.compile(
+    r'(google\.com/maps|maps\.google|goo\.gl/maps|iframe[^>]*google\.com[^>]*maps)',
+    re.IGNORECASE)
+LOCAL_SERVICE_AREA_RE = re.compile(
+    r'(zone\s+de\s+service|service\s+area|nous\s+intervenons|we\s+serve|serving\s|dessert\s)',
+    re.IGNORECASE)
+
+
+def _detect_local_business(pages, homepage_url):
+    """Detect local business signals across the site."""
+    signals = {
+        'has_address': False,
+        'has_phone': False,
+        'has_maps_embed': False,
+        'has_service_area': False,
+        'has_local_schema': False,
+        'has_opening_hours': False,
+    }
+    signal_details = []
+
+    for p in pages[:30]:  # Check first 30 pages
+        if p.get('status') != 200:
+            continue
+        html = p.get('html', p.get('body', ''))
+        if not html:
+            continue
+        url = p.get('url', '')
+
+        # Address
+        if not signals['has_address'] and LOCAL_ADDRESS_RE.search(html):
+            signals['has_address'] = True
+            signal_details.append({'signal': 'address', 'url': url})
+
+        # Phone
+        if not signals['has_phone'] and LOCAL_PHONE_RE.search(html):
+            signals['has_phone'] = True
+            signal_details.append({'signal': 'phone', 'url': url})
+
+        # Google Maps embed
+        if not signals['has_maps_embed'] and LOCAL_MAPS_RE.search(html):
+            signals['has_maps_embed'] = True
+            signal_details.append({'signal': 'maps_embed', 'url': url})
+
+        # Service area
+        if not signals['has_service_area'] and LOCAL_SERVICE_AREA_RE.search(html):
+            signals['has_service_area'] = True
+            signal_details.append({'signal': 'service_area', 'url': url})
+
+        # LocalBusiness schema
+        if not signals['has_local_schema']:
+            schema_types = p.get('schema_types', [])
+            if any(t in ('LocalBusiness', 'Restaurant', 'Hotel', 'LodgingBusiness',
+                         'FoodEstablishment', 'HealthAndBeautyBusiness', 'Store',
+                         'AutoDealer', 'MedicalBusiness', 'LegalService',
+                         'RealEstateAgent', 'FinancialService')
+                   for t in schema_types):
+                signals['has_local_schema'] = True
+                signal_details.append({'signal': 'local_schema', 'url': url})
+
+        # Opening hours
+        if not signals['has_opening_hours']:
+            if re.search(r'(horaires|opening.hours|heures.d.ouverture|hours.of.operation|lundi|monday)', html, re.IGNORECASE):
+                signals['has_opening_hours'] = True
+                signal_details.append({'signal': 'opening_hours', 'url': url})
+
+    signal_count = sum(1 for v in signals.values() if v)
+    is_local = signal_count >= 2  # At least 2 signals to qualify
+
+    missing = []
+    if is_local:
+        if not signals['has_address']:
+            missing.append('address')
+        if not signals['has_phone']:
+            missing.append('phone')
+        if not signals['has_local_schema']:
+            missing.append('local_schema')
+        if not signals['has_maps_embed']:
+            missing.append('maps_embed')
+        if not signals['has_opening_hours']:
+            missing.append('opening_hours')
+
+    return {
+        'is_local_business': is_local,
+        'signal_count': signal_count,
+        'signals': signals,
+        'signal_details': signal_details[:10],
+        'missing': missing,
+    }
+
+
 def crawl_site(url, output_dir):
     """Main crawl function. Returns a results dict with v2 deep analysis."""
     parsed = urlparse(url)
@@ -845,10 +1161,30 @@ def crawl_site(url, output_dir):
     schema_inventory = _build_schema_inventory(pages)
     print(f"  [crawler] Schema: {len(schema_inventory['all_types_found'])} types across {schema_inventory['pages_with_schema']} pages")
 
+    print(f"  [crawler] Analyzing anchor texts...")
+    anchor_analysis = _analyze_anchor_texts(pages)
+    print(f"  [crawler] Anchors: {anchor_analysis['total_anchors']} total, {anchor_analysis['generic_count']} generic ({anchor_analysis['ratio_generic_pct']}%)")
+
+    print(f"  [crawler] Analyzing title/H1/meta coherence...")
+    title_h1_coherence = _analyze_title_h1_meta_coherence(pages)
+    print(f"  [crawler] Coherence: {title_h1_coherence['incoherent_count']}/{title_h1_coherence['total_checked']} pages incoherent")
+
+    print(f"  [crawler] Detecting keyword cannibalization...")
+    cannibalization = _detect_keyword_cannibalization(pages)
+    print(f"  [crawler] Cannibalization: {cannibalization['total_groups']} groups, {cannibalization['total_pages_affected']} pages affected")
+
+    print(f"  [crawler] Detecting local business signals...")
+    local_business = _detect_local_business(pages, url)
+    if local_business['is_local_business']:
+        print(f"  [crawler] Local business detected ({local_business['signal_count']} signals)")
+    else:
+        print(f"  [crawler] Not a local business ({local_business['signal_count']} signals)")
+
     # Clean heavy fields from pages to reduce JSON size
     for p in pages:
         p.pop('images_raw', None)
         p.pop('html', None)
+        p.pop('internal_link_anchors', None)
         # Keep redirect_chain for redirect analysis but cap it
         chain = p.get('redirect_chain', [])
         if len(chain) > 5:
@@ -873,6 +1209,10 @@ def crawl_site(url, output_dir):
         'thin_content': thin_content,
         'redirect_analysis': redirect_analysis,
         'schema_inventory': schema_inventory,
+        'anchor_analysis': anchor_analysis,
+        'title_h1_coherence': title_h1_coherence,
+        'cannibalization': cannibalization,
+        'local_business': local_business,
     }
 
     # Export

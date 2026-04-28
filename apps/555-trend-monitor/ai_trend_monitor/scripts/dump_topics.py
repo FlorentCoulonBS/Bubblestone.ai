@@ -200,7 +200,7 @@ def get_trend_history(title, conn):
 def load_youtube_items():
     """Load YouTube items from collector file if recent."""
     import os
-    yt_path = "/home/pinceouverte/clawd/memory/youtube_latest.json"
+    yt_path = os.environ.get("YOUTUBE_DATA_PATH", "/data/youtube_latest.json")
     if not os.path.exists(yt_path):
         return []
     try:

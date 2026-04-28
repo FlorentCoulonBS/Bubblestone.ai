@@ -1,4 +1,4 @@
-FROM node:22-bookworm
+FROM node:25-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ZAP_VERSION=2.17.0

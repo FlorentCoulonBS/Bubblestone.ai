@@ -154,6 +154,94 @@ maintenance_cleanup_logs() {
 }
 
 # =============================================================================
+# Application dependencies — pull external Docker images and apply, audit pip
+# =============================================================================
+
+# Pull and re-up each compose stack listed in arguments (paths to docker-compose.yml).
+# Compares image digests before/after pull and only re-ups stacks where images
+# actually changed (so locally-built images and pinned tags don't trigger a noop restart).
+maintenance_docker_pull_update() {
+    local stacks=("$@")
+    [ ${#stacks[@]} -eq 0 ] && return 0
+    log "--- Docker compose pull + up ---"
+
+    local total_pulled=0 total_upgraded=0 stack_count=0 fail_count=0
+    local stack pull_out pull_status before_digests after_digests up_out dir
+
+    for stack in "${stacks[@]}"; do
+        [ ! -f "$stack" ] && { log "compose missing: $stack"; continue; }
+        stack_count=$((stack_count + 1))
+        dir=$(dirname "$stack")
+
+        before_digests=$(docker compose -f "$stack" config --images 2>/dev/null | xargs -r -n1 docker image inspect --format '{{.Id}}' 2>/dev/null | sort -u)
+
+        pull_out=$(cd "$dir" && docker compose pull --quiet 2>&1)
+        pull_status=$?
+        if [ $pull_status -ne 0 ]; then
+            log "pull fail $stack: $(echo "$pull_out" | tail -3)"
+            fail_count=$((fail_count + 1))
+            continue
+        fi
+
+        after_digests=$(docker compose -f "$stack" config --images 2>/dev/null | xargs -r -n1 docker image inspect --format '{{.Id}}' 2>/dev/null | sort -u)
+
+        if [ "$before_digests" = "$after_digests" ]; then
+            continue
+        fi
+        total_pulled=$((total_pulled + 1))
+
+        up_out=$(cd "$dir" && docker compose up -d --remove-orphans 2>&1)
+        if [ $? -eq 0 ]; then
+            total_upgraded=$((total_upgraded + 1))
+        else
+            log "up fail $stack: $(echo "$up_out" | tail -3)"
+            fail_count=$((fail_count + 1))
+        fi
+    done
+
+    if [ $fail_count -gt 0 ]; then
+        step_warn "Docker images" "${total_upgraded}/${total_pulled} stack(s) re-up, ${fail_count} échec(s) sur ${stack_count} compose"
+    elif [ $total_pulled -eq 0 ]; then
+        step_ok "Docker images" "${stack_count} stack(s) compose, déjà à jour"
+    else
+        step_ok "Docker images" "${total_upgraded}/${total_pulled} stack(s) mis à jour sur ${stack_count}"
+    fi
+}
+
+# Run pip-audit on each requirements.txt path passed as argument.
+# Reports a single row: total CVEs and which files are affected.
+# Skipped silently if pip-audit is not installed.
+maintenance_pip_audit_files() {
+    local files=("$@")
+    [ ${#files[@]} -eq 0 ] && return 0
+    if ! command -v pip-audit >/dev/null 2>&1; then
+        log "pip-audit not installed, skipping app deps audit"
+        return 0
+    fi
+    log "--- pip-audit on requirements ---"
+
+    local total_files=0 total_vulns=0 vuln_files=() f out vulns
+    for f in "${files[@]}"; do
+        [ ! -f "$f" ] && continue
+        total_files=$((total_files + 1))
+        out=$(pip-audit --progress-spinner=off -r "$f" 2>&1)
+        # pip-audit prints "Found N known vulnerabilities" when CVEs exist
+        vulns=$(echo "$out" | sed -nE 's/^Found ([0-9]+) known vulnerabilit.*/\1/p' | head -1)
+        [ -z "$vulns" ] && vulns=0
+        if [ "$vulns" -gt 0 ]; then
+            total_vulns=$((total_vulns + vulns))
+            vuln_files+=("$(basename "$(dirname "$f")"):$vulns")
+        fi
+    done
+
+    if [ $total_vulns -eq 0 ]; then
+        step_ok "Audit deps Python" "${total_files} requirements.txt — aucune CVE"
+    else
+        step_warn "Audit deps Python" "${total_vulns} CVE(s) sur ${total_files} fichier(s) — ${vuln_files[*]}"
+    fi
+}
+
+# =============================================================================
 # HTML email helpers — append to global $ROWS
 # =============================================================================
 email_row() {

@@ -68,6 +68,16 @@ def get_post(post_id):
     return post
 
 
+def get_post_by_topic_id(topic_id):
+    conn = get_db()
+    post = conn.execute(
+        "SELECT * FROM posts WHERE topic_id = ? ORDER BY created_at DESC LIMIT 1",
+        (str(topic_id),)
+    ).fetchone()
+    conn.close()
+    return post
+
+
 def create_post(topic_title, post_text, image_prompt, topic_id=None,
                 topic_url=None, topic_score=None, article_md=None, sources=None):
     conn = get_db()

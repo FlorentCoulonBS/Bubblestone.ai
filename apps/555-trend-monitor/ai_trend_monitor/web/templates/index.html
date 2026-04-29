@@ -82,9 +82,47 @@
                 </span>
                 {% endfor %}
             </div>
+            {% if t.id %}
+            <button
+                type="button"
+                class="send-linkedin mt-4 w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-gray-700"
+                data-topic-id="{{ t.id }}">
+                Envoyer vers LinkedIn
+            </button>
+            {% endif %}
         </div>
     </div>
     {% endfor %}
 </div>
+
+<script>
+document.querySelectorAll('.send-linkedin').forEach((button) => {
+    button.addEventListener('click', async () => {
+        const original = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Envoi...';
+        try {
+            const response = await fetch(`/api/topic/${button.dataset.topicId}/send-linkedin`, {
+                method: 'POST',
+                headers: {'Accept': 'application/json'}
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Erreur LinkedIn');
+            }
+            button.textContent = data.created ? 'Post créé' : 'Post déjà créé';
+            if (data.post_url) {
+                window.location.href = data.post_url;
+            }
+        } catch (error) {
+            button.textContent = error.message;
+            setTimeout(() => {
+                button.disabled = false;
+                button.textContent = original;
+            }, 3500);
+        }
+    });
+});
+</script>
 
 {% endblock %}

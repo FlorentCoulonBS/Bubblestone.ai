@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 from pathlib import Path
 
+import requests
 from flask import Flask, render_template, request, Response, jsonify, redirect, url_for
 
 from ai_trend_monitor.dump_topics import (
@@ -31,6 +32,11 @@ if os.path.exists(env_file):
 
 VEILLE_USER = os.environ.get("VEILLE_USER", "")
 VEILLE_PASS = os.environ.get("VEILLE_PASS", "")
+INTERNAL_SECRET = os.environ.get("SECRET_KEY", "")
+LINKEDIN_INGEST_URL = os.environ.get(
+    "LINKEDIN_INGEST_URL",
+    "http://linkedin-generator:5001/api/intake-topic",
+)
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = hashlib.sha256(VEILLE_PASS.encode()).hexdigest()
@@ -172,17 +178,17 @@ def get_topics_for_date(date_str):
     start = f"{date_str} 00:00:00"
     end = f"{date_str} 23:59:59.999999"
     c.execute("""
-        SELECT title, score, sources, url, last_seen, post_count, velocity_1h, velocity_6h, velocity_24h, first_seen
+        SELECT id, title, score, sources, url, last_seen, post_count, velocity_1h, velocity_6h, velocity_24h, first_seen
         FROM topic WHERE last_seen BETWEEN ? AND ?
         ORDER BY score DESC LIMIT 150
     """, (start, end))
     raw = []
     for r in c.fetchall():
         raw.append({
-            "title": r[0], "old_score": r[1], "sources": r[2] or "unknown",
-            "url": r[3], "seen": r[4], "post_count": r[5],
-            "velocity_1h": r[6], "velocity_6h": r[7], "velocity_24h": r[8],
-            "first_seen": r[9]
+            "id": r[0], "title": r[1], "old_score": r[2], "sources": r[3] or "unknown",
+            "url": r[4], "seen": r[5], "post_count": r[6],
+            "velocity_1h": r[7], "velocity_6h": r[8], "velocity_24h": r[9],
+            "first_seen": r[10]
         })
 
     # Add YouTube items from API collector
@@ -200,8 +206,9 @@ def get_topics_for_date(date_str):
                     if it.get("channel") in AI_CHANNELS:
                         # Check if video date matches requested date
                         pub = it.get("published", "")[:10]
-                        if pub >= date_str or date_str == datetime.now(tz.utc).strftime("%Y-%m-%d"):
+                        if pub >= date_str or date_str == datetime.now(timezone.utc).strftime("%Y-%m-%d"):
                             raw.append({
+                                "id": None,
                                 "title": it["title"], "old_score": 1.5, "sources": "youtube",
                                 "url": it["url"], "seen": it.get("published", ""),
                                 "post_count": 1, "velocity_1h": 0, "velocity_6h": 0,
@@ -262,6 +269,31 @@ def get_topics_for_date(date_str):
 
     conn.close()
     return merged[:20]
+
+
+def get_topic(topic_id):
+    conn = get_db()
+    row = conn.execute("""
+        SELECT id, title, score, sources, url, last_seen, first_seen, post_count,
+               velocity_1h, velocity_6h, velocity_24h
+        FROM topic WHERE id = ?
+    """, (topic_id,)).fetchone()
+    conn.close()
+    if not row:
+        return None
+    return {
+        "id": row["id"],
+        "title": row["title"],
+        "score": row["score"],
+        "sources": row["sources"] or "unknown",
+        "url": row["url"],
+        "last_seen": row["last_seen"],
+        "first_seen": row["first_seen"],
+        "post_count": row["post_count"],
+        "velocity_1h": row["velocity_1h"],
+        "velocity_6h": row["velocity_6h"],
+        "velocity_24h": row["velocity_24h"],
+    }
 
 
 def search_topics(query, limit=50):
@@ -418,6 +450,31 @@ def api_og_image():
         return jsonify({"image": None})
     img = fetch_og_image(url)
     return jsonify({"image": img})
+
+
+@app.route("/api/topic/<int:topic_id>/send-linkedin", methods=["POST"])
+@requires_auth
+def api_send_linkedin(topic_id):
+    topic = get_topic(topic_id)
+    if not topic:
+        return jsonify({"error": "Topic introuvable"}), 404
+    if not INTERNAL_SECRET:
+        return jsonify({"error": "Secret interne non configuré"}), 503
+
+    try:
+        resp = requests.post(
+            LINKEDIN_INGEST_URL,
+            json=topic,
+            headers={"X-Internal-Secret": INTERNAL_SECRET},
+            timeout=20,
+        )
+        payload = resp.json()
+    except Exception as exc:
+        return jsonify({"error": f"LinkedIn indisponible: {exc}"}), 502
+
+    if resp.status_code >= 400:
+        return jsonify(payload), resp.status_code
+    return jsonify(payload)
 
 
 def create_app():

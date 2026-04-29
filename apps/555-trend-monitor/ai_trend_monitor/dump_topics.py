@@ -147,6 +147,7 @@ def merge_cluster(cluster):
     combined_signal = source_authority * effective_volume * max_old_score
 
     return {
+        "id": best.get("id"),
         "title": best["title"],
         "sources": ",".join(sorted(all_sources)),
         "source_count": len(all_sources),

@@ -4,6 +4,7 @@
 import os
 import json
 import base64
+import hmac
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
@@ -14,13 +15,15 @@ from flask import (Flask, render_template, request, redirect, url_for,
                    jsonify, session, send_from_directory, flash)
 from models import (init_db, get_posts, get_post, update_post_text,
                     update_post_status, update_post_image, get_post_counts,
-                    IMAGES_DIR)
+                    create_post, get_post_by_topic_id, IMAGES_DIR)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(32).hex()
 
 LOGIN_USER = os.environ.get("LOGIN_USER") or "florent"
 LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD") or "Bricks2026!AI"
+INTERNAL_SECRET = os.environ.get("SECRET_KEY", "")
+PUBLIC_BASE_URL = os.environ.get("LINKEDIN_PUBLIC_BASE_URL", "https://linkedin.bubblestone.ai")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_IMAGE_MODEL = "gpt-image-2"
 
@@ -147,6 +150,77 @@ def api_regenerate_image(post_id):
         return jsonify({"ok": True, "image_path": image_path})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+def _internal_authorized():
+    sent = request.headers.get("X-Internal-Secret", "")
+    return bool(INTERNAL_SECRET) and hmac.compare_digest(sent, INTERNAL_SECRET)
+
+
+def _build_linkedin_draft(topic):
+    title = (topic.get("title") or "").strip()
+    sources = (topic.get("sources") or "veille").strip()
+    score = topic.get("score")
+    score_line = f"Signal veille: {score:.1f}." if isinstance(score, (int, float)) else "Signal veille a qualifier."
+
+    post_text = (
+        f"{title}\n\n"
+        "Ce signal merite attention parce qu'il touche directement la facon dont les equipes vont produire, "
+        "automatiser ou arbitrer leurs outils IA dans les prochains jours.\n\n"
+        f"{score_line} Sources detectees: {sources}.\n\n"
+        "Mon angle de lecture: verifier si c'est une annonce cosmetique ou un vrai changement d'usage, "
+        "puis identifier ce que cela change concretement pour une equipe commerciale, marketing ou operationnelle.\n\n"
+        "A surveiller: adoption reelle, limites techniques, cout total et impact sur les workflows existants."
+    )
+    image_prompt = (
+        "Scene realiste en photographie editoriale: une equipe professionnelle dans un bureau moderne analyse "
+        "un tableau de veille IA sur de grands ecrans, ambiance business sobre, lumiere naturelle, "
+        "details credibles, aucune interface lisible, aucun texte incruste."
+    )
+    return post_text, image_prompt
+
+
+@app.route("/api/intake-topic", methods=["POST"])
+def api_intake_topic():
+    if not _internal_authorized():
+        return jsonify({"error": "Non autorise"}), 401
+
+    topic = request.get_json(silent=True) or {}
+    topic_id = str(topic.get("id") or topic.get("topic_id") or "").strip()
+    title = (topic.get("title") or "").strip()
+    if not topic_id or not title:
+        return jsonify({"error": "Topic incomplet"}), 400
+
+    existing = get_post_by_topic_id(topic_id)
+    if existing:
+        return jsonify({
+            "ok": True,
+            "created": False,
+            "post_id": existing["id"],
+            "post_url": f"{PUBLIC_BASE_URL}/post/{existing['id']}",
+        })
+
+    post_text, image_prompt = _build_linkedin_draft(topic)
+    try:
+        score = float(topic["score"]) if topic.get("score") is not None else None
+    except (TypeError, ValueError):
+        score = None
+    post_id = create_post(
+        topic_title=title,
+        post_text=post_text,
+        image_prompt=image_prompt,
+        topic_id=topic_id,
+        topic_url=topic.get("url"),
+        topic_score=score,
+        article_md=json.dumps(topic, ensure_ascii=False, indent=2),
+        sources=topic.get("sources"),
+    )
+    return jsonify({
+        "ok": True,
+        "created": True,
+        "post_id": post_id,
+        "post_url": f"{PUBLIC_BASE_URL}/post/{post_id}",
+    })
 
 
 @app.route("/images/<path:filename>")

@@ -24,6 +24,12 @@ services:
     networks:
       bubblestone-net:
         ipv4_address: 172.18.0.10
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:81/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   # ============================================
   # BubbleStone.ai — Site vitrine (prod)
@@ -38,6 +44,12 @@ services:
     networks:
       bubblestone-net:
         ipv4_address: 172.18.0.20
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # ============================================
   # BubbleStone.ai — Staging
@@ -52,6 +64,12 @@ services:
     networks:
       bubblestone-net:
         ipv4_address: 172.18.0.25
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # ============================================
   # 555 — AI Trend Dashboard (Veille IA)
@@ -72,6 +90,12 @@ services:
     networks:
       bubblestone-net:
         ipv4_address: 172.18.0.2
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   # ============================================
   # BubbleStone Audit
@@ -90,6 +114,12 @@ services:
     networks:
       bubblestone-net:
         ipv4_address: 172.18.0.30
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   # ============================================
   # LinkedIn Generator
@@ -113,6 +143,12 @@ services:
     networks:
       bubblestone-net:
         ipv4_address: 172.18.0.40
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 networks:
   bubblestone-net:

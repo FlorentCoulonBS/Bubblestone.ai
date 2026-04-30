@@ -314,6 +314,21 @@ find /opt/bubblestone-backups-incoming/n8n -name 'backup-dalmata-*.tar.gz' -mtim
 rm -f "$SFTP_BATCH"
 rm -rf "$BACKUP_DIR" "$ARCHIVE"
 
+# ÉTAPE 5b — Restic differential backup (parallel to tar.gz)
+log "--- Restic ---"
+if [ -x /opt/bubblestone-ops/restic-backup.sh ]; then
+    RESTIC_OUTPUT=$(/opt/bubblestone-ops/restic-backup.sh 2>&1)
+    RESTIC_LINE=$(echo "$RESTIC_OUTPUT" | grep -E '^\[restic-backup\]' | tail -1)
+    if echo "$RESTIC_LINE" | grep -q '\[restic-backup\] OK'; then
+        step_ok "Restic" "$RESTIC_LINE"
+    else
+        step_err "Restic" "${RESTIC_LINE:-no output}"
+    fi
+    echo "$RESTIC_OUTPUT" >> "$LOGFILE"
+else
+    step_warn "Restic" "Script /opt/bubblestone-ops/restic-backup.sh introuvable"
+fi
+
 # ÉTAPE 6 — Verification
 log "--- Verification ---"
 CONTAINER_FAIL=""

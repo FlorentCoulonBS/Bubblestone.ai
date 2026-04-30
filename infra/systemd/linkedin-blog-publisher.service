@@ -1,0 +1,15 @@
+[Unit]
+Description=Publish validated LinkedIn posts to the BubbleStone blog
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=codex-ops
+Group=codex-ops
+WorkingDirectory=/opt/repos/bubblestone
+Environment=ASTRO_TELEMETRY_DISABLED=1
+Environment=BLOG_PUBLISH_REPO_DIR=/opt/bubblestone-blog-publisher
+Environment=LINKEDIN_DB_PATH=/opt/bubblestone-linkedin-data/linkedin.db
+Environment=LINKEDIN_IMAGES_DIR=/opt/bubblestone-linkedin-data/images
+ExecStart=/usr/bin/flock -n /tmp/linkedin-blog-publisher.lock /usr/bin/python3 /opt/repos/bubblestone/site/scripts/publish-validated-linkedin-posts.py

@@ -31,6 +31,7 @@
 <!-- Cards Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
     {% for t in topics[:12] %}
+    {% set display_score = t.combined_signal if t.combined_signal else t.old_score %}
     <div class="card-hover bg-dark-800 rounded-xl border border-indigo-900/20 overflow-hidden flex flex-col" style="background:#1a1a2e;">
         <!-- Image -->
         <div data-og-url="{{ t.url or '' }}">
@@ -43,7 +44,7 @@
             <!-- Score badge + trend -->
             <div class="flex items-center gap-2 mb-2">
                 <span class="score-{{ t.score_color }} text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                    {{ "%.0f"|format(t.combined_signal) if t.combined_signal else t.old_score }}
+                    {{ "%.0f"|format(display_score) if display_score else "0" }}
                 </span>
                 <span class="text-sm">{{ t.trend_emoji }} {{ t.trend_label }}</span>
                 <span class="text-gray-500 text-xs ml-auto">vol: {{ t.volume }} | src: {{ t.source_count }}</span>
@@ -88,7 +89,7 @@
                 class="send-linkedin mt-4 w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-gray-700"
                 data-topic-id="{{ t.id }}"
                 data-topic-title="{{ t.title|e }}"
-                data-topic-score="{{ '%.1f'|format(t.score) }}"
+                data-topic-score="{{ '%.1f'|format(display_score) if display_score else '0.0' }}"
                 data-topic-sources="{{ t.source_list|join(', ')|e }}">
                 Valider
             </button>

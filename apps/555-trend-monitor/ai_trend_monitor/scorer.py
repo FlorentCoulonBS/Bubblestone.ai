@@ -38,13 +38,13 @@ def score_topics(only_unscored: bool = False) -> list[tuple[str, float]]:
             score = _calculate_score(topic, session)
 
             # Update velocity fields
-            velocities = calculate_velocity(topic.id)
+            velocities = calculate_velocity(topic.id, session=session)
             topic.velocity_1h = velocities["velocity_1h"]
             topic.velocity_6h = velocities["velocity_6h"]
             topic.velocity_24h = velocities["velocity_24h"]
 
             # Update official status
-            topic.is_official = detect_official_source(topic)
+            topic.is_official = detect_official_source(topic, session=session)
 
             # Apply official boost
             if topic.is_official:
@@ -63,7 +63,8 @@ def score_topics(only_unscored: bool = False) -> list[tuple[str, float]]:
             source_count = len(
                 [s for s in topic.sources.split(",") if s.strip()]
             ) if topic.sources else 0
-            record_snapshot(topic.id, topic.post_count, source_count)
+            record_snapshot(topic.id, topic.post_count, source_count, session=session)
+        session.commit()
 
     results.sort(key=lambda x: x[1], reverse=True)
     logger.info("Scored %d topics", len(results))
@@ -106,7 +107,7 @@ def _calculate_score(topic: Topic, session: Session) -> float:
     cross_source_score = calculate_cross_source_score(topic)
 
     # --- Official score (binary: 10 or 0) ---
-    official_score = 10.0 if detect_official_source(topic) else 0.0
+    official_score = 10.0 if detect_official_source(topic, session=session) else 0.0
 
     # Weighted sum
     weights = config.SCORING_WEIGHTS

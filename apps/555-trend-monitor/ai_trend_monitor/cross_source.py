@@ -26,7 +26,7 @@ def calculate_cross_source_score(topic: Topic) -> float:
     return float(_SOURCE_SCORE_MAP.get(unique_count, 0))
 
 
-def detect_official_source(topic: Topic) -> bool:
+def detect_official_source(topic: Topic, session: Session | None = None) -> bool:
     """Check if any post associated with this topic is from an official source.
 
     Checks Post.author against config.OFFICIAL_SOURCES for rss posts.
@@ -34,21 +34,27 @@ def detect_official_source(topic: Topic) -> bool:
     if topic.id is None:
         return False
 
+    if session is not None:
+        return _detect_official_source_with_session(topic, session)
+
     init_db()
     engine = get_engine()
 
     with Session(engine) as session:
-        posts = session.exec(
-            select(Post).where(Post.topic_id == topic.id)
-        ).all()
+        return _detect_official_source_with_session(topic, session)
 
-        for post in posts:
-            source = post.subreddit  # subreddit field doubles as source identifier
-            author = getattr(post, "reddit_id", "")  # repurposed field for author
 
-            # For rss posts, check author
-            if source == "rss":
-                if author in config.OFFICIAL_SOURCES:
-                    return True
+def _detect_official_source_with_session(topic: Topic, session: Session) -> bool:
+    posts = session.exec(
+        select(Post).where(Post.topic_id == topic.id)
+    ).all()
 
+    for post in posts:
+        source = post.subreddit  # subreddit field doubles as source identifier
+        author = getattr(post, "reddit_id", "")  # repurposed field for author
+
+        # For rss posts, check author
+        if source == "rss":
+            if author in config.OFFICIAL_SOURCES:
+                return True
     return False

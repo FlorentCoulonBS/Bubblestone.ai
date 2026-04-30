@@ -51,6 +51,12 @@
             <div class="editor-header">
                 <h2>Illustration</h2>
             </div>
+
+            {% if post.image_status == 'generating' %}
+            <div class="status-message info">Image en cours de generation.</div>
+            {% elif post.image_status == 'error' %}
+            <div class="status-message error">Erreur image : {{ post.image_error }}</div>
+            {% endif %}
             
             {% if post.image_path %}
             <div class="image-preview">

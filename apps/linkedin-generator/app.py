@@ -28,8 +28,9 @@ LOGIN_PASSWORD = os.environ.get("LOGIN_PASSWORD") or "Bricks2026!AI"
 INTERNAL_SECRET = os.environ.get("SECRET_KEY", "")
 PUBLIC_BASE_URL = os.environ.get("LINKEDIN_PUBLIC_BASE_URL", "https://linkedin.bubblestone.ai")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_IMAGE_MODEL = "gpt-image-2"
-OPENAI_IMAGE_TIMEOUT = int(os.environ.get("OPENAI_IMAGE_TIMEOUT", "180"))
+OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-1")
+OPENAI_IMAGE_QUALITY = os.environ.get("OPENAI_IMAGE_QUALITY", "low")
+OPENAI_IMAGE_TIMEOUT = int(os.environ.get("OPENAI_IMAGE_TIMEOUT", "75"))
 CLAUDE_TIMEOUT = int(os.environ.get("CLAUDE_TIMEOUT", "60"))
 PROMPT_SYSTEM_PATH = Path(__file__).parent / "prompts" / "system.md"
 
@@ -408,7 +409,7 @@ def generate_image(post_id, prompt):
         "model": OPENAI_IMAGE_MODEL,
         "prompt": full_prompt,
         "size": "1024x1024",
-        "quality": "high",
+        "quality": OPENAI_IMAGE_QUALITY,
         "n": 1,
     }
     headers = {
@@ -444,6 +445,7 @@ def _start_image_generation(post_id, prompt):
             image_path = generate_image(post_id, prompt)
             update_post_image(post_id, image_path)
         except Exception as exc:
+            app.logger.exception("Image generation failed for post %s", post_id)
             update_image_status(post_id, "error", str(exc))
 
     thread = threading.Thread(target=worker, daemon=True)

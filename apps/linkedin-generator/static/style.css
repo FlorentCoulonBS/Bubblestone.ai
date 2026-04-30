@@ -565,6 +565,24 @@ a:hover { color: #67e8f9; }
 /* ── Loading ── */
 .loading { opacity: 0.5; pointer-events: none; }
 
+.status-message {
+    margin-bottom: calc(var(--bs-space) * 2);
+    padding: 10px 12px;
+    border-radius: var(--bs-radius-sm);
+    font-size: 0.88rem;
+    line-height: 1.4;
+}
+.status-message.info {
+    color: var(--bs-text-accent);
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+.status-message.error {
+    color: #fecaca;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
 /* ── Toast ── */
 .toast {
     position: fixed;

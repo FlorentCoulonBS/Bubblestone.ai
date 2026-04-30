@@ -24,6 +24,23 @@ async function api(url, method = 'POST', data = null) {
     return json;
 }
 
+async function pollImageStatus(postId, btn = null, startedText = 'Image en cours...') {
+    if (btn) btn.textContent = startedText;
+    for (let attempt = 0; attempt < 90; attempt += 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const status = await api(`/api/post/${postId}/image-status`, 'GET');
+        if (status.image_path || status.image_status === 'ready') {
+            toast('Image générée !');
+            location.reload();
+            return;
+        }
+        if (status.image_status === 'error') {
+            throw new Error(status.image_error || 'Erreur génération image');
+        }
+    }
+    throw new Error('Image encore en cours après 3 minutes. Recharge la page dans quelques instants.');
+}
+
 // Validate post (generate image)
 async function validatePost(postId, detail = false) {
     const btn = event?.target;
@@ -35,12 +52,16 @@ async function validatePost(postId, detail = false) {
         const result = await api(`/api/post/${postId}/validate`);
         toast('Post validé !');
         if (result.error) toast(result.error, 'error');
-        setTimeout(() => location.reload(), 500);
+        if (result.image_pending) {
+            await pollImageStatus(postId, btn, '⏳ Image en cours...');
+        } else {
+            setTimeout(() => location.reload(), 500);
+        }
     } catch (e) {
         toast(e.message, 'error');
         if (btn) {
             btn.disabled = false;
-            btn.textContent = '✅ Valider';
+            btn.textContent = '✅ Valider + Générer image';
         }
     }
 }
@@ -142,14 +163,18 @@ async function regenerateImage(postId) {
     
     try {
         const data = prompt ? { image_prompt: prompt } : {};
-        await api(`/api/post/${postId}/regenerate-image`, 'POST', data);
-        toast('Image régénérée !');
-        setTimeout(() => location.reload(), 500);
+        const result = await api(`/api/post/${postId}/regenerate-image`, 'POST', data);
+        if (result.image_pending) {
+            await pollImageStatus(postId, btn, '⏳ Image en cours...');
+        } else {
+            toast('Image régénérée !');
+            setTimeout(() => location.reload(), 500);
+        }
     } catch (e) {
         toast(e.message, 'error');
         if (btn) {
             btn.disabled = false;
-            btn.textContent = '🔄 Régénérer';
+            btn.textContent = '🔄 Générer';
         }
     }
 }

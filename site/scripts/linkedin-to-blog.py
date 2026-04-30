@@ -77,7 +77,7 @@ def git_push(filepath: Path, title: str):
         cwd=repo_dir, check=True
     )
     subprocess.run(
-        ["git", "push", "origin", "master"],
+        ["git", "push", "origin", "main"],
         cwd=repo_dir, check=True, timeout=30
     )
     print("✅ Pushed → GitHub Actions → staging deploy")

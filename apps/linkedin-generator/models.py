@@ -50,7 +50,11 @@ def init_db():
     }
     for column, sql in migrations.items():
         if column not in columns:
-            conn.execute(sql)
+            try:
+                conn.execute(sql)
+            except sqlite3.OperationalError as exc:
+                if "duplicate column name" not in str(exc).lower():
+                    raise
     conn.commit()
     conn.close()
 

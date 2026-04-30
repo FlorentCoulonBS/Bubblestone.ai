@@ -298,6 +298,39 @@ email_section_uptime_reboot() {
     fi
 }
 
+# Section: restic differential backup status
+email_section_restic() {
+    email_section "💾 Restic"
+
+    local LAST_BACKUP
+    LAST_BACKUP=$(grep '\[restic-backup\]' "$LOGFILE" 2>/dev/null | tail -1 | sed 's/.*\[restic-backup\] //')
+    if echo "$LAST_BACKUP" | grep -q '^OK '; then
+        email_row "✅" "Backup quotidien — ${LAST_BACKUP}"
+    elif [ -n "$LAST_BACKUP" ]; then
+        email_row "❌" "Backup quotidien — ${LAST_BACKUP}"
+    else
+        email_row "⚠️" "Backup quotidien — aucun run journalisé"
+    fi
+
+    local LAST_TEST
+    LAST_TEST=$(tail -1 /var/log/restic-restore-test.log 2>/dev/null || true)
+    if echo "$LAST_TEST" | grep -q ' OK '; then
+        email_row "✅" "Dernier test trimestriel — ${LAST_TEST}"
+    elif [ -n "$LAST_TEST" ]; then
+        email_row "❌" "Dernier test trimestriel — ${LAST_TEST}"
+    else
+        email_row "⚠️" "Dernier test trimestriel — aucun encore"
+    fi
+
+    local NEXT_TEST
+    NEXT_TEST=$(systemctl show restic-restore-test.timer -p NextElapseUSecRealtime --value 2>/dev/null)
+    if [ -n "$NEXT_TEST" ] && [ "$NEXT_TEST" != "n/a" ]; then
+        email_row "🔄" "Prochain test trimestriel — ${NEXT_TEST}"
+    else
+        email_row "⚠️" "Prochain test trimestriel — timer non programmé"
+    fi
+}
+
 # Section: disk + docker images
 email_section_systeme() {
     email_section "💾 Systeme"

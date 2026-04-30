@@ -198,7 +198,6 @@ def publish_posts(dry_run: bool, limit: int) -> int:
         print(f"Dry run, would publish: {published}")
         return len(published)
 
-    run(["npm", "run", "build"], cwd=SITE_DIR)
     run(["git", "add", "site/src/content/blog", "site/public/images/blog", "site/scripts/publish-validated-linkedin-posts.py"])
     status = run(["git", "status", "--porcelain"]).stdout.strip()
     if status:

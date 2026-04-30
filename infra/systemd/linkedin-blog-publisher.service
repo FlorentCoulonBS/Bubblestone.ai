@@ -9,6 +9,7 @@ User=codex-ops
 Group=codex-ops
 WorkingDirectory=/opt/repos/bubblestone
 Environment=ASTRO_TELEMETRY_DISABLED=1
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 Environment=BLOG_PUBLISH_REPO_DIR=/opt/bubblestone-blog-publisher
 Environment=LINKEDIN_DB_PATH=/opt/bubblestone-linkedin-data/linkedin.db
 Environment=LINKEDIN_IMAGES_DIR=/opt/bubblestone-linkedin-data/images

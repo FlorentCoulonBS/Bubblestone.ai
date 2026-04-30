@@ -82,7 +82,11 @@ def post_detail(post_id):
     if not post:
         flash("Post introuvable", "error")
         return redirect(url_for("dashboard"))
-    return render_template("post_detail.html", post=post)
+    return render_template(
+        "post_detail.html",
+        post=post,
+        article_md=_article_markdown_from_post(post),
+    )
 
 
 # --- API ---
@@ -205,6 +209,43 @@ def _build_image_prompt(topic):
     return image_prompt
 
 
+def _build_article_markdown(topic, post_text):
+    title = (topic.get("title") or "Sujet IA").strip()
+    url = (topic.get("url") or "").strip()
+    sources = (topic.get("sources") or "veille").strip()
+    score = topic.get("score")
+    score_line = f"{score:.1f}" if isinstance(score, (int, float)) else "n/a"
+
+    sections = [
+        f"# {title}",
+        "",
+        post_text.strip(),
+        "",
+        "## Source",
+        "",
+    ]
+    if url:
+        sections.append(f"- [{url}]({url})")
+    else:
+        sections.append("- Source non fournie")
+    sections.extend([
+        "",
+        "## Notes de veille",
+        "",
+        f"- Signal veille : {score_line}",
+        f"- Sources : {sources}",
+    ])
+    return "\n".join(sections).strip()
+
+
+def _article_markdown_from_post(post):
+    existing = (post["article_md"] or "").strip()
+    if existing and not existing.startswith("{"):
+        return existing
+    topic = _topic_from_post(post)
+    return _build_article_markdown(topic, post["post_text"])
+
+
 def _generate_with_claude(topic, anecdote):
     system_prompt = _load_system_prompt()
     user_prompt = _build_user_prompt(topic, anecdote)
@@ -290,7 +331,7 @@ def api_intake_topic():
         topic_id=topic_id,
         topic_url=topic.get("url"),
         topic_score=score,
-        article_md=json.dumps(topic, ensure_ascii=False, indent=2),
+        article_md=_build_article_markdown(topic, post_text),
         sources=topic.get("sources"),
         anecdote=anecdote or None,
     )
@@ -317,7 +358,13 @@ def api_regenerate_text(post_id):
         return jsonify({"error": str(exc)}), 504
     except Exception as exc:
         return jsonify({"error": f"Generation failed: {exc}"}), 502
-    update_post_generation(post_id, post_text, image_prompt, anecdote or None)
+    update_post_generation(
+        post_id,
+        post_text,
+        image_prompt,
+        anecdote or None,
+        _build_article_markdown(topic, post_text),
+    )
     return jsonify({"ok": True, "chars": len(post_text)})
 
 

@@ -78,13 +78,13 @@
         </div>
 
         <!-- Article markdown -->
-        {% if post.article_md %}
+        {% if article_md %}
         <div class="article-section">
             <div class="editor-header">
                 <h2>Version article</h2>
                 <button class="btn btn-sm btn-ghost" onclick="copyArticle()">📋 Copier</button>
             </div>
-            <pre class="article-content" id="articleMd">{{ post.article_md }}</pre>
+            <pre class="article-content" id="articleMd">{{ article_md }}</pre>
         </div>
         {% endif %}
 

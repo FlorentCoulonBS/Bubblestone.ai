@@ -129,6 +129,9 @@ send_email() {
     BK_INFO=$(grep "Sauvegarde" "$LOGFILE" 2>/dev/null | tail -1 | sed 's/.*[✅❌⚠️] //')
     [ -n "$BK_INFO" ] && email_row "✅" "$BK_INFO" || email_row "✅" "Voir logs"
 
+    # --- Restic differential backup ---
+    email_section_restic
+
     email_send
 }
 

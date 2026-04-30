@@ -140,6 +140,8 @@ services:
     volumes:
       - /opt/bubblestone-linkedin-data:/data
       - /opt/bubblestone-555-data/trends.db:/data/trends.db:ro
+      - /root/.claude:/root/.claude:ro
+      - /root/.claude.json:/root/.claude.json:ro
     networks:
       bubblestone-net:
         ipv4_address: 172.18.0.40

@@ -16,6 +16,14 @@
             {% if post.topic_score %}<span>🔥 Score: {{ "%.0f"|format(post.topic_score) }}</span>{% endif %}
             {% if post.topic_url %}<a href="{{ post.topic_url }}" target="_blank" rel="noopener">🔗 Source</a>{% endif %}
         </div>
+        {% if post.anecdote %}
+        <div class="article-section">
+            <div class="editor-header">
+                <h2>Angle perso</h2>
+            </div>
+            <p>{{ post.anecdote }}</p>
+        </div>
+        {% endif %}
 
         <!-- Post text éditable -->
         <div class="post-editor">
@@ -32,6 +40,7 @@
             <div class="editor-actions">
                 {% if post.status == 'proposed' %}
                 <button class="btn btn-sm btn-ghost" onclick="saveText({{ post.id }})">💾 Sauvegarder</button>
+                <button class="btn btn-sm btn-ghost" onclick="regenerateText({{ post.id }})">🔄 Régénérer le texte</button>
                 {% endif %}
                 <button class="btn btn-sm btn-ghost" onclick="copyText()">📋 Copier le texte</button>
             </div>

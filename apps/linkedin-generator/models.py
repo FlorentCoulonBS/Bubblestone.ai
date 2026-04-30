@@ -36,11 +36,16 @@ def init_db():
             validated_at TIMESTAMP,
             published_at TIMESTAMP,
             article_md TEXT,
-            sources TEXT
+            sources TEXT,
+            anecdote TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);
         CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC);
     """)
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(posts)").fetchall()}
+    if "anecdote" not in columns:
+        conn.execute("ALTER TABLE posts ADD COLUMN anecdote TEXT")
+        conn.commit()
     conn.close()
 
 
@@ -79,14 +84,15 @@ def get_post_by_topic_id(topic_id):
 
 
 def create_post(topic_title, post_text, image_prompt, topic_id=None,
-                topic_url=None, topic_score=None, article_md=None, sources=None):
+                topic_url=None, topic_score=None, article_md=None, sources=None,
+                anecdote=None):
     conn = get_db()
     cursor = conn.execute(
         """INSERT INTO posts (topic_title, post_text, image_prompt, topic_id,
-           topic_url, topic_score, article_md, sources)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+           topic_url, topic_score, article_md, sources, anecdote)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (topic_title, post_text, image_prompt, topic_id,
-         topic_url, topic_score, article_md, sources)
+         topic_url, topic_score, article_md, sources, anecdote)
     )
     post_id = cursor.lastrowid
     conn.commit()
@@ -116,6 +122,18 @@ def update_post_status(post_id, status):
 def update_post_image(post_id, image_path):
     conn = get_db()
     conn.execute("UPDATE posts SET image_path = ? WHERE id = ?", (image_path, post_id))
+    conn.commit()
+    conn.close()
+
+
+def update_post_generation(post_id, post_text, image_prompt, anecdote=None):
+    conn = get_db()
+    conn.execute(
+        """UPDATE posts
+           SET post_text = ?, image_prompt = ?, anecdote = ?
+           WHERE id = ?""",
+        (post_text, image_prompt, anecdote, post_id),
+    )
     conn.commit()
     conn.close()
 

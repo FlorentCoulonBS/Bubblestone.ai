@@ -5,6 +5,7 @@ import os
 import json
 import base64
 import hmac
+import subprocess
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
@@ -15,7 +16,8 @@ from flask import (Flask, render_template, request, redirect, url_for,
                    jsonify, session, send_from_directory, flash)
 from models import (init_db, get_posts, get_post, update_post_text,
                     update_post_status, update_post_image, get_post_counts,
-                    create_post, get_post_by_topic_id, IMAGES_DIR)
+                    update_post_generation, create_post, get_post_by_topic_id,
+                    IMAGES_DIR)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(32).hex()
@@ -26,6 +28,8 @@ INTERNAL_SECRET = os.environ.get("SECRET_KEY", "")
 PUBLIC_BASE_URL = os.environ.get("LINKEDIN_PUBLIC_BASE_URL", "https://linkedin.bubblestone.ai")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_IMAGE_MODEL = "gpt-image-2"
+CLAUDE_TIMEOUT = int(os.environ.get("CLAUDE_TIMEOUT", "60"))
+PROMPT_SYSTEM_PATH = Path(__file__).parent / "prompts" / "system.md"
 
 
 # --- Auth ---
@@ -157,27 +161,90 @@ def _internal_authorized():
     return bool(INTERNAL_SECRET) and hmac.compare_digest(sent, INTERNAL_SECRET)
 
 
-def _build_linkedin_draft(topic):
+def _load_system_prompt():
+    return PROMPT_SYSTEM_PATH.read_text(encoding="utf-8")
+
+
+def _build_user_prompt(topic, anecdote):
     title = (topic.get("title") or "").strip()
+    url = (topic.get("url") or "").strip()
     sources = (topic.get("sources") or "veille").strip()
     score = topic.get("score")
-    score_line = f"Signal veille: {score:.1f}." if isinstance(score, (int, float)) else "Signal veille a qualifier."
+    score_line = f"{score:.1f}" if isinstance(score, (int, float)) else "n/a"
+    parts = [
+        "# Sujet a traiter",
+        f"Titre : {title}",
+        f"URL source : {url}" if url else "",
+        f"Sources veille : {sources}" if sources else "",
+        f"Signal veille : {score_line}",
+        "",
+    ]
+    if anecdote:
+        parts.extend([
+            "# Anecdote / angle perso a integrer",
+            anecdote,
+            "",
+            "Integre cette anecdote naturellement, comme un vecu concret qui appuie l'analyse.",
+        ])
+    else:
+        parts.extend([
+            "# Mode",
+            "Pas d'anecdote fournie : produis un post analytique et contrarian.",
+        ])
+    parts.extend(["", "Redige maintenant le post LinkedIn complet."])
+    return "\n".join(part for part in parts if part is not None)
 
-    post_text = (
-        f"{title}\n\n"
-        "Ce signal merite attention parce qu'il touche directement la facon dont les equipes vont produire, "
-        "automatiser ou arbitrer leurs outils IA dans les prochains jours.\n\n"
-        f"{score_line} Sources detectees: {sources}.\n\n"
-        "Mon angle de lecture: verifier si c'est une annonce cosmetique ou un vrai changement d'usage, "
-        "puis identifier ce que cela change concretement pour une equipe commerciale, marketing ou operationnelle.\n\n"
-        "A surveiller: adoption reelle, limites techniques, cout total et impact sur les workflows existants."
-    )
+
+def _build_image_prompt(topic):
+    title = (topic.get("title") or "sujet IA").strip()
     image_prompt = (
-        "Scene realiste en photographie editoriale: une equipe professionnelle dans un bureau moderne analyse "
-        "un tableau de veille IA sur de grands ecrans, ambiance business sobre, lumiere naturelle, "
-        "details credibles, aucune interface lisible, aucun texte incruste."
+        f"Scene realiste en photographie editoriale evoquant : {title}. "
+        "Ambiance business sobre, lumiere naturelle, details credibles, "
+        "aucune interface lisible, aucun texte incruste."
     )
-    return post_text, image_prompt
+    return image_prompt
+
+
+def _generate_with_claude(topic, anecdote):
+    system_prompt = _load_system_prompt()
+    user_prompt = _build_user_prompt(topic, anecdote)
+    full_prompt = f"{system_prompt}\n\n---\n\n{user_prompt}"
+    result = subprocess.run(
+        ["claude", "-p", full_prompt, "--output-format", "text"],
+        capture_output=True,
+        text=True,
+        timeout=CLAUDE_TIMEOUT,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"claude CLI exit {result.returncode}: {result.stderr.strip()}"
+        )
+    post_text = result.stdout.strip()
+    if not post_text:
+        raise RuntimeError("claude CLI a retourne un texte vide")
+    return post_text, _build_image_prompt(topic)
+
+
+def _topic_from_post(post):
+    try:
+        topic = json.loads(post["article_md"] or "{}")
+    except (TypeError, json.JSONDecodeError):
+        topic = {}
+    topic.setdefault("id", post["topic_id"])
+    topic.setdefault("title", post["topic_title"])
+    topic.setdefault("url", post["topic_url"])
+    topic.setdefault("score", post["topic_score"])
+    topic.setdefault("sources", post["sources"])
+    return topic
+
+
+def _generate_post_response(topic, anecdote):
+    try:
+        return _generate_with_claude(topic, anecdote)
+    except subprocess.TimeoutExpired:
+        raise TimeoutError(f"Claude CLI timeout (>{CLAUDE_TIMEOUT}s)") from None
+    except FileNotFoundError:
+        raise RuntimeError("Claude CLI introuvable dans le container") from None
 
 
 @app.route("/api/intake-topic", methods=["POST"])
@@ -200,7 +267,14 @@ def api_intake_topic():
             "post_url": f"{PUBLIC_BASE_URL}/post/{existing['id']}",
         })
 
-    post_text, image_prompt = _build_linkedin_draft(topic)
+    anecdote = (topic.get("anecdote") or "").strip()
+    try:
+        post_text, image_prompt = _generate_post_response(topic, anecdote)
+    except TimeoutError as exc:
+        return jsonify({"error": str(exc)}), 504
+    except Exception as exc:
+        return jsonify({"error": f"Generation failed: {exc}"}), 502
+
     try:
         score = float(topic["score"]) if topic.get("score") is not None else None
     except (TypeError, ValueError):
@@ -214,6 +288,7 @@ def api_intake_topic():
         topic_score=score,
         article_md=json.dumps(topic, ensure_ascii=False, indent=2),
         sources=topic.get("sources"),
+        anecdote=anecdote or None,
     )
     return jsonify({
         "ok": True,
@@ -221,6 +296,25 @@ def api_intake_topic():
         "post_id": post_id,
         "post_url": f"{PUBLIC_BASE_URL}/post/{post_id}",
     })
+
+
+@app.route("/api/post/<int:post_id>/regenerate-text", methods=["POST"])
+@login_required
+def api_regenerate_text(post_id):
+    post = get_post(post_id)
+    if not post:
+        return jsonify({"error": "Post introuvable"}), 404
+    topic = _topic_from_post(post)
+    data = request.get_json(silent=True) or {}
+    anecdote = (data.get("anecdote") or post["anecdote"] or "").strip()
+    try:
+        post_text, image_prompt = _generate_post_response(topic, anecdote)
+    except TimeoutError as exc:
+        return jsonify({"error": str(exc)}), 504
+    except Exception as exc:
+        return jsonify({"error": f"Generation failed: {exc}"}), 502
+    update_post_generation(post_id, post_text, image_prompt, anecdote or None)
+    return jsonify({"ok": True, "chars": len(post_text)})
 
 
 @app.route("/images/<path:filename>")

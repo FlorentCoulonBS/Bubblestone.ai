@@ -331,6 +331,67 @@ email_section_restic() {
     fi
 }
 
+# Section: restic stability overview (counts daily snapshots on local+mirror).
+# Args: $1 = local repo path, $2 = mirror sftp URL (e.g. sftp:backup@host:path),
+#       $3 = sftp args string (e.g. "-i /root/.ssh/id_ed25519_backup -o BatchMode=yes").
+# Threshold for stable: at least 3 daily snapshots on each repo, no KO in maintenance log.
+email_section_restic_overview() {
+    local repo_local="$1" repo_mirror="$2" sftp_args="$3"
+    local password_file="/root/.config/restic/password"
+    local threshold=3
+
+    email_section "⏳ Restic — Validation"
+
+    _restic_overview_count() {
+        local out
+        out=$(tr -d '[:space:]')
+        [[ "$out" =~ ^[0-9]+$ ]] && echo "$out" || echo 0
+    }
+
+    local local_count mirror_count
+    local_count=$(RESTIC_PASSWORD_FILE="$password_file" \
+        restic -r "$repo_local" snapshots --tag daily --json 2>/dev/null \
+        | jq 'length' 2>/dev/null | _restic_overview_count)
+    mirror_count=$(RESTIC_PASSWORD_FILE="$password_file" \
+        restic -r "$repo_mirror" -o sftp.args="$sftp_args" snapshots --tag daily --json 2>/dev/null \
+        | jq 'length' 2>/dev/null | _restic_overview_count)
+
+    local ko_count
+    ko_count=$(grep -c '\[restic-backup\] KO' "$LOGFILE" 2>/dev/null || echo 0)
+    [[ "$ko_count" =~ ^[0-9]+$ ]] || ko_count=0
+
+    if [ "$local_count" -ge "$threshold" ] && [ "$mirror_count" -ge "$threshold" ] && [ "$ko_count" -eq 0 ]; then
+        email_row "✅" "Repo local — ${local_count} snapshot(s) daily"
+        email_row "✅" "Repo mirror — ${mirror_count} snapshot(s) daily"
+        email_row "✅" "Aucun KO restic-backup dans le log"
+        email_row "🎯" "Restic stable — sécuritaire de retirer les tar.gz"
+    else
+        if [ "$local_count" -ge "$threshold" ]; then
+            email_row "✅" "Repo local — ${local_count} snapshot(s) daily"
+        elif [ "$local_count" -ge 1 ]; then
+            email_row "⚠️" "Repo local — ${local_count} snapshot(s) daily (cible: ≥${threshold})"
+        else
+            email_row "❌" "Repo local — aucun snapshot daily"
+        fi
+
+        if [ "$mirror_count" -ge "$threshold" ]; then
+            email_row "✅" "Repo mirror — ${mirror_count} snapshot(s) daily"
+        elif [ "$mirror_count" -ge 1 ]; then
+            email_row "⚠️" "Repo mirror — ${mirror_count} snapshot(s) daily (cible: ≥${threshold})"
+        else
+            email_row "❌" "Repo mirror — aucun snapshot daily"
+        fi
+
+        if [ "$ko_count" -gt 0 ]; then
+            email_row "❌" "${ko_count} KO restic-backup détecté(s) dans le log"
+        else
+            email_row "✅" "Aucun KO restic-backup dans le log"
+        fi
+
+        email_row "⏳" "Restic pas encore stable — NE PAS retirer les tar.gz"
+    fi
+}
+
 # Section: disk + docker images
 email_section_systeme() {
     email_section "💾 Systeme"

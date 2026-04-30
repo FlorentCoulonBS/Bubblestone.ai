@@ -172,7 +172,10 @@ linkedinSubmit.addEventListener('click', async () => {
             headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
             body: JSON.stringify({anecdote: linkedinAnecdote.value.trim()})
         });
-        const data = await response.json();
+        const contentType = response.headers.get('content-type') || '';
+        const data = contentType.includes('application/json')
+            ? await response.json()
+            : {error: (await response.text()).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || 'Réponse non JSON de la veille'};
         if (!response.ok) {
             throw new Error(data.error || 'Erreur LinkedIn');
         }

@@ -126,13 +126,13 @@ def update_post_image(post_id, image_path):
     conn.close()
 
 
-def update_post_generation(post_id, post_text, image_prompt, anecdote=None):
+def update_post_generation(post_id, post_text, image_prompt, anecdote=None, article_md=None):
     conn = get_db()
     conn.execute(
         """UPDATE posts
-           SET post_text = ?, image_prompt = ?, anecdote = ?
+           SET post_text = ?, image_prompt = ?, anecdote = ?, article_md = ?
            WHERE id = ?""",
-        (post_text, image_prompt, anecdote, post_id),
+        (post_text, image_prompt, anecdote, article_md, post_id),
     )
     conn.commit()
     conn.close()

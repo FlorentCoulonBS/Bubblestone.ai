@@ -209,9 +209,13 @@ def _generate_with_claude(topic, anecdote):
     system_prompt = _load_system_prompt()
     user_prompt = _build_user_prompt(topic, anecdote)
     full_prompt = f"{system_prompt}\n\n---\n\n{user_prompt}"
+    claude_env = os.environ.copy()
+    for key in ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"):
+        claude_env.pop(key, None)
     result = subprocess.run(
         ["claude", "-p", full_prompt, "--output-format", "text"],
         capture_output=True,
+        env=claude_env,
         text=True,
         timeout=CLAUDE_TIMEOUT,
     )

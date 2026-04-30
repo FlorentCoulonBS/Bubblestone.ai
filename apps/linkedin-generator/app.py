@@ -6,6 +6,7 @@ import json
 import base64
 import hmac
 import subprocess
+import threading
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
@@ -17,7 +18,7 @@ from flask import (Flask, render_template, request, redirect, url_for,
 from models import (init_db, get_posts, get_post, update_post_text,
                     update_post_status, update_post_image, get_post_counts,
                     update_post_generation, create_post, get_post_by_topic_id,
-                    IMAGES_DIR)
+                    update_image_status, IMAGES_DIR)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(32).hex()
@@ -28,6 +29,7 @@ INTERNAL_SECRET = os.environ.get("SECRET_KEY", "")
 PUBLIC_BASE_URL = os.environ.get("LINKEDIN_PUBLIC_BASE_URL", "https://linkedin.bubblestone.ai")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_IMAGE_MODEL = "gpt-image-2"
+OPENAI_IMAGE_TIMEOUT = int(os.environ.get("OPENAI_IMAGE_TIMEOUT", "180"))
 CLAUDE_TIMEOUT = int(os.environ.get("CLAUDE_TIMEOUT", "60"))
 PROMPT_SYSTEM_PATH = Path(__file__).parent / "prompts" / "system.md"
 
@@ -109,20 +111,17 @@ def api_validate(post_id):
     if not post:
         return jsonify({"error": "Post introuvable"}), 404
 
-    # Generate image
-    image_path = None
+    update_post_status(post_id, "validated")
+    image_pending = False
     error = None
-    if post["image_prompt"] and OPENAI_API_KEY:
+    if post["image_prompt"]:
         try:
-            image_path = generate_image(post_id, post["image_prompt"])
+            _start_image_generation(post_id, post["image_prompt"])
+            image_pending = True
         except Exception as e:
             error = f"Image generation failed: {e}"
 
-    update_post_status(post_id, "validated")
-    if image_path:
-        update_post_image(post_id, image_path)
-
-    return jsonify({"ok": True, "image_path": image_path, "error": error})
+    return jsonify({"ok": True, "image_pending": image_pending, "error": error})
 
 
 @app.route("/api/post/<int:post_id>/reject", methods=["POST"])
@@ -153,11 +152,24 @@ def api_regenerate_image(post_id):
         return jsonify({"error": "Pas de prompt image"}), 400
 
     try:
-        image_path = generate_image(post_id, prompt)
-        update_post_image(post_id, image_path)
-        return jsonify({"ok": True, "image_path": image_path})
+        _start_image_generation(post_id, prompt)
+        return jsonify({"ok": True, "image_pending": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/post/<int:post_id>/image-status")
+@login_required
+def api_image_status(post_id):
+    post = get_post(post_id)
+    if not post:
+        return jsonify({"error": "Post introuvable"}), 404
+    return jsonify({
+        "ok": True,
+        "image_path": post["image_path"],
+        "image_status": post["image_status"],
+        "image_error": post["image_error"],
+    })
 
 
 def _internal_authorized():
@@ -408,7 +420,7 @@ def generate_image(post_id, prompt):
         "https://api.openai.com/v1/images/generations",
         json=payload,
         headers=headers,
-        timeout=120,
+        timeout=OPENAI_IMAGE_TIMEOUT,
     )
     r.raise_for_status()
 
@@ -419,6 +431,23 @@ def generate_image(post_id, prompt):
     Path(IMAGES_DIR).mkdir(parents=True, exist_ok=True)
     (Path(IMAGES_DIR) / filename).write_bytes(img_bytes)
     return filename
+
+
+def _start_image_generation(post_id, prompt):
+    if not OPENAI_API_KEY:
+        raise ValueError("OPENAI_API_KEY not set")
+
+    update_image_status(post_id, "generating", None)
+
+    def worker():
+        try:
+            image_path = generate_image(post_id, prompt)
+            update_post_image(post_id, image_path)
+        except Exception as exc:
+            update_image_status(post_id, "error", str(exc))
+
+    thread = threading.Thread(target=worker, daemon=True)
+    thread.start()
 
 
 # --- Init ---

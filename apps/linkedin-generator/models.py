@@ -43,9 +43,15 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC);
     """)
     columns = {row["name"] for row in conn.execute("PRAGMA table_info(posts)").fetchall()}
-    if "anecdote" not in columns:
-        conn.execute("ALTER TABLE posts ADD COLUMN anecdote TEXT")
-        conn.commit()
+    migrations = {
+        "anecdote": "ALTER TABLE posts ADD COLUMN anecdote TEXT",
+        "image_status": "ALTER TABLE posts ADD COLUMN image_status TEXT",
+        "image_error": "ALTER TABLE posts ADD COLUMN image_error TEXT",
+    }
+    for column, sql in migrations.items():
+        if column not in columns:
+            conn.execute(sql)
+    conn.commit()
     conn.close()
 
 
@@ -121,7 +127,20 @@ def update_post_status(post_id, status):
 
 def update_post_image(post_id, image_path):
     conn = get_db()
-    conn.execute("UPDATE posts SET image_path = ? WHERE id = ?", (image_path, post_id))
+    conn.execute(
+        "UPDATE posts SET image_path = ?, image_status = ?, image_error = NULL WHERE id = ?",
+        (image_path, "ready", post_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def update_image_status(post_id, image_status, image_error=None):
+    conn = get_db()
+    conn.execute(
+        "UPDATE posts SET image_status = ?, image_error = ? WHERE id = ?",
+        (image_status, image_error, post_id),
+    )
     conn.commit()
     conn.close()
 

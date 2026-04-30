@@ -1,0 +1,12 @@
+[Unit]
+Description=Run LinkedIn blog publisher every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Persistent=true
+Unit=linkedin-blog-publisher.service
+
+[Install]
+WantedBy=timers.target

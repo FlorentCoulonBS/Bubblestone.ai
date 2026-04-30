@@ -85,6 +85,26 @@ async function saveText(postId) {
     }
 }
 
+// Regenerate LinkedIn text with Claude CLI
+async function regenerateText(postId) {
+    const btn = event?.target;
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Claude rédige...';
+    }
+    try {
+        await api(`/api/post/${postId}/regenerate-text`, 'POST', {});
+        toast('Texte régénéré');
+        setTimeout(() => location.reload(), 500);
+    } catch (e) {
+        toast(e.message, 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '🔄 Régénérer le texte';
+        }
+    }
+}
+
 // Copy text to clipboard
 function copyText() {
     const textarea = document.getElementById('postText');

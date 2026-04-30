@@ -461,12 +461,16 @@ def api_send_linkedin(topic_id):
     if not INTERNAL_SECRET:
         return jsonify({"error": "Secret interne non configuré"}), 503
 
+    body = request.get_json(silent=True) or {}
+    payload = dict(topic)
+    payload["anecdote"] = (body.get("anecdote") or "").strip()
+
     try:
         resp = requests.post(
             LINKEDIN_INGEST_URL,
-            json=topic,
+            json=payload,
             headers={"X-Internal-Secret": INTERNAL_SECRET},
-            timeout=20,
+            timeout=60,
         )
         payload = resp.json()
     except Exception as exc:

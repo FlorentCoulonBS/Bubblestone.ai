@@ -131,6 +131,10 @@ send_email() {
 
     # --- Restic differential backup ---
     email_section_restic
+    email_section_restic_overview \
+        "/opt/bubblestone-restic" \
+        "sftp:backup@69.62.106.57:restic/bubblestone" \
+        "-i /root/.ssh/id_ed25519_backup -o BatchMode=yes"
 
     email_send
 }

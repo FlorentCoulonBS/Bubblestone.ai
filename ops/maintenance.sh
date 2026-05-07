@@ -367,7 +367,7 @@ fi
 
 # ÉTAPE 7 — Cleanup
 log "--- Cleanup ---"
-PRUNE_OUTPUT=$(docker image prune -f 2>&1 && docker volume prune -f 2>&1)
+PRUNE_OUTPUT=$(docker image prune -f 2>&1)
 SPACE_RECLAIMED=$(echo "$PRUNE_OUTPUT" | grep -i "reclaimed" || echo "rien")
 maintenance_cleanup_logs
 SPACE_CLEAN=$(echo "$SPACE_RECLAIMED" | grep -oP 'Total reclaimed space: \S+' | head -1 || echo "$SPACE_RECLAIMED")

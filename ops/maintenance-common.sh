@@ -248,6 +248,54 @@ maintenance_pip_audit_files() {
     fi
 }
 
+# Updates npm + corepack globally, re-applies o+rX on the npm root, and reports
+# the result as a maintenance step.
+#
+# Why the chmod: on systems where Node was installed via the NodeSource .deb, the
+# default install applies drwxr-x--- on /usr/lib/node_modules/npm and friends,
+# which makes the binaries unusable for non-root users. `npm install -g` re-creates
+# those dirs each time, so we re-relax permissions after every install.
+maintenance_npm_runtime_update() {
+    local npm_before corepack_before npm_after corepack_after npm_output rc
+    npm_before=$(npm --version 2>/dev/null || echo "unknown")
+    corepack_before=$(corepack --version 2>/dev/null || echo "unknown")
+    npm_output=$(npm install -g npm@latest corepack@latest 2>&1)
+    rc=$?
+    chmod -R o+rX "$(npm root -g)" 2>/dev/null || true
+    if [ "$rc" -ne 0 ]; then
+        step_warn "npm runtime" "$(echo "$npm_output" | tail -1)"
+        return
+    fi
+    npm_after=$(npm --version 2>/dev/null || echo "unknown")
+    corepack_after=$(corepack --version 2>/dev/null || echo "unknown")
+    if [ "$npm_before" != "$npm_after" ] || [ "$corepack_before" != "$corepack_after" ]; then
+        step_ok "npm runtime" "npm $npm_before→$npm_after, corepack $corepack_before→$corepack_after"
+    else
+        step_ok "npm runtime" "Déjà à jour (npm $npm_after, corepack $corepack_after)"
+    fi
+}
+
+# Installs/updates a single npm global package and reports the result.
+# Args: $1 = step label, $2 = command to read the installed version, $3 = npm spec.
+maintenance_npm_package_update() {
+    local label="$1" version_cmd="$2" spec="$3"
+    local before after npm_output rc
+    before=$(eval "$version_cmd" 2>/dev/null | tail -1 || echo "unknown")
+    npm_output=$(npm install -g "$spec" 2>&1)
+    rc=$?
+    chmod -R o+rX "$(npm root -g)" 2>/dev/null || true
+    if [ "$rc" -ne 0 ]; then
+        step_warn "$label" "$(echo "$npm_output" | tail -1)"
+        return
+    fi
+    after=$(eval "$version_cmd" 2>/dev/null | tail -1 || echo "unknown")
+    if [ "$before" != "$after" ]; then
+        step_ok "$label" "$before → $after"
+    else
+        step_ok "$label" "Déjà à jour ($after)"
+    fi
+}
+
 # =============================================================================
 # HTML email helpers — append to global $ROWS
 # =============================================================================

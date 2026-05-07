@@ -212,6 +212,22 @@ else
     step_ok "Claude Code" "Déjà à jour ($CC_AFTER)"
 fi
 
+# ÉTAPE 3b — Codex CLI
+log "--- Codex CLI ---"
+CODEX_BEFORE=$(codex --version 2>/dev/null | tail -1 || echo "unknown")
+CODEX_NPM_OUTPUT=$(npm install -g @openai/codex@latest 2>&1)
+if [ $? -ne 0 ]; then
+    CODEX_NPM_ERROR=$(echo "$CODEX_NPM_OUTPUT" | tail -1)
+    step_warn "Codex CLI" "npm install échoué (${CODEX_NPM_ERROR:-voir logs})"
+else
+    CODEX_AFTER=$(codex --version 2>/dev/null | tail -1 || echo "unknown")
+    if [ "$CODEX_BEFORE" != "$CODEX_AFTER" ]; then
+        step_ok "Codex CLI" "$CODEX_BEFORE → $CODEX_AFTER"
+    else
+        step_ok "Codex CLI" "Déjà à jour ($CODEX_AFTER)"
+    fi
+fi
+
 # ÉTAPE 4 — Backup
 log "--- Backup ---"
 rm -rf "$BACKUP_DIR"

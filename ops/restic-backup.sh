@@ -41,9 +41,34 @@ restic -r "$REPO_LOCAL" backup \
   /opt/repos/bubblestone/infra/docker-compose.yml \
   /opt/bubblestone-leximpact/docker-compose.yml \
   /opt/bubblestone-ops \
+  /opt/bubblestone-site-app/nginx.conf \
+  /opt/bubblestone-staging-app/nginx.conf \
   /etc/msmtprc \
+  /etc/lynis/custom.prf \
   /etc/audit/rules.d/audit.rules \
-  /etc/systemd/system/cron.service.d/hardening.conf
+  /etc/crowdsec/acquis.yaml \
+  /etc/crowdsec/acquis.d \
+  /etc/crowdsec/profiles.yaml \
+  /etc/fail2ban/jail.local \
+  /etc/ssh/sshd_config.d/01-hardening.conf \
+  /etc/ssh/sshd_config.d/90-hardening.conf \
+  /etc/profile.d/99-hardening.sh \
+  /etc/apt/apt.conf.d/99-check-setuid-integrity \
+  /etc/sudoers.d/90-codex-ops \
+  /etc/sudoers.d/deploy \
+  /etc/cron.d \
+  /var/spool/cron/crontabs/root \
+  /etc/systemd/system/cron.service.d/hardening.conf \
+  /etc/systemd/system/crowdsec.service.d/hardening.conf \
+  /etc/systemd/system/crowdsec-firewall-bouncer.service.d/hardening.conf \
+  /etc/systemd/system/fail2ban.service.d/hardening.conf \
+  /etc/systemd/system/ssh.service.d/hardening.conf \
+  /etc/systemd/system/unattended-upgrades.service.d/hardening.conf \
+  /etc/systemd/system/weekly-reboot.service \
+  /etc/systemd/system/weekly-reboot.timer \
+  /usr/local/sbin/check-setuid-integrity.sh \
+  /usr/local/sbin/weekly-reboot.sh \
+  /usr/local/sbin/bubblestone-deploy
 
 # 3. Forget on local
 restic -r "$REPO_LOCAL" forget --keep-daily 7 --prune --quiet

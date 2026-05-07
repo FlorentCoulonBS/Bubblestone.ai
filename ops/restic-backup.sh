@@ -71,7 +71,7 @@ restic -r "$REPO_LOCAL" backup \
   /usr/local/sbin/bubblestone-deploy
 
 # 3. Forget on local
-restic -r "$REPO_LOCAL" forget --keep-daily 7 --prune --quiet
+restic -r "$REPO_LOCAL" forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune --quiet
 
 # 4. Copy to mirror
 restic -r "$REPO_MIRROR" -o sftp.args="$SFTP_OPT_ARGS" unlock --remove-all >/dev/null 2>&1 || true
@@ -79,7 +79,7 @@ restic -r "$REPO_MIRROR" -o sftp.args="$SFTP_OPT_ARGS" \
   copy --from-repo "$REPO_LOCAL" --from-password-file "$PASSWORD_FILE"
 
 # 5. Forget on mirror
-restic -r "$REPO_MIRROR" -o sftp.args="$SFTP_OPT_ARGS" forget --keep-daily 7 --prune --quiet
+restic -r "$REPO_MIRROR" -o sftp.args="$SFTP_OPT_ARGS" forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune --quiet
 
 # 6. Weekly rotating check (1/7 of data each day)
 DOW=$(date +%u)

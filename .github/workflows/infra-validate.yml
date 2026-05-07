@@ -1,0 +1,48 @@
+name: Infra Validate
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - infra/**
+      - .github/workflows/infra-validate.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - infra/**
+      - .github/workflows/infra-validate.yml
+  workflow_dispatch:
+
+concurrency:
+  group: infra-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Validate BubbleStone Docker Compose stacks
+        run: |
+          set -euo pipefail
+          # External resources referenced by composes (not created in CI; stub them so
+          # `docker compose config` doesn't error on the external: true declarations).
+          docker network create bubblestone-net >/dev/null 2>&1 || true
+
+          # Stub env vars referenced by the compose file (NPM, sites, etc.).
+          export POSTGRES_USER=compose-validation-only
+          export POSTGRES_PASSWORD=compose-validation-only
+          export POSTGRES_DB=compose-validation-only
+
+          for f in infra/docker-compose.yml infra/bubblestone-leximpact/docker-compose.yml; do
+            [ -f "$f" ] || continue
+            echo "::group::Validate $f"
+            docker compose -f "$f" config --quiet
+            echo "::endgroup::"
+          done

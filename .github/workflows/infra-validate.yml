@@ -35,6 +35,11 @@ jobs:
           # `docker compose config` doesn't error on the external: true declarations).
           docker network create bubblestone-net >/dev/null 2>&1 || true
 
+          # Stub env files referenced by absolute paths in the compose
+          # (the apps load secrets from /opt/bubblestone-config/.env on the live host).
+          sudo mkdir -p /opt/bubblestone-config
+          sudo touch /opt/bubblestone-config/.env
+
           # Stub env vars referenced by the compose file (NPM, sites, etc.).
           export POSTGRES_USER=compose-validation-only
           export POSTGRES_PASSWORD=compose-validation-only

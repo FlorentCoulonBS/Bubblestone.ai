@@ -31,7 +31,10 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-1")
 OPENAI_IMAGE_QUALITY = os.environ.get("OPENAI_IMAGE_QUALITY", "low")
 OPENAI_IMAGE_TIMEOUT = int(os.environ.get("OPENAI_IMAGE_TIMEOUT", "75"))
+OPENAI_TEXT_MODEL = os.environ.get("OPENAI_TEXT_MODEL", "gpt-4.1-mini")
+OPENAI_TEXT_TIMEOUT = int(os.environ.get("OPENAI_TEXT_TIMEOUT", "45"))
 CLAUDE_TIMEOUT = int(os.environ.get("CLAUDE_TIMEOUT", "60"))
+TEXT_GENERATION_PROVIDER = os.environ.get("TEXT_GENERATION_PROVIDER", "openai").lower()
 PROMPT_SYSTEM_PATH = Path(__file__).parent / "prompts" / "system.md"
 
 
@@ -283,6 +286,48 @@ def _generate_with_claude(topic, anecdote):
     return post_text, _build_image_prompt(topic)
 
 
+def _extract_openai_text(payload):
+    text = (payload.get("output_text") or "").strip()
+    if text:
+        return text
+    chunks = []
+    for item in payload.get("output") or []:
+        for content in item.get("content") or []:
+            if content.get("type") in {"output_text", "text"}:
+                chunks.append(content.get("text") or "")
+    return "\n".join(chunk for chunk in chunks if chunk).strip()
+
+
+def _generate_with_openai(topic, anecdote):
+    if not OPENAI_API_KEY:
+        raise RuntimeError("OPENAI_API_KEY not set")
+
+    payload = {
+        "model": OPENAI_TEXT_MODEL,
+        "instructions": _load_system_prompt(),
+        "input": _build_user_prompt(topic, anecdote),
+        "max_output_tokens": 1800,
+    }
+    response = requests.post(
+        "https://api.openai.com/v1/responses",
+        json=payload,
+        headers={
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        timeout=OPENAI_TEXT_TIMEOUT,
+    )
+    if response.status_code >= 400:
+        raise RuntimeError(
+            f"OpenAI API HTTP {response.status_code}: {response.text[:500]}"
+        )
+
+    post_text = _extract_openai_text(response.json())
+    if not post_text:
+        raise RuntimeError("OpenAI API a retourne un texte vide")
+    return post_text, _build_image_prompt(topic)
+
+
 def _topic_from_post(post):
     try:
         topic = json.loads(post["article_md"] or "{}")
@@ -297,12 +342,17 @@ def _topic_from_post(post):
 
 
 def _generate_post_response(topic, anecdote):
+    if TEXT_GENERATION_PROVIDER == "claude":
+        try:
+            return _generate_with_claude(topic, anecdote)
+        except Exception as claude_exc:
+            app.logger.warning("Claude generation failed, falling back to OpenAI: %s", claude_exc)
+            return _generate_with_openai(topic, anecdote)
+
     try:
-        return _generate_with_claude(topic, anecdote)
-    except subprocess.TimeoutExpired:
-        raise TimeoutError(f"Claude CLI timeout (>{CLAUDE_TIMEOUT}s)") from None
-    except FileNotFoundError:
-        raise RuntimeError("Claude CLI introuvable dans le container") from None
+        return _generate_with_openai(topic, anecdote)
+    except requests.Timeout:
+        raise TimeoutError(f"OpenAI API timeout (>{OPENAI_TEXT_TIMEOUT}s)") from None
 
 
 @app.route("/api/intake-topic", methods=["POST"])

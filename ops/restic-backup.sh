@@ -22,6 +22,13 @@ chmod 700 "$STAGING"
 # 1. SQLite NPM cold copy via .backup
 sqlite3 /opt/bubblestone-core/data/database.sqlite ".backup ${STAGING}/npm.sqlite"
 
+# 1b. SQLite Compta (compta.bubblestone.ai) — same trick: .backup yields a
+# consistent snapshot even mid-write, where a plain file copy could be corrupt.
+# Guarded so the nightly backup survives if the app is not deployed yet.
+if [ -f /opt/bubblestone-compta-data/app.db ]; then
+  sqlite3 /opt/bubblestone-compta-data/app.db ".backup ${STAGING}/compta.sqlite"
+fi
+
 export RESTIC_PASSWORD_FILE="$PASSWORD_FILE"
 
 # 2. Backup local
@@ -33,7 +40,9 @@ restic -r "$REPO_LOCAL" backup \
   "$STAGING" \
   /opt/bubblestone-555-data \
   /opt/bubblestone-audit-data \
+  /opt/bubblestone-compta-data \
   /opt/bubblestone-linkedin-data \
+  /opt/compta/secrets \
   /opt/bubblestone-core/data \
   /opt/bubblestone-core/letsencrypt \
   /opt/bubblestone-site-app/dist \

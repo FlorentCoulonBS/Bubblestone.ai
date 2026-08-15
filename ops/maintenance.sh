@@ -34,7 +34,7 @@ REMOTE_DIR="bubblestone"
 BACKUP_DIR="/tmp/backup_bubblestone"
 COMPOSE_FILE="/opt/repos/bubblestone/infra/docker-compose.yml"
 COMPOSE_PROJECT="bubblestone"
-SERVICES=(npm site staging 555 audit linkedin-generator)
+SERVICES=(npm site staging 555 audit linkedin-generator compta)
 container_name() { echo "bubblestone-${1}"; }
 
 # =============================================================================
@@ -73,7 +73,7 @@ send_email() {
 
     # --- Containers ---
     email_section "🐳 Containers"
-    declare -A CNAMES=( [npm]="Nginx Proxy Manager" [site]="bubblestone.ai" [staging]="staging.bubblestone.ai" [555]="AI Trend Dashboard (555)" [audit]="Audit Platform" [linkedin-generator]="LinkedIn Generator" )
+    declare -A CNAMES=( [npm]="Nginx Proxy Manager" [site]="bubblestone.ai" [staging]="staging.bubblestone.ai" [555]="AI Trend Dashboard (555)" [audit]="Audit Platform" [linkedin-generator]="LinkedIn Generator" [compta]="Compta (compta.bubblestone.ai)" )
     for svc in "${SERVICES[@]}"; do
         local CNAME STATUS STARTED LABEL
         CNAME=$(container_name "$svc")

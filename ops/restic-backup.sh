@@ -46,6 +46,8 @@ restic -r "$REPO_LOCAL" backup \
   /opt/repos/bubblestone/infra/docker-compose.yml \
   /opt/bubblestone-leximpact/docker-compose.yml \
   /opt/bubblestone-ops \
+  /var/backups/chronofeu \
+  /etc/chronofeu-sauvegarde \
   /opt/bubblestone-site-app/nginx.conf \
   /opt/bubblestone-staging-app/nginx.conf \
   /etc/msmtprc \

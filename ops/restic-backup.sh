@@ -101,6 +101,18 @@ if [ -f "$SCW_ENV" ]; then
   ) || { echo "${LOG_PREFIX} ERREUR copie Scaleway"; exit 1; }
 fi
 
+# 5ter. Copie vers le coffre immuable Scaleway : additive, ne supprime JAMAIS rien.
+# Le bucket coffre-exploit-scw porte un verrou Object Lock GOVERNANCE de 30 jours et
+# une regle d'acces qui interdit la suppression a cette cle : un objet ecrit ne
+# peut plus etre efface, meme par root sur ce serveur.
+# Ce que le prune retire du depot courant reste donc disponible dans le coffre.
+RCLONE_CONF=/root/.config/rclone/rclone.conf
+if rclone --config "$RCLONE_CONF" listremotes 2>/dev/null | grep -q '^coffre-scw:'; then
+  rclone --config "$RCLONE_CONF" copy "$REPO_LOCAL" coffre-scw:coffre-exploit-scw/restic \
+    --transfers=8 --checkers=16 --fast-list --stats=0 \
+    || { echo "${LOG_PREFIX} ERREUR copie coffre immuable"; exit 1; }
+fi
+
 # 6. Weekly rotating check (1/7 of data each day)
 DOW=$(date +%u)
 restic -r "$REPO_LOCAL" check --read-data-subset="${DOW}/7" --quiet

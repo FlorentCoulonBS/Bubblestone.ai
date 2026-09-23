@@ -136,6 +136,8 @@ send_email() {
         "sftp:backup@69.62.106.57:restic/bubblestone" \
         "-i /root/.ssh/id_ed25519_backup -o BatchMode=yes"
 
+    email_section_scaleway
+
     email_send
 }
 

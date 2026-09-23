@@ -611,3 +611,21 @@ $ROWS
 </body></html>
 EOF
 }
+
+# Section: copie hors site Scaleway + echeance de la cle API
+email_section_scaleway() {
+    email_section "☁️ Hors site — Scaleway"
+    if [ ! -x /usr/local/sbin/check-sauvegarde-horssite ]; then
+        email_row "⚠️" "Contrôle absent (/usr/local/sbin/check-sauvegarde-horssite)"
+        return 0
+    fi
+    local sortie ligne
+    sortie=$(/usr/local/sbin/check-sauvegarde-horssite 2>&1)
+    while IFS= read -r ligne; do
+        case "$ligne" in
+            OK*) email_row "✅" "${ligne#OK  }" ;;
+            KO*) email_row "❌" "${ligne#KO  }" ;;
+            *)   [ -n "$ligne" ] && email_row "⚠️" "$ligne" ;;
+        esac
+    done <<< "$sortie"
+}

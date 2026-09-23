@@ -9,9 +9,14 @@ REPO_MIRROR="sftp:backup@69.62.106.57:restic/bubblestone"
 SFTP_KEY="/root/.ssh/id_ed25519_backup"
 SFTP_OPT_ARGS="-i ${SFTP_KEY} -o BatchMode=yes"
 PASSWORD_FILE="/root/.config/restic/password"
-STAGING="/tmp/restic-staging-bubblestone-$$"
+REPO_SCW="s3:s3.fr-par.scw.cloud/backup-exploit-scw"
+SCW_ENV="/root/.config/restic/scaleway.env"
+STAGING="/tmp/restic-staging-bubblestone"
 LOG_PREFIX="[restic-backup]"
 TS_START=$(date +%s)
+
+exec 9>/var/lock/restic-backup.lock
+flock -n 9 || { echo "${LOG_PREFIX} SKIP une execution est deja en cours"; exit 0; }
 
 cleanup() { rm -rf "$STAGING"; }
 trap cleanup EXIT
@@ -71,7 +76,7 @@ restic -r "$REPO_LOCAL" backup \
   /usr/local/sbin/bubblestone-deploy
 
 # 3. Forget on local
-restic -r "$REPO_LOCAL" forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune --quiet
+restic -r "$REPO_LOCAL" forget --group-by host --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune --quiet
 
 # 4. Copy to mirror
 restic -r "$REPO_MIRROR" -o sftp.args="$SFTP_OPT_ARGS" unlock --remove-all >/dev/null 2>&1 || true
@@ -79,7 +84,20 @@ restic -r "$REPO_MIRROR" -o sftp.args="$SFTP_OPT_ARGS" \
   copy --from-repo "$REPO_LOCAL" --from-password-file "$PASSWORD_FILE"
 
 # 5. Forget on mirror
-restic -r "$REPO_MIRROR" -o sftp.args="$SFTP_OPT_ARGS" forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune --quiet
+restic -r "$REPO_MIRROR" -o sftp.args="$SFTP_OPT_ARGS" forget --group-by host --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune --quiet
+
+# 5bis. Copie hors site vers Scaleway. Inerte tant que $SCW_ENV n'existe pas.
+# Sort les donnees du parc Hostinger : le miroir SFTP est chez le meme
+# hebergeur, sur le meme compte.
+if [ -f "$SCW_ENV" ]; then
+  ( set -a; . "$SCW_ENV"; set +a
+    restic -r "$REPO_SCW" unlock --remove-all >/dev/null 2>&1 || true
+    restic -r "$REPO_SCW" copy \
+      --from-repo "$REPO_LOCAL" --from-password-file "$PASSWORD_FILE"
+    restic -r "$REPO_SCW" forget --group-by host \
+      --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune --quiet
+  ) || { echo "${LOG_PREFIX} ERREUR copie Scaleway"; exit 1; }
+fi
 
 # 6. Weekly rotating check (1/7 of data each day)
 DOW=$(date +%u)

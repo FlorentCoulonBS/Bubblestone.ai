@@ -27,6 +27,14 @@ chmod 700 "$STAGING"
 # 1. SQLite NPM cold copy via .backup
 sqlite3 /opt/bubblestone-core/data/database.sqlite ".backup ${STAGING}/npm.sqlite"
 
+# 1bis. Vaultwarden (gestionnaire de mots de passe) et Compta : meme precaution.
+# Copier db.sqlite3 a chaud donnerait un fichier a moitie ecrit, inutilisable.
+# .backup prend une copie coherente sans arreter le service.
+sqlite3 /opt/bubblestone-vaultwarden-data/db.sqlite3 ".backup ${STAGING}/vaultwarden.sqlite3"
+for base in /opt/bubblestone-compta-data/app.db; do
+  [ -f "$base" ] && sqlite3 "$base" ".backup ${STAGING}/compta-$(basename "$base")"
+done
+
 export RESTIC_PASSWORD_FILE="$PASSWORD_FILE"
 
 # 2. Backup local
@@ -35,10 +43,25 @@ restic -r "$REPO_LOCAL" backup \
   --tag daily \
   --exclude /opt/bubblestone-backups-incoming \
   --exclude /opt/bubblestone-restic \
+  --exclude /opt/bubblestone-vaultwarden-data/db.sqlite3-wal \
+  --exclude /opt/bubblestone-vaultwarden-data/db.sqlite3-shm \
+  --exclude '**/node_modules' \
+  --exclude '**/.venv' \
+  --exclude '**/__pycache__' \
   "$STAGING" \
   /opt/bubblestone-555-data \
   /opt/bubblestone-audit-data \
   /opt/bubblestone-linkedin-data \
+  /opt/bubblestone-vaultwarden-data \
+  /opt/vaultwarden \
+  /opt/bubblestone-compta-data \
+  /opt/compta/docker-compose.yml \
+  /opt/bubblestone-formation \
+  /opt/bubblestone-blog-publisher \
+  /opt/bubblestone-config \
+  /opt/bubblestone-leximpact \
+  /opt/bubblestone-demo-offline \
+  /opt/exchange-mcp \
   /opt/bubblestone-core/data \
   /opt/bubblestone-core/letsencrypt \
   /opt/bubblestone-site-app/dist \
@@ -47,6 +70,7 @@ restic -r "$REPO_LOCAL" backup \
   /opt/bubblestone-leximpact/docker-compose.yml \
   /opt/bubblestone-ops \
   /var/backups/chronofeu \
+  /opt/chronofeu-backups-incoming/restic \
   /etc/chronofeu-sauvegarde \
   /opt/bubblestone-site-app/nginx.conf \
   /opt/bubblestone-staging-app/nginx.conf \
